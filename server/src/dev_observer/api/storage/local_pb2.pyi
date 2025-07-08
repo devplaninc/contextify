@@ -10,13 +10,15 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class LocalStorageData(_message.Message):
-    __slots__ = ("github_repos", "processing_items", "global_config", "web_sites")
+    __slots__ = ("github_repos", "processing_items", "global_config", "web_sites", "processing_results")
     GITHUB_REPOS_FIELD_NUMBER: _ClassVar[int]
     PROCESSING_ITEMS_FIELD_NUMBER: _ClassVar[int]
     GLOBAL_CONFIG_FIELD_NUMBER: _ClassVar[int]
     WEB_SITES_FIELD_NUMBER: _ClassVar[int]
+    PROCESSING_RESULTS_FIELD_NUMBER: _ClassVar[int]
     github_repos: _containers.RepeatedCompositeFieldContainer[_repo_pb2.GitHubRepository]
     processing_items: _containers.RepeatedCompositeFieldContainer[_processing_pb2.ProcessingItem]
     global_config: _config_pb2.GlobalConfig
     web_sites: _containers.RepeatedCompositeFieldContainer[_sites_pb2.WebSite]
-    def __init__(self, github_repos: _Optional[_Iterable[_Union[_repo_pb2.GitHubRepository, _Mapping]]] = ..., processing_items: _Optional[_Iterable[_Union[_processing_pb2.ProcessingItem, _Mapping]]] = ..., global_config: _Optional[_Union[_config_pb2.GlobalConfig, _Mapping]] = ..., web_sites: _Optional[_Iterable[_Union[_sites_pb2.WebSite, _Mapping]]] = ...) -> None: ...
+    processing_results: _containers.RepeatedCompositeFieldContainer[_processing_pb2.ProcessingItemResult]
+    def __init__(self, github_repos: _Optional[_Iterable[_Union[_repo_pb2.GitHubRepository, _Mapping]]] = ..., processing_items: _Optional[_Iterable[_Union[_processing_pb2.ProcessingItem, _Mapping]]] = ..., global_config: _Optional[_Union[_config_pb2.GlobalConfig, _Mapping]] = ..., web_sites: _Optional[_Iterable[_Union[_sites_pb2.WebSite, _Mapping]]] = ..., processing_results: _Optional[_Iterable[_Union[_processing_pb2.ProcessingItemResult, _Mapping]]] = ...) -> None: ...

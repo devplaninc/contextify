@@ -39,19 +39,25 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
         self.prompts = prompts
         self.observations = observations
 
-    async def process(self, entity: E, requests: List[ObservationRequest], config: GlobalConfig, clean: bool = True):
+    async def process(
+            self, entity: E, requests: List[ObservationRequest], config: GlobalConfig, clean: bool = True,
+    ) -> List[ObservationKey]:
         res = await self.get_flatten(entity, config)
         _log.debug(s_("Got flatten result", result=res))
         try:
+            result: List[ObservationKey] = []
             for request in requests:
                 try:
                     prompts_prefix = request.prompt_prefix
                     key = request.key
-                    analyzer = TokenizedAnalyzer(prompts_prefix=prompts_prefix, analysis=self.analysis, prompts=self.prompts)
+                    analyzer = TokenizedAnalyzer(prompts_prefix=prompts_prefix, analysis=self.analysis,
+                                                 prompts=self.prompts)
                     content = await analyzer.analyze_flatten(res)
                     await self.observations.store(Observation(key=key, content=content))
+                    result.append(key)
                 except Exception as e:
                     _log.exception(s_("Analysis failed.", request=request), exc_info=e)
+            return result
         finally:
             if clean:
                 res.clean_up()

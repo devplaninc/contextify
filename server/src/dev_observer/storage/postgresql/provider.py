@@ -1,16 +1,19 @@
 import datetime
 import uuid
-from typing import Optional, MutableSequence
+from typing import Optional, MutableSequence, List, Sequence
 
 from google.protobuf import json_format
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSession
 
 from dev_observer.api.types.config_pb2 import GlobalConfig
-from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey
+from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, \
+    ProcessingItemResult, ProcessingRequest, ProcessingResultFilter, ProcessingItemsFilter
 from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
+from dev_observer.api.types.schedule_pb2 import Schedule
 from dev_observer.api.types.sites_pb2 import WebSite
-from dev_observer.storage.postgresql.model import GitRepoEntity, ProcessingItemEntity, GlobalConfigEntity, WebsiteEntity
+from dev_observer.storage.postgresql.model import GitRepoEntity, ProcessingItemEntity, GlobalConfigEntity, \
+    WebsiteEntity, ProcessingItemResultEntity
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
 from dev_observer.util import parse_json_pb, pb_to_json, Clock, RealClock
 
@@ -132,7 +135,12 @@ class PostgresqlStorageProvider(StorageProvider):
             item = res.first()
             return _to_optional_item(item[0] if item is not None else None)
 
-    async def set_next_processing_time(self, key: ProcessingItemKey, next_time: Optional[datetime.datetime]):
+    async def set_next_processing_time(
+            self, key: ProcessingItemKey,
+            next_time: Optional[datetime.datetime],
+            error: Optional[str] = None,
+            processing_started_at: Optional[datetime.datetime] = None,
+    ):
         key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
@@ -141,10 +149,112 @@ class PostgresqlStorageProvider(StorageProvider):
                     await session.execute(
                         update(ProcessingItemEntity)
                         .where(ProcessingItemEntity.key == key_str)
-                        .values(next_processing=next_time)
+                        .values(
+                            next_processing=next_time,
+                            last_error=error,
+                            processing_started_at=processing_started_at,
+                        )
                     )
                 else:
-                    session.add(ProcessingItemEntity(key=key_str, next_processing=next_time, json_data="{}"))
+                    session.add(ProcessingItemEntity(
+                        key=key_str, next_processing=next_time, last_error=error, json_data="{}",
+                    ))
+
+    async def create_processing_time(
+            self,
+            key: ProcessingItemKey,
+            request: Optional[ProcessingRequest] = None,
+            schedule: Optional[Schedule] = None,
+            next_time: Optional[datetime.datetime] = None,
+    ):
+        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                session.add(ProcessingItemEntity(
+                    key=key_str,
+                    next_processing=next_time,
+                    request_type=request.WhichOneof("type") if request else None,
+                    reference_id=request.reference_id if request else None,
+                    namespace=request.namespace if request else None,
+                    created_by=request.created_by if request else None,
+                    json_data=pb_to_json(ProcessingItem(
+                        key=key,
+                        schedule=schedule,
+                        request=request,
+                    )),
+                ))
+
+    async def update_processing_item(self, key: ProcessingItemKey, schedule: Optional[Schedule] = None):
+        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                existing = await session.get(ProcessingItemEntity, key_str)
+                item = _to_item(existing)
+                if schedule is None:
+                    item.ClearField("schedule")
+                else:
+                    item.schedule.CopyFrom(schedule)
+                await session.execute(
+                    update(ProcessingItemEntity)
+                    .where(ProcessingItemEntity.key == key_str)
+                    .values(json_data=pb_to_json(item))
+                )
+
+    async def delete_processing_item(self, key: ProcessingItemKey):
+        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                await session.execute(delete(ProcessingItemEntity).where(ProcessingItemEntity.key == key_str))
+
+    async def add_processing_result(self, item: ProcessingItemResult) -> str:
+        key_str = json_format.MessageToJson(item.key, indent=None, sort_keys=True)
+        new_id = item.id
+        if new_id is None or len(new_id) == 0:
+            new_id = str(uuid.uuid4())
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                session.add(ProcessingItemResultEntity(
+                    id=new_id,
+                    key=key_str,
+                    json_data=pb_to_json(item),
+                    error_message=item.error_message,
+                    namespace=item.request.namespace or None,
+                    created_by=item.request.created_by or None,
+                    reference_id=item.request.reference_id or None,
+                    request_type=item.request.WhichOneof("type") if item.HasField("request") else None,
+                ))
+        return new_id
+
+    async def get_processing_results(
+            self,
+            from_date: datetime.datetime,
+            to_date: datetime.datetime,
+            filter: ProcessingResultFilter,
+    ) -> List[ProcessingItemResult]:
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                query = select(ProcessingItemResultEntity)
+                if filter.namespace:
+                    query = query.where(ProcessingItemResultEntity.namespace == filter.namespace)
+                if filter.reference_id:
+                    query = query.where(ProcessingItemResultEntity.reference_id == filter.reference_id)
+                if filter.request_type:
+                    query = query.where(ProcessingItemResultEntity.request_type == filter.request_type)
+                result = await session.scalars(
+                    query.order_by(ProcessingItemResultEntity.created_at.desc())
+                )
+                entities = result.all()
+                return [_to_processing_item_result(entity) for entity in entities]
+
+    async def set_processing_error(self, key: ProcessingItemKey, error: Optional[str] = None):
+        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                await session.execute(
+                    update(ProcessingItemEntity)
+                    .where(ProcessingItemEntity.key == key_str)
+                    .values(last_error=error)
+                )
 
     async def get_global_config(self) -> GlobalConfig:
         async with AsyncSession(self._engine) as session:
@@ -165,6 +275,32 @@ class PostgresqlStorageProvider(StorageProvider):
                     .values(json_data=pb_to_json(config))
                 )
         return await self.get_global_config()
+
+    async def get_processing_time(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
+        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                existing = await session.get_one(ProcessingItemEntity, key_str)
+                return _to_optional_item(existing)
+
+    async def get_processing_result(self, result_id: str) -> Optional[ProcessingItemResult]:
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                existing = await session.get_one(ProcessingItemResultEntity, result_id)
+                return _to_processing_item_result(existing) if existing is not None else None
+
+    async def get_processing_items(self, filter: ProcessingItemsFilter) -> Sequence[ProcessingItem]:
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                query = select(ProcessingItemEntity)
+                if filter.namespace:
+                    query = query.where(ProcessingItemEntity.namespace == filter.namespace)
+                if filter.reference_id:
+                    query = query.where(ProcessingItemEntity.reference_id == filter.reference_id)
+                if filter.request_type:
+                    query = query.where(ProcessingItemEntity.request_type == filter.request_type)
+                items = await session.scalars(query)
+                return [_to_item(i) for i in items.all()]
 
 
 def _to_optional_repo(ent: Optional[GitRepoEntity]) -> Optional[GitHubRepository]:
@@ -204,7 +340,21 @@ def _to_item(ent: ProcessingItemEntity) -> ProcessingItem:
         data.ClearField("last_processed")
     else:
         data.last_processed = ent.last_processed
+    if ent.processing_started_at is None:
+        data.ClearField("processing_started_at")
+    else:
+        data.processing_started_at = ent.processing_started_at
     data.last_error = ent.last_error if ent.last_error else ""
     data.no_processing = ent.no_processing
     data.key.CopyFrom(parse_json_pb(ent.key, ProcessingItemKey()))
+    return data
+
+
+def _to_processing_item_result(ent: ProcessingItemResultEntity) -> ProcessingItemResult:
+    data = parse_json_pb(ent.json_data, ProcessingItemResult())
+    data.id = ent.id
+    data.key.CopyFrom(parse_json_pb(ent.key, ProcessingItemKey()))
+    data.created_at.FromDatetime(ent.created_at)
+    if ent.error_message:
+        data.error_message = ent.error_message
     return data

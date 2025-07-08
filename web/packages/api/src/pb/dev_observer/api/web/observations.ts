@@ -6,7 +6,16 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
+import { Timestamp } from "../../../google/protobuf/timestamp";
 import { Observation, ObservationKey } from "../types/observations";
+import {
+  ProcessingItem,
+  ProcessingItemKey,
+  ProcessingItemResult,
+  ProcessingItemsFilter,
+  ProcessingRequest,
+  ProcessingResultFilter,
+} from "../types/processing";
 
 export const protobufPackage = "dev_observer.api.web.observations";
 
@@ -16,6 +25,62 @@ export interface GetObservationsResponse {
 
 export interface GetObservationResponse {
   observation: Observation | undefined;
+}
+
+export interface GetProcessingResultsRequest {
+  /** Defaults to "to - 7d" */
+  fromDate?:
+    | Date
+    | undefined;
+  /** Default to "now" */
+  toDate?: Date | undefined;
+  filter: ProcessingResultFilter | undefined;
+}
+
+export interface GetProcessingResultsResponse {
+  results: ProcessingItemResult[];
+}
+
+export interface GetProcessingResultResponse {
+  result?: ProcessingItemResult | undefined;
+}
+
+export interface CreateProcessingItemRequest {
+  key: ProcessingItemKey | undefined;
+  request?: ProcessingRequest | undefined;
+  processImmediately: boolean;
+}
+
+export interface CreateProcessingItemResponse {
+}
+
+export interface DeleteProcessingItemRequest {
+  key: ProcessingItemKey | undefined;
+}
+
+export interface DeleteProcessingItemResponse {
+}
+
+export interface RunProcessingRequest {
+  /** Must be a globally unique UUID */
+  requestId: string;
+  request: ProcessingRequest | undefined;
+}
+
+export interface RunProcessingResponse {
+}
+
+export interface GetProcessingRunStatusResponse {
+  result?: ProcessingItemResult | undefined;
+  item?: ProcessingItem | undefined;
+}
+
+export interface GetProcessingItemsRequest {
+  filter: ProcessingItemsFilter | undefined;
+}
+
+export interface GetProcessingItemsResponse {
+  items: ProcessingItem[];
 }
 
 function createBaseGetObservationsResponse(): GetObservationsResponse {
@@ -136,6 +201,783 @@ export const GetObservationResponse: MessageFns<GetObservationResponse> = {
   },
 };
 
+function createBaseGetProcessingResultsRequest(): GetProcessingResultsRequest {
+  return { fromDate: undefined, toDate: undefined, filter: undefined };
+}
+
+export const GetProcessingResultsRequest: MessageFns<GetProcessingResultsRequest> = {
+  encode(message: GetProcessingResultsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.fromDate !== undefined) {
+      Timestamp.encode(toTimestamp(message.fromDate), writer.uint32(10).fork()).join();
+    }
+    if (message.toDate !== undefined) {
+      Timestamp.encode(toTimestamp(message.toDate), writer.uint32(18).fork()).join();
+    }
+    if (message.filter !== undefined) {
+      ProcessingResultFilter.encode(message.filter, writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetProcessingResultsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetProcessingResultsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.fromDate = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.toDate = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.filter = ProcessingResultFilter.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetProcessingResultsRequest {
+    return {
+      fromDate: isSet(object.fromDate) ? fromJsonTimestamp(object.fromDate) : undefined,
+      toDate: isSet(object.toDate) ? fromJsonTimestamp(object.toDate) : undefined,
+      filter: isSet(object.filter) ? ProcessingResultFilter.fromJSON(object.filter) : undefined,
+    };
+  },
+
+  toJSON(message: GetProcessingResultsRequest): unknown {
+    const obj: any = {};
+    if (message.fromDate !== undefined) {
+      obj.fromDate = message.fromDate.toISOString();
+    }
+    if (message.toDate !== undefined) {
+      obj.toDate = message.toDate.toISOString();
+    }
+    if (message.filter !== undefined) {
+      obj.filter = ProcessingResultFilter.toJSON(message.filter);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetProcessingResultsRequest>): GetProcessingResultsRequest {
+    return GetProcessingResultsRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetProcessingResultsRequest>): GetProcessingResultsRequest {
+    const message = createBaseGetProcessingResultsRequest();
+    message.fromDate = object.fromDate ?? undefined;
+    message.toDate = object.toDate ?? undefined;
+    message.filter = (object.filter !== undefined && object.filter !== null)
+      ? ProcessingResultFilter.fromPartial(object.filter)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseGetProcessingResultsResponse(): GetProcessingResultsResponse {
+  return { results: [] };
+}
+
+export const GetProcessingResultsResponse: MessageFns<GetProcessingResultsResponse> = {
+  encode(message: GetProcessingResultsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.results) {
+      ProcessingItemResult.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetProcessingResultsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetProcessingResultsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.results.push(ProcessingItemResult.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetProcessingResultsResponse {
+    return {
+      results: gt.Array.isArray(object?.results)
+        ? object.results.map((e: any) => ProcessingItemResult.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: GetProcessingResultsResponse): unknown {
+    const obj: any = {};
+    if (message.results?.length) {
+      obj.results = message.results.map((e) => ProcessingItemResult.toJSON(e));
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetProcessingResultsResponse>): GetProcessingResultsResponse {
+    return GetProcessingResultsResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetProcessingResultsResponse>): GetProcessingResultsResponse {
+    const message = createBaseGetProcessingResultsResponse();
+    message.results = object.results?.map((e) => ProcessingItemResult.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseGetProcessingResultResponse(): GetProcessingResultResponse {
+  return { result: undefined };
+}
+
+export const GetProcessingResultResponse: MessageFns<GetProcessingResultResponse> = {
+  encode(message: GetProcessingResultResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.result !== undefined) {
+      ProcessingItemResult.encode(message.result, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetProcessingResultResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetProcessingResultResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.result = ProcessingItemResult.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetProcessingResultResponse {
+    return { result: isSet(object.result) ? ProcessingItemResult.fromJSON(object.result) : undefined };
+  },
+
+  toJSON(message: GetProcessingResultResponse): unknown {
+    const obj: any = {};
+    if (message.result !== undefined) {
+      obj.result = ProcessingItemResult.toJSON(message.result);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetProcessingResultResponse>): GetProcessingResultResponse {
+    return GetProcessingResultResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetProcessingResultResponse>): GetProcessingResultResponse {
+    const message = createBaseGetProcessingResultResponse();
+    message.result = (object.result !== undefined && object.result !== null)
+      ? ProcessingItemResult.fromPartial(object.result)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseCreateProcessingItemRequest(): CreateProcessingItemRequest {
+  return { key: undefined, request: undefined, processImmediately: false };
+}
+
+export const CreateProcessingItemRequest: MessageFns<CreateProcessingItemRequest> = {
+  encode(message: CreateProcessingItemRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== undefined) {
+      ProcessingItemKey.encode(message.key, writer.uint32(10).fork()).join();
+    }
+    if (message.request !== undefined) {
+      ProcessingRequest.encode(message.request, writer.uint32(18).fork()).join();
+    }
+    if (message.processImmediately !== false) {
+      writer.uint32(24).bool(message.processImmediately);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateProcessingItemRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateProcessingItemRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = ProcessingItemKey.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.request = ProcessingRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.processImmediately = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CreateProcessingItemRequest {
+    return {
+      key: isSet(object.key) ? ProcessingItemKey.fromJSON(object.key) : undefined,
+      request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
+      processImmediately: isSet(object.processImmediately) ? gt.Boolean(object.processImmediately) : false,
+    };
+  },
+
+  toJSON(message: CreateProcessingItemRequest): unknown {
+    const obj: any = {};
+    if (message.key !== undefined) {
+      obj.key = ProcessingItemKey.toJSON(message.key);
+    }
+    if (message.request !== undefined) {
+      obj.request = ProcessingRequest.toJSON(message.request);
+    }
+    if (message.processImmediately !== false) {
+      obj.processImmediately = message.processImmediately;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CreateProcessingItemRequest>): CreateProcessingItemRequest {
+    return CreateProcessingItemRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CreateProcessingItemRequest>): CreateProcessingItemRequest {
+    const message = createBaseCreateProcessingItemRequest();
+    message.key = (object.key !== undefined && object.key !== null)
+      ? ProcessingItemKey.fromPartial(object.key)
+      : undefined;
+    message.request = (object.request !== undefined && object.request !== null)
+      ? ProcessingRequest.fromPartial(object.request)
+      : undefined;
+    message.processImmediately = object.processImmediately ?? false;
+    return message;
+  },
+};
+
+function createBaseCreateProcessingItemResponse(): CreateProcessingItemResponse {
+  return {};
+}
+
+export const CreateProcessingItemResponse: MessageFns<CreateProcessingItemResponse> = {
+  encode(_: CreateProcessingItemResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CreateProcessingItemResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCreateProcessingItemResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): CreateProcessingItemResponse {
+    return {};
+  },
+
+  toJSON(_: CreateProcessingItemResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create(base?: DeepPartial<CreateProcessingItemResponse>): CreateProcessingItemResponse {
+    return CreateProcessingItemResponse.fromPartial(base ?? {});
+  },
+  fromPartial(_: DeepPartial<CreateProcessingItemResponse>): CreateProcessingItemResponse {
+    const message = createBaseCreateProcessingItemResponse();
+    return message;
+  },
+};
+
+function createBaseDeleteProcessingItemRequest(): DeleteProcessingItemRequest {
+  return { key: undefined };
+}
+
+export const DeleteProcessingItemRequest: MessageFns<DeleteProcessingItemRequest> = {
+  encode(message: DeleteProcessingItemRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== undefined) {
+      ProcessingItemKey.encode(message.key, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DeleteProcessingItemRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDeleteProcessingItemRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = ProcessingItemKey.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): DeleteProcessingItemRequest {
+    return { key: isSet(object.key) ? ProcessingItemKey.fromJSON(object.key) : undefined };
+  },
+
+  toJSON(message: DeleteProcessingItemRequest): unknown {
+    const obj: any = {};
+    if (message.key !== undefined) {
+      obj.key = ProcessingItemKey.toJSON(message.key);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<DeleteProcessingItemRequest>): DeleteProcessingItemRequest {
+    return DeleteProcessingItemRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<DeleteProcessingItemRequest>): DeleteProcessingItemRequest {
+    const message = createBaseDeleteProcessingItemRequest();
+    message.key = (object.key !== undefined && object.key !== null)
+      ? ProcessingItemKey.fromPartial(object.key)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseDeleteProcessingItemResponse(): DeleteProcessingItemResponse {
+  return {};
+}
+
+export const DeleteProcessingItemResponse: MessageFns<DeleteProcessingItemResponse> = {
+  encode(_: DeleteProcessingItemResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): DeleteProcessingItemResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDeleteProcessingItemResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): DeleteProcessingItemResponse {
+    return {};
+  },
+
+  toJSON(_: DeleteProcessingItemResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create(base?: DeepPartial<DeleteProcessingItemResponse>): DeleteProcessingItemResponse {
+    return DeleteProcessingItemResponse.fromPartial(base ?? {});
+  },
+  fromPartial(_: DeepPartial<DeleteProcessingItemResponse>): DeleteProcessingItemResponse {
+    const message = createBaseDeleteProcessingItemResponse();
+    return message;
+  },
+};
+
+function createBaseRunProcessingRequest(): RunProcessingRequest {
+  return { requestId: "", request: undefined };
+}
+
+export const RunProcessingRequest: MessageFns<RunProcessingRequest> = {
+  encode(message: RunProcessingRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.requestId !== "") {
+      writer.uint32(10).string(message.requestId);
+    }
+    if (message.request !== undefined) {
+      ProcessingRequest.encode(message.request, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RunProcessingRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRunProcessingRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.requestId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.request = ProcessingRequest.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RunProcessingRequest {
+    return {
+      requestId: isSet(object.requestId) ? gt.String(object.requestId) : "",
+      request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
+    };
+  },
+
+  toJSON(message: RunProcessingRequest): unknown {
+    const obj: any = {};
+    if (message.requestId !== "") {
+      obj.requestId = message.requestId;
+    }
+    if (message.request !== undefined) {
+      obj.request = ProcessingRequest.toJSON(message.request);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<RunProcessingRequest>): RunProcessingRequest {
+    return RunProcessingRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<RunProcessingRequest>): RunProcessingRequest {
+    const message = createBaseRunProcessingRequest();
+    message.requestId = object.requestId ?? "";
+    message.request = (object.request !== undefined && object.request !== null)
+      ? ProcessingRequest.fromPartial(object.request)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseRunProcessingResponse(): RunProcessingResponse {
+  return {};
+}
+
+export const RunProcessingResponse: MessageFns<RunProcessingResponse> = {
+  encode(_: RunProcessingResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RunProcessingResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRunProcessingResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): RunProcessingResponse {
+    return {};
+  },
+
+  toJSON(_: RunProcessingResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create(base?: DeepPartial<RunProcessingResponse>): RunProcessingResponse {
+    return RunProcessingResponse.fromPartial(base ?? {});
+  },
+  fromPartial(_: DeepPartial<RunProcessingResponse>): RunProcessingResponse {
+    const message = createBaseRunProcessingResponse();
+    return message;
+  },
+};
+
+function createBaseGetProcessingRunStatusResponse(): GetProcessingRunStatusResponse {
+  return { result: undefined, item: undefined };
+}
+
+export const GetProcessingRunStatusResponse: MessageFns<GetProcessingRunStatusResponse> = {
+  encode(message: GetProcessingRunStatusResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.result !== undefined) {
+      ProcessingItemResult.encode(message.result, writer.uint32(10).fork()).join();
+    }
+    if (message.item !== undefined) {
+      ProcessingItem.encode(message.item, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetProcessingRunStatusResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetProcessingRunStatusResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.result = ProcessingItemResult.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.item = ProcessingItem.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetProcessingRunStatusResponse {
+    return {
+      result: isSet(object.result) ? ProcessingItemResult.fromJSON(object.result) : undefined,
+      item: isSet(object.item) ? ProcessingItem.fromJSON(object.item) : undefined,
+    };
+  },
+
+  toJSON(message: GetProcessingRunStatusResponse): unknown {
+    const obj: any = {};
+    if (message.result !== undefined) {
+      obj.result = ProcessingItemResult.toJSON(message.result);
+    }
+    if (message.item !== undefined) {
+      obj.item = ProcessingItem.toJSON(message.item);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetProcessingRunStatusResponse>): GetProcessingRunStatusResponse {
+    return GetProcessingRunStatusResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetProcessingRunStatusResponse>): GetProcessingRunStatusResponse {
+    const message = createBaseGetProcessingRunStatusResponse();
+    message.result = (object.result !== undefined && object.result !== null)
+      ? ProcessingItemResult.fromPartial(object.result)
+      : undefined;
+    message.item = (object.item !== undefined && object.item !== null)
+      ? ProcessingItem.fromPartial(object.item)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseGetProcessingItemsRequest(): GetProcessingItemsRequest {
+  return { filter: undefined };
+}
+
+export const GetProcessingItemsRequest: MessageFns<GetProcessingItemsRequest> = {
+  encode(message: GetProcessingItemsRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.filter !== undefined) {
+      ProcessingItemsFilter.encode(message.filter, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetProcessingItemsRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetProcessingItemsRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.filter = ProcessingItemsFilter.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetProcessingItemsRequest {
+    return { filter: isSet(object.filter) ? ProcessingItemsFilter.fromJSON(object.filter) : undefined };
+  },
+
+  toJSON(message: GetProcessingItemsRequest): unknown {
+    const obj: any = {};
+    if (message.filter !== undefined) {
+      obj.filter = ProcessingItemsFilter.toJSON(message.filter);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetProcessingItemsRequest>): GetProcessingItemsRequest {
+    return GetProcessingItemsRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetProcessingItemsRequest>): GetProcessingItemsRequest {
+    const message = createBaseGetProcessingItemsRequest();
+    message.filter = (object.filter !== undefined && object.filter !== null)
+      ? ProcessingItemsFilter.fromPartial(object.filter)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseGetProcessingItemsResponse(): GetProcessingItemsResponse {
+  return { items: [] };
+}
+
+export const GetProcessingItemsResponse: MessageFns<GetProcessingItemsResponse> = {
+  encode(message: GetProcessingItemsResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.items) {
+      ProcessingItem.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetProcessingItemsResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetProcessingItemsResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.items.push(ProcessingItem.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetProcessingItemsResponse {
+    return { items: gt.Array.isArray(object?.items) ? object.items.map((e: any) => ProcessingItem.fromJSON(e)) : [] };
+  },
+
+  toJSON(message: GetProcessingItemsResponse): unknown {
+    const obj: any = {};
+    if (message.items?.length) {
+      obj.items = message.items.map((e) => ProcessingItem.toJSON(e));
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetProcessingItemsResponse>): GetProcessingItemsResponse {
+    return GetProcessingItemsResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetProcessingItemsResponse>): GetProcessingItemsResponse {
+    const message = createBaseGetProcessingItemsResponse();
+    message.items = object.items?.map((e) => ProcessingItem.fromPartial(e)) || [];
+    return message;
+  },
+};
+
 declare const self: any | undefined;
 declare const window: any | undefined;
 declare const global: any | undefined;
@@ -163,6 +1005,28 @@ export type DeepPartial<T> = T extends Builtin ? T
   : T extends { $case: string; value: unknown } ? { $case: T["$case"]; value?: DeepPartial<T["value"]> }
   : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+function toTimestamp(date: Date): Timestamp {
+  const seconds = Math.trunc(date.getTime() / 1_000);
+  const nanos = (date.getTime() % 1_000) * 1_000_000;
+  return { seconds, nanos };
+}
+
+function fromTimestamp(t: Timestamp): Date {
+  let millis = (t.seconds || 0) * 1_000;
+  millis += (t.nanos || 0) / 1_000_000;
+  return new gt.Date(millis);
+}
+
+function fromJsonTimestamp(o: any): Date {
+  if (o instanceof gt.Date) {
+    return o;
+  } else if (typeof o === "string") {
+    return new gt.Date(o);
+  } else {
+    return fromTimestamp(Timestamp.fromJSON(o));
+  }
+}
 
 function isSet(value: any): boolean {
   return value !== null && value !== undefined;

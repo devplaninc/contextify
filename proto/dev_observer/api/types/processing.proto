@@ -3,11 +3,17 @@ syntax = "proto3";
 package dev_observer.api.types.processing;
 
 import "google/protobuf/timestamp.proto";
+import "dev_observer/api/types/observations.proto";
+import "dev_observer/api/types/schedule.proto";
 
 message ProcessingItemKey {
   oneof entity {
+    // Repo summary processing.
     string github_repo_id = 100;
+    // Website summary processing.
     string website_url = 101;
+    // One-off request
+    string request_id = 102;
   }
 }
 
@@ -17,4 +23,44 @@ message ProcessingItem {
   optional google.protobuf.Timestamp last_processed = 3;
   optional string last_error = 4;
   bool no_processing = 5;
+  optional ProcessingRequest request = 6;
+  optional dev_observer.api.types.schedule.Schedule schedule = 7;
+  optional google.protobuf.Timestamp processing_started_at = 8;
+}
+
+message ProcessingRequest {
+  string created_by = 1;
+  string namespace = 2;
+  // Free form indexed reference id that may be useful for connecting request to a specific repo or other entity.
+  string reference_id = 3;
+  oneof type {
+    ProcessGitChangesRequest git_changes = 100;
+  }
+}
+
+message ProcessGitChangesRequest {
+  string git_repo_id = 1;
+  int32 look_back_days = 2;
+}
+
+message ProcessingItemResult {
+  // Unique id of the result
+  string id = 1;
+  ProcessingItemKey key = 2;
+  repeated dev_observer.api.types.observations.ObservationKey observations = 3;
+  optional string error_message = 4;
+  google.protobuf.Timestamp created_at = 5;
+  optional ProcessingRequest request = 6;
+}
+
+message ProcessingResultFilter {
+  optional string namespace = 1;
+  optional string reference_id = 2;
+  optional string request_type = 3;
+}
+
+message ProcessingItemsFilter {
+  optional string namespace = 1;
+  optional string reference_id = 2;
+  optional string request_type = 3;
 }

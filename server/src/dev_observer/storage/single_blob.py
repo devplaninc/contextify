@@ -4,14 +4,16 @@ import datetime
 import logging
 import uuid
 from abc import abstractmethod
-from typing import Optional, Callable, MutableSequence
+from typing import Optional, Callable, MutableSequence, List, Sequence
 
 from google.protobuf import timestamp
 
 from dev_observer.api.storage.local_pb2 import LocalStorageData
 from dev_observer.api.types.config_pb2 import GlobalConfig
-from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey
+from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
+    ProcessingRequest, ProcessingResultFilter, ProcessingItemsFilter
 from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
+from dev_observer.api.types.schedule_pb2 import Schedule
 from dev_observer.api.types.sites_pb2 import WebSite
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
 from dev_observer.util import Clock, RealClock
@@ -58,11 +60,6 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
             if repo.id in [r.id for r in self._get().github_repos]:
                 return
             d.github_repos.append(repo)
-            if repo.id not in [i.key.github_repo_id for i in self._get().processing_items]:
-                d.processing_items.append(ProcessingItem(
-                    key=ProcessingItemKey(github_repo_id=repo.id),
-                    next_processing=self._clock.now(),
-                ))
 
         await self._update(up)
         return repo
@@ -128,8 +125,21 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
         items.sort(key=lambda item: timestamp.to_datetime(item.next_processing))
         return items[0]
 
-    async def get_processing_items(self) -> MutableSequence[ProcessingItem]:
-        return self._get().processing_items
+    async def get_processing_items(self, filter: ProcessingItemsFilter) -> Sequence[ProcessingItem]:
+        items = []
+
+        for item in self._get().processing_items:
+            if filter.namespace and filter.namespace != item.request.namespace:
+                continue
+            if filter.reference_id and filter.reference_id != item.request.reference_id:
+                continue
+            if filter.request_type:
+                if not item.HasField("request") or filter.request_type != item.request.WhichOneof("type"):
+                    continue
+
+            items.append(item)
+
+        return items
 
     async def get_processing_item(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
         for i in self._get().processing_items:
@@ -137,7 +147,10 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
                 return i
         return None
 
-    async def set_next_processing_time(self, key: ProcessingItemKey, next_time: Optional[datetime.datetime]):
+    async def set_next_processing_time(self, key: ProcessingItemKey, next_time: Optional[datetime.datetime],
+                                       error: Optional[str] = None,
+                                       processing_started_at: Optional[datetime.datetime] = None,
+                                       ):
         def up(d: LocalStorageData):
             found = False
             for i in d.processing_items:
@@ -147,9 +160,12 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
                         i.ClearField("next_processing")
                     else:
                         i.next_processing.CopyFrom(timestamp.from_milliseconds(int(next_time.timestamp() * 1000)))
+                    i.last_error = error or ""
+                    if processing_started_at:
+                        i.processing_started_at = processing_started_at
 
             if not found:
-                d.processing_items.append(ProcessingItem(key=key, next_processing=next_time))
+                d.processing_items.append(ProcessingItem(key=key, next_processing=next_time, last_error=error))
 
         await self._update(up)
 
@@ -180,6 +196,111 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
             updater(data)
             self._store(data)
             return self._get()
+
+    async def create_processing_time(self, key: ProcessingItemKey,
+                                     request: Optional[ProcessingRequest] = None,
+                                     schedule: Optional[Schedule] = None,
+                                     next_time: Optional[datetime.datetime] = None):
+        def up(d: LocalStorageData):
+            for item in d.processing_items:
+                if item.key == key:
+                    return
+
+            new_item = ProcessingItem(
+                key=key,
+                schedule=schedule,
+                request=request,
+            )
+            if next_time is not None:
+                new_item.next_processing.CopyFrom(timestamp.from_milliseconds(int(next_time.timestamp() * 1000)))
+
+            d.processing_items.append(new_item)
+
+        await self._update(up)
+
+    async def update_processing_item(self, key: ProcessingItemKey, schedule: Optional[Schedule] = None):
+        def up(d: LocalStorageData):
+            for item in d.processing_items:
+                if item.key == key:
+                    if schedule is None:
+                        item.ClearField("schedule")
+                    else:
+                        item.schedule.CopyFrom(schedule)
+                    return
+            raise ValueError(f"Processing item with key {key} not found")
+
+        await self._update(up)
+
+    async def delete_processing_item(self, key: ProcessingItemKey):
+        def up(d: LocalStorageData):
+            new_items = [item for item in d.processing_items if item.key != key]
+            d.ClearField("processing_items")
+            d.processing_items.extend(new_items)
+
+        await self._update(up)
+
+    async def set_processing_error(self, key: ProcessingItemKey, error: Optional[str] = None):
+        def up(d: LocalStorageData):
+            for item in d.processing_items:
+                if item.key == key:
+                    item.last_error = error if error is not None else ""
+                    return
+            raise ValueError(f"Processing item with key {key} not found")
+
+        await self._update(up)
+
+    async def add_processing_result(self, item: ProcessingItemResult) -> str:
+        if not item.id or len(item.id) == 0:
+            item.id = f"{uuid.uuid4()}"
+
+        def up(d: LocalStorageData):
+            # Set created_at if not already set
+            if not item.HasField("created_at"):
+                item.created_at.CopyFrom(timestamp.from_milliseconds(int(self._clock.now().timestamp() * 1000)))
+
+            d.processing_results.append(item)
+
+        await self._update(up)
+        return item.id
+
+    async def get_processing_results(
+            self,
+            from_date: datetime.datetime, to_date: datetime.datetime, filter: ProcessingResultFilter
+    ) -> List[ProcessingItemResult]:
+        results = []
+
+        if from_date.tzinfo is None:
+            from_date = from_date.replace(tzinfo=datetime.timezone.utc)
+        if to_date.tzinfo is None:
+            to_date = to_date.replace(tzinfo=datetime.timezone.utc)
+
+        for result in self._get().processing_results:
+            if filter.namespace and filter.namespace != result.request.namespace:
+                continue
+            if filter.reference_id and filter.reference_id != result.request.reference_id:
+                continue
+            if filter.request_type and (not result.HasField("request")
+                                        or filter.request_type != result.request.WhichOneof("type")):
+                continue
+            created_at = timestamp.to_datetime(result.created_at, tz=datetime.timezone.utc)
+            if from_date <= created_at <= to_date:
+                results.append(result)
+
+        # Sort by created_at descending (most recent first)
+        results.sort(key=lambda r: timestamp.to_datetime(r.created_at, tz=datetime.timezone.utc), reverse=True)
+        return results
+
+    async def get_processing_time(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
+        for item in self._get().processing_items:
+            if item.key == key:
+                return item
+        return None
+
+    async def get_processing_result(self, result_id: str) -> Optional[ProcessingItemResult]:
+        for result in self._get().processing_results:
+            if result.id == result_id:
+                return result
+        return None
 
     @abstractmethod
     def _get(self) -> LocalStorageData:

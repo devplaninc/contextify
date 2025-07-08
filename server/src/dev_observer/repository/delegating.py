@@ -1,4 +1,5 @@
 import subprocess
+from typing import Optional
 
 from dev_observer.repository.parser import parse_github_url
 from dev_observer.repository.provider import GitRepositoryProvider, RepositoryInfo
@@ -16,14 +17,14 @@ class DelegatingGitRepositoryProvider(GitRepositoryProvider):
             size_kb=500,
         )
 
-    async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str):
+    async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str, depth: Optional[str] = None):
         repo_root = _get_git_root()
-        result = subprocess.run(
-            ["git", "clone", repo_root, dest],
-            capture_output=True,
-            text=True,
-            check=False
-        )
+        cmd = ["git", "clone"]
+        if depth is not None:
+            cmd.append(f"--depth={depth}")
+        cmd.append(repo_root)
+        cmd.append(dest)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
         if result.returncode != 0:
             raise RuntimeError(f"Failed to clone repository: {result.stderr}")

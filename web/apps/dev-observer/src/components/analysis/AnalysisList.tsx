@@ -37,23 +37,27 @@ export function AnalysisList({kind, keysFiler}: AnalysisListProps) {
       Analysis Data
     </div>
     <div>
-      <Accordion type="multiple" className="w-full">
-        {keys.map(key => <AccordionItem value={key.name} key={key.key}>
-          <AccordionTrigger className="text-sm font-medium justify-start">
-            {key.name}
-          </AccordionTrigger>
-
-          <AccordionContent className="pl-4">
-            <AnalysisContent observationKey={key}/>
-          </AccordionContent>
-        </AccordionItem>)}
-
-      </Accordion>
+      <AnalysisContents keys={keys}/>
     </div>
   </div>
 }
 
-function AnalysisContent({observationKey}: { observationKey: ObservationKey }) {
+export function AnalysisContents({keys}: { keys: ObservationKey[] }) {
+  return <Accordion type="multiple" className="w-full">
+    {keys.map(key => <AccordionItem value={key.name} key={key.key}>
+      <AccordionTrigger className="text-sm font-medium justify-start">
+        {key.name}
+      </AccordionTrigger>
+
+      <AccordionContent className="pl-4">
+        <AnalysisContent observationKey={key}/>
+      </AccordionContent>
+    </AccordionItem>)}
+
+  </Accordion>
+}
+
+export function AnalysisContent({observationKey}: { observationKey: ObservationKey }) {
   const {observation, error} = useObservation(observationKey)
   if (!observation) {
     if (error) {

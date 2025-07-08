@@ -3,12 +3,14 @@ import logging
 
 from dev_observer.api.types.config_pb2 import RepoAnalysisConfig, AnalysisConfig, WebsiteCrawlingConfig
 from dev_observer.api.types.observations_pb2 import Analyzer
-from dev_observer.server import detect
+from dev_observer.api.types.repo_pb2 import GitHubRepository
 from dev_observer.log import s_
+from dev_observer.server import detect
 
 env = detect.env
 
 _log = logging.getLogger(__name__)
+
 
 async def init_global_config():
     config = await env.storage.get_global_config()
@@ -39,7 +41,12 @@ async def init_global_config():
             name="general",
             file_name="analysis.md",
             prompt_prefix="general-web",
-        )]
+        )],
+        default_git_changes_analyzer=Analyzer(
+            name="git-changes-default",
+            file_name="git-changes-report.md",
+            prompt_prefix="git-changes-default",
+        )
     ))
     config.website_crawling.CopyFrom(WebsiteCrawlingConfig(
         website_scan_timeout_seconds=15,
@@ -50,5 +57,24 @@ async def init_global_config():
     await env.storage.set_global_config(config)
     _log.info(s_("Global config initialized", config=config))
 
+
+async def init_repositories():
+    repos = await env.storage.get_github_repos()
+    if len(repos) > 0:
+        _log.info(s_("Repositories already initialized", repos=repos))
+        return
+    await env.storage.add_github_repo(GitHubRepository(
+        name="dev-observer",
+        full_name="devplaninc/dev-observer",
+        url="https://github.com/devplaninc/dev-observer.git",
+    ))
+
+async def init_all():
+    await asyncio.gather(
+        init_global_config(),
+        init_repositories(),
+    )
+
+
 if __name__ == "__main__":
-    asyncio.run(init_global_config())
+    asyncio.run(init_all())

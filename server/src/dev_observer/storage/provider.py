@@ -1,11 +1,14 @@
 import dataclasses
 import datetime
-from typing import Protocol, Optional, MutableSequence
+from typing import Protocol, Optional, MutableSequence, List, Sequence
 
 from dev_observer.api.types.config_pb2 import GlobalConfig
-from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey
+from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
+    ProcessingRequest, ProcessingResultFilter, ProcessingItemsFilter
 from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
+from dev_observer.api.types.schedule_pb2 import Schedule
 from dev_observer.api.types.sites_pb2 import WebSite
+
 
 @dataclasses.dataclass
 class AddWebSiteData:
@@ -32,7 +35,6 @@ class StorageProvider(Protocol):
     async def update_repo_properties(self, id: str, properties: GitProperties) -> GitHubRepository:
         ...
 
-
     async def get_web_sites(self) -> MutableSequence[WebSite]:
         ...
 
@@ -48,11 +50,49 @@ class StorageProvider(Protocol):
     async def next_processing_item(self) -> Optional[ProcessingItem]:
         ...
 
-    async def set_next_processing_time(self, key: ProcessingItemKey, next_time: Optional[datetime.datetime]):
+    async def create_processing_time(
+            self,
+            key: ProcessingItemKey,
+            request: Optional[ProcessingRequest] = None,
+            schedule: Optional[Schedule] = None,
+            next_time: Optional[datetime.datetime] = None,
+    ):
+        ...
+
+    async def get_processing_items(self, filter: ProcessingItemsFilter) -> Sequence[ProcessingItem]:
+        ...
+
+    async def update_processing_item(self, key: ProcessingItemKey, schedule: Optional[Schedule] = None):
+        ...
+
+    async def delete_processing_item(self, key: ProcessingItemKey):
+        ...
+
+    async def set_next_processing_time(
+            self, key: ProcessingItemKey, next_time: Optional[datetime.datetime], error: Optional[str] = None,
+            processing_started_at: Optional[datetime.datetime] = None,
+    ):
+        ...
+
+    async def get_processing_time(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
+        ...
+
+    async def set_processing_error(self, key: ProcessingItemKey, error: Optional[str] = None):
         ...
 
     async def get_global_config(self) -> GlobalConfig:
         ...
 
     async def set_global_config(self, config: GlobalConfig) -> GlobalConfig:
+        ...
+
+    async def add_processing_result(self, item: ProcessingItemResult):
+        ...
+
+    async def get_processing_results(
+            self, from_date: datetime.datetime, to_date: datetime.datetime, filter: ProcessingResultFilter,
+    ) -> List[ProcessingItemResult]:
+        ...
+
+    async def get_processing_result(self, result_id: str) -> Optional[ProcessingItemResult]:
         ...

@@ -20,6 +20,7 @@ export interface AnalysisConfig {
   repoAnalyzers: Analyzer[];
   siteAnalyzers: Analyzer[];
   disableMasking: boolean;
+  defaultGitChangesAnalyzer?: Analyzer | undefined;
 }
 
 export interface UserManagementStatus {
@@ -156,7 +157,7 @@ export const GlobalConfig: MessageFns<GlobalConfig> = {
 };
 
 function createBaseAnalysisConfig(): AnalysisConfig {
-  return { repoAnalyzers: [], siteAnalyzers: [], disableMasking: false };
+  return { repoAnalyzers: [], siteAnalyzers: [], disableMasking: false, defaultGitChangesAnalyzer: undefined };
 }
 
 export const AnalysisConfig: MessageFns<AnalysisConfig> = {
@@ -169,6 +170,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     }
     if (message.disableMasking !== false) {
       writer.uint32(24).bool(message.disableMasking);
+    }
+    if (message.defaultGitChangesAnalyzer !== undefined) {
+      Analyzer.encode(message.defaultGitChangesAnalyzer, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -204,6 +208,14 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
           message.disableMasking = reader.bool();
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.defaultGitChangesAnalyzer = Analyzer.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -222,6 +234,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
         ? object.siteAnalyzers.map((e: any) => Analyzer.fromJSON(e))
         : [],
       disableMasking: isSet(object.disableMasking) ? gt.Boolean(object.disableMasking) : false,
+      defaultGitChangesAnalyzer: isSet(object.defaultGitChangesAnalyzer)
+        ? Analyzer.fromJSON(object.defaultGitChangesAnalyzer)
+        : undefined,
     };
   },
 
@@ -236,6 +251,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     if (message.disableMasking !== false) {
       obj.disableMasking = message.disableMasking;
     }
+    if (message.defaultGitChangesAnalyzer !== undefined) {
+      obj.defaultGitChangesAnalyzer = Analyzer.toJSON(message.defaultGitChangesAnalyzer);
+    }
     return obj;
   },
 
@@ -247,6 +265,10 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     message.repoAnalyzers = object.repoAnalyzers?.map((e) => Analyzer.fromPartial(e)) || [];
     message.siteAnalyzers = object.siteAnalyzers?.map((e) => Analyzer.fromPartial(e)) || [];
     message.disableMasking = object.disableMasking ?? false;
+    message.defaultGitChangesAnalyzer =
+      (object.defaultGitChangesAnalyzer !== undefined && object.defaultGitChangesAnalyzer !== null)
+        ? Analyzer.fromPartial(object.defaultGitChangesAnalyzer)
+        : undefined;
     return message;
   },
 };

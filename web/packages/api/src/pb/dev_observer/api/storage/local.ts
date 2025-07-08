@@ -7,7 +7,7 @@
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { GlobalConfig } from "../types/config";
-import { ProcessingItem } from "../types/processing";
+import { ProcessingItem, ProcessingItemResult } from "../types/processing";
 import { GitHubRepository } from "../types/repo";
 import { WebSite } from "../types/sites";
 
@@ -18,10 +18,11 @@ export interface LocalStorageData {
   processingItems: ProcessingItem[];
   globalConfig: GlobalConfig | undefined;
   webSites: WebSite[];
+  processingResults: ProcessingItemResult[];
 }
 
 function createBaseLocalStorageData(): LocalStorageData {
-  return { githubRepos: [], processingItems: [], globalConfig: undefined, webSites: [] };
+  return { githubRepos: [], processingItems: [], globalConfig: undefined, webSites: [], processingResults: [] };
 }
 
 export const LocalStorageData: MessageFns<LocalStorageData> = {
@@ -37,6 +38,9 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
     }
     for (const v of message.webSites) {
       WebSite.encode(v!, writer.uint32(34).fork()).join();
+    }
+    for (const v of message.processingResults) {
+      ProcessingItemResult.encode(v!, writer.uint32(42).fork()).join();
     }
     return writer;
   },
@@ -80,6 +84,14 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
           message.webSites.push(WebSite.decode(reader, reader.uint32()));
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.processingResults.push(ProcessingItemResult.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -99,6 +111,9 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
         : [],
       globalConfig: isSet(object.globalConfig) ? GlobalConfig.fromJSON(object.globalConfig) : undefined,
       webSites: gt.Array.isArray(object?.webSites) ? object.webSites.map((e: any) => WebSite.fromJSON(e)) : [],
+      processingResults: gt.Array.isArray(object?.processingResults)
+        ? object.processingResults.map((e: any) => ProcessingItemResult.fromJSON(e))
+        : [],
     };
   },
 
@@ -116,6 +131,9 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
     if (message.webSites?.length) {
       obj.webSites = message.webSites.map((e) => WebSite.toJSON(e));
     }
+    if (message.processingResults?.length) {
+      obj.processingResults = message.processingResults.map((e) => ProcessingItemResult.toJSON(e));
+    }
     return obj;
   },
 
@@ -130,6 +148,7 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
       ? GlobalConfig.fromPartial(object.globalConfig)
       : undefined;
     message.webSites = object.webSites?.map((e) => WebSite.fromPartial(e)) || [];
+    message.processingResults = object.processingResults?.map((e) => ProcessingItemResult.fromPartial(e)) || [];
     return message;
   },
 };

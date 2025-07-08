@@ -8,6 +8,7 @@ from dev_observer.log import s_
 from dev_observer.observations.local import LocalObservationsProvider
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.observations.s3 import S3ObservationsProvider
+from dev_observer.processors.git_changes import GitChangesProcessor
 from dev_observer.processors.periodic import PeriodicProcessor
 from dev_observer.processors.repos import ReposProcessor
 from dev_observer.processors.websites import WebsitesProcessor
@@ -197,6 +198,7 @@ def detect_server_env(settings: Settings) -> ServerEnv:
     bg_analysis = detect_analysis_provider(settings, bg_storage)
     bg_repository = detect_git_provider(settings, bg_storage)
     bg_repos_processor = ReposProcessor(bg_analysis, bg_repository, prompts, observations, tokenizer)
+    bg_git_changes_processor = GitChangesProcessor(bg_analysis, bg_repository, prompts, observations, tokenizer)
     bg_web_scraping = detect_web_scraping(settings)
     bg_sites_processor = WebsitesProcessor(bg_analysis, bg_web_scraping, prompts, observations, tokenizer)
     users = detect_users_provider(settings)
@@ -212,7 +214,12 @@ def detect_server_env(settings: Settings) -> ServerEnv:
         observations=observations,
         storage=storage,
         repos_processor=bg_repos_processor,
-        periodic_processor=PeriodicProcessor(bg_storage, bg_repos_processor, websites_processor=bg_sites_processor),
+        periodic_processor=PeriodicProcessor(
+            bg_storage,
+            bg_repos_processor,
+            bg_git_changes_processor,
+            websites_processor=bg_sites_processor,
+        ),
         users=users,
         api_keys=api_keys or [],
     )
