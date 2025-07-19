@@ -19,6 +19,7 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog.tsx";
 import {RepoAnalysisList} from "@/components/repos/RepoAnalysisList.tsx";
+import {GitHubChangesList} from "@/components/repos/GitHubChangesList.tsx";
 
 const RepositoryDetailsPage: React.FC = () => {
   const {id} = useParams<{ id: string }>();
@@ -71,7 +72,10 @@ const RepositoryDetailsPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          <RepoAnalysisList repo={repository}/>
+          <div className="space-y-6">
+            <GitHubChangesList repo={repository}/>
+            <RepoAnalysisList repo={repository}/>
+          </div>
         </div>
       ) : (
         <div className="bg-muted p-8 rounded-lg text-center">

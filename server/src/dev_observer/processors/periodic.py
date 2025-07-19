@@ -8,6 +8,7 @@ from dev_observer.api.types.processing_pb2 import ProcessingItem
 from dev_observer.log import s_
 from dev_observer.processors.flattening import ObservationRequest
 from dev_observer.processors.repos import ReposProcessor
+from dev_observer.processors.changes import ChangesProcessor
 from dev_observer.repository.types import ObservedRepo
 from dev_observer.processors.websites import WebsitesProcessor, ObservedWebsite
 from dev_observer.storage.provider import StorageProvider
@@ -19,17 +20,20 @@ _log = logging.getLogger(__name__)
 class PeriodicProcessor:
     _storage: StorageProvider
     _repos_processor: ReposProcessor
+    _changes_processor: Optional[ChangesProcessor]
     _websites_processor: Optional[WebsitesProcessor]
     _clock: Clock
 
     def __init__(self,
                  storage: StorageProvider,
                  repos_processor: ReposProcessor,
+                 changes_processor: Optional[ChangesProcessor] = None,
                  websites_processor: Optional[WebsitesProcessor] = None,
                  clock: Clock = RealClock(),
                  ):
         self._storage = storage
         self._repos_processor = repos_processor
+        self._changes_processor = changes_processor
         self._websites_processor = websites_processor
         self._clock = clock
 
@@ -89,6 +93,18 @@ class PeriodicProcessor:
             _log.debug(s_("No analyzers configured, skipping", repo=repo))
             return
         await self._repos_processor.process(ObservedRepo(url=repo.url, github_repo=repo), requests, config)
+
+        # Process repository changes if changes processor is configured
+        if self._changes_processor is not None:
+            try:
+                await self._changes_processor.process_repository_changes(
+                    ObservedRepo(url=repo.url, github_repo=repo), 
+                    config
+                )
+                _log.debug(s_("Github repo changes processed", repo=repo))
+            except Exception as e:
+                _log.error(s_("Failed to process repository changes", repo=repo), exc_info=e)
+
         _log.debug(s_("Github repo processed", repo=repo))
 
     async def _process_website(self, website_url: str):
