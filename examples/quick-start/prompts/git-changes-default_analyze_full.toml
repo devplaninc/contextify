@@ -1,0 +1,12 @@
+[system]
+text ='''You will be given a diff of a repository over a certain period. Generate a well readable summary of changes in markdown format.
+'''
+[user]
+text = '''Here is a diff:
+
+{{content}}
+'''
+[config.model]
+provider="google_genai"
+model_name="gemini-2.0-flash-lite"
+temperature=0.1

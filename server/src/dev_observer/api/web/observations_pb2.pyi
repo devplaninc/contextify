@@ -1,4 +1,6 @@
 from dev_observer.api.types import observations_pb2 as _observations_pb2
+from dev_observer.api.types import processing_pb2 as _processing_pb2
+from google.protobuf import timestamp_pb2 as _timestamp_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -17,3 +19,81 @@ class GetObservationResponse(_message.Message):
     OBSERVATION_FIELD_NUMBER: _ClassVar[int]
     observation: _observations_pb2.Observation
     def __init__(self, observation: _Optional[_Union[_observations_pb2.Observation, _Mapping]] = ...) -> None: ...
+
+class GetProcessingResultsRequest(_message.Message):
+    __slots__ = ("from_date", "to_date", "filter")
+    FROM_DATE_FIELD_NUMBER: _ClassVar[int]
+    TO_DATE_FIELD_NUMBER: _ClassVar[int]
+    FILTER_FIELD_NUMBER: _ClassVar[int]
+    from_date: _timestamp_pb2.Timestamp
+    to_date: _timestamp_pb2.Timestamp
+    filter: _processing_pb2.ProcessingResultFilter
+    def __init__(self, from_date: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., to_date: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., filter: _Optional[_Union[_processing_pb2.ProcessingResultFilter, _Mapping]] = ...) -> None: ...
+
+class GetProcessingResultsResponse(_message.Message):
+    __slots__ = ("results",)
+    RESULTS_FIELD_NUMBER: _ClassVar[int]
+    results: _containers.RepeatedCompositeFieldContainer[_processing_pb2.ProcessingItemResult]
+    def __init__(self, results: _Optional[_Iterable[_Union[_processing_pb2.ProcessingItemResult, _Mapping]]] = ...) -> None: ...
+
+class GetProcessingResultResponse(_message.Message):
+    __slots__ = ("result",)
+    RESULT_FIELD_NUMBER: _ClassVar[int]
+    result: _processing_pb2.ProcessingItemResult
+    def __init__(self, result: _Optional[_Union[_processing_pb2.ProcessingItemResult, _Mapping]] = ...) -> None: ...
+
+class CreateProcessingItemRequest(_message.Message):
+    __slots__ = ("key", "request", "process_immediately")
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    REQUEST_FIELD_NUMBER: _ClassVar[int]
+    PROCESS_IMMEDIATELY_FIELD_NUMBER: _ClassVar[int]
+    key: _processing_pb2.ProcessingItemKey
+    request: _processing_pb2.ProcessingRequest
+    process_immediately: bool
+    def __init__(self, key: _Optional[_Union[_processing_pb2.ProcessingItemKey, _Mapping]] = ..., request: _Optional[_Union[_processing_pb2.ProcessingRequest, _Mapping]] = ..., process_immediately: bool = ...) -> None: ...
+
+class CreateProcessingItemResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class DeleteProcessingItemRequest(_message.Message):
+    __slots__ = ("key",)
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    key: _processing_pb2.ProcessingItemKey
+    def __init__(self, key: _Optional[_Union[_processing_pb2.ProcessingItemKey, _Mapping]] = ...) -> None: ...
+
+class DeleteProcessingItemResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class RunProcessingRequest(_message.Message):
+    __slots__ = ("request_id", "request")
+    REQUEST_ID_FIELD_NUMBER: _ClassVar[int]
+    REQUEST_FIELD_NUMBER: _ClassVar[int]
+    request_id: str
+    request: _processing_pb2.ProcessingRequest
+    def __init__(self, request_id: _Optional[str] = ..., request: _Optional[_Union[_processing_pb2.ProcessingRequest, _Mapping]] = ...) -> None: ...
+
+class RunProcessingResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class GetProcessingRunStatusResponse(_message.Message):
+    __slots__ = ("result", "item")
+    RESULT_FIELD_NUMBER: _ClassVar[int]
+    ITEM_FIELD_NUMBER: _ClassVar[int]
+    result: _processing_pb2.ProcessingItemResult
+    item: _processing_pb2.ProcessingItem
+    def __init__(self, result: _Optional[_Union[_processing_pb2.ProcessingItemResult, _Mapping]] = ..., item: _Optional[_Union[_processing_pb2.ProcessingItem, _Mapping]] = ...) -> None: ...
+
+class GetProcessingItemsRequest(_message.Message):
+    __slots__ = ("filter",)
+    FILTER_FIELD_NUMBER: _ClassVar[int]
+    filter: _processing_pb2.ProcessingItemsFilter
+    def __init__(self, filter: _Optional[_Union[_processing_pb2.ProcessingItemsFilter, _Mapping]] = ...) -> None: ...
+
+class GetProcessingItemsResponse(_message.Message):
+    __slots__ = ("items",)
+    ITEMS_FIELD_NUMBER: _ClassVar[int]
+    items: _containers.RepeatedCompositeFieldContainer[_processing_pb2.ProcessingItem]
+    def __init__(self, items: _Optional[_Iterable[_Union[_processing_pb2.ProcessingItem, _Mapping]]] = ...) -> None: ...

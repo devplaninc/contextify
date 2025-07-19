@@ -2,15 +2,14 @@ import logging
 import subprocess
 from abc import abstractmethod
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, Optional
 
 from github import Auth
 from github import Github
 
 from dev_observer.api.types.repo_pb2 import GitProperties, GitMeta
-from dev_observer.repository.types import ObservedRepo
-from dev_observer.repository.parser import parse_github_url
 from dev_observer.repository.provider import GitRepositoryProvider, RepositoryInfo
+from dev_observer.repository.types import ObservedRepo
 from dev_observer.repository.util import get_valid_repo_meta
 from dev_observer.storage.provider import StorageProvider
 
@@ -62,15 +61,15 @@ class GithubProvider(GitRepositoryProvider):
             size_kb=meta.size_kb,
         )
 
-    async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str):
+    async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str, depth: Optional[str] = None):
         token = await self._auth_provider.get_cli_token_prefix(repo)
         clone_url = info.clone_url.replace("https://", f"https://{token}@")
-        result = subprocess.run(
-            ["git", "clone", "--depth=1", clone_url, dest],
-            capture_output=True,
-            text=True,
-            check=False
-        )
+        cmd = ["git", "clone"]
+        if depth is not None:
+            cmd.append(f"--depth={depth}")
+        cmd.append(clone_url)
+        cmd.append(dest)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
         if result.returncode != 0:
             raise RuntimeError(f"Failed to clone repository: {result.stderr}")

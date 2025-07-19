@@ -1,6 +1,6 @@
 import dataclasses
 from abc import abstractmethod
-from typing import Protocol
+from typing import Protocol, Optional
 
 from dev_observer.repository.types import ObservedRepo
 
@@ -19,5 +19,5 @@ class GitRepositoryProvider(Protocol):
         ...
 
     @abstractmethod
-    async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str):
+    async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str, depth: Optional[str] = None):
         ...

@@ -3,6 +3,8 @@ syntax = "proto3";
 package dev_observer.api.web.observations;
 
 import "dev_observer/api/types/observations.proto";
+import "dev_observer/api/types/processing.proto";
+import "google/protobuf/timestamp.proto";
 
 message GetObservationsResponse {
   repeated dev_observer.api.types.observations.ObservationKey keys = 1;
@@ -10,4 +12,58 @@ message GetObservationsResponse {
 
 message GetObservationResponse {
   dev_observer.api.types.observations.Observation observation = 1;
+}
+
+message GetProcessingResultsRequest {
+  // Defaults to "to - 7d"
+  optional google.protobuf.Timestamp from_date = 1;
+  // Default to "now"
+  optional google.protobuf.Timestamp to_date = 2;
+  dev_observer.api.types.processing.ProcessingResultFilter filter = 3;
+}
+
+message GetProcessingResultsResponse {
+  repeated dev_observer.api.types.processing.ProcessingItemResult results = 1;
+}
+
+message GetProcessingResultResponse {
+  optional dev_observer.api.types.processing.ProcessingItemResult result = 1;
+}
+
+message CreateProcessingItemRequest {
+  dev_observer.api.types.processing.ProcessingItemKey key = 1;
+  optional dev_observer.api.types.processing.ProcessingRequest request = 2;
+  bool process_immediately = 3;
+}
+
+message CreateProcessingItemResponse {
+}
+
+message DeleteProcessingItemRequest {
+  dev_observer.api.types.processing.ProcessingItemKey key = 1;
+}
+
+message DeleteProcessingItemResponse {
+}
+
+message RunProcessingRequest {
+  // Must be a globally unique UUID
+  string request_id = 1;
+  dev_observer.api.types.processing.ProcessingRequest request = 2;
+}
+
+message RunProcessingResponse {
+}
+
+message GetProcessingRunStatusResponse {
+  optional dev_observer.api.types.processing.ProcessingItemResult result = 1;
+  optional dev_observer.api.types.processing.ProcessingItem item = 2;
+}
+
+message GetProcessingItemsRequest {
+  dev_observer.api.types.processing.ProcessingItemsFilter filter = 1;
+}
+
+message GetProcessingItemsResponse {
+  repeated dev_observer.api.types.processing.ProcessingItem items = 1;
 }

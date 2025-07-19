@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package dev_observer.api.types.schedule;
+
+message Schedule {
+  Frequency frequency = 1;
+}
+
+message Frequency {
+  oneof type {
+    Daily daily = 100;
+    Weekly weekly = 101;
+  }
+
+  message Daily {
+    Time time = 1;
+  }
+
+  message Weekly {
+    DayOfWeek day_of_week = 1;
+    Time time = 2;
+  }
+}
+
+enum DayOfWeek {
+  DAY_OF_WEEK_UNSPECIFIED = 0;
+  MONDAY = 1;
+  TUESDAY = 2;
+  WEDNESDAY = 3;
+  THURSDAY = 4;
+  FRIDAY = 5;
+  SATURDAY = 6;
+  SUNDAY = 7;
+}
+
+message TimeOfDay {
+  // Hours of day in 24 hour format. Should be from 0 to 23. An API may choose
+  // to allow the value "24:00:00" for scenarios like business closing time.
+  int32 hours = 1;
+
+  // Minutes of hour of day. Must be from 0 to 59.
+  int32 minutes = 2;
+
+  // Seconds of minutes of the time. Must normally be from 0 to 59. An API may
+  // allow the value 60 if it allows leap-seconds.
+  int32 seconds = 3;
+
+  // Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999.
+  int32 nanos = 4;
+}
+
+message Time {
+  TimeOfDay time_of_day = 1;
+  TimeZone time_zone = 2;
+}
+
+// Represents a time zone from the
+// [IANA Time Zone Database](https://www.iana.org/time-zones).
+message TimeZone {
+  // IANA Time Zone Database time zone, e.g. "America/New_York".
+  string id = 1;
+}

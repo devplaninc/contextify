@@ -15,6 +15,8 @@ import {useEffect, useState} from "react";
 import {Loader} from "@/components/Loader.tsx";
 import {ErrorAlert} from "@/components/ErrorAlert.tsx";
 import {ClerkProvider} from "@/auth/ClerkProvider.tsx";
+import {ProcessingResultPage} from "@/pages/ProcessingResultPage.tsx";
+import {processingResultPath} from "@/paths.tsx";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -67,6 +69,8 @@ function AppRoutes() {
     <Route path="/repositories/:id" element={<RepositoryDetailsPage/>}/>
     <Route path="/websites" element={<WebSitesListPage/>}/>
     <Route path="/websites/:id" element={<WebSiteDetailsPage/>}/>
+    <Route path={processingResultPath(":id")} element={<ProcessingResultPage/>}/>
+
     <Route path="/admin/config-editor" element={<GlobalConfigEditorPage/>}/>
     <Route path="/" element={<Navigate to="/repositories" replace/>}/>
     <Route path="*" element={<Navigate to="/repositories" replace/>}/>

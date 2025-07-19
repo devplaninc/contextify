@@ -19,6 +19,9 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog.tsx";
 import {RepoAnalysisList} from "@/components/repos/RepoAnalysisList.tsx";
+import {ProcessingResults} from "@/components/processing/ProcessingResults.tsx";
+import {RequestRepoChangesSummaryButton} from "@/components/processing/RequestRepoChangesSummaryButton.tsx";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs.tsx";
 
 const RepositoryDetailsPage: React.FC = () => {
   const {id} = useParams<{ id: string }>();
@@ -48,30 +51,45 @@ const RepositoryDetailsPage: React.FC = () => {
           <p className="text-lg">Loading repository details...</p>
         </div>
       ) : repository ? (
-        <div>
-          <h1 className="text-3xl font-bold mb-6">{repository.name}</h1>
+        <div className="space-y-8">
+          <h1 className="text-3xl font-bold">{repository.name}</h1>
 
-          <Card className="mb-8">
+          <Card>
             <CardHeader>
               <CardTitle>Repository Information</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <RepoProp name="URL" value={repository.url}/>
-                <RepoProp name="Full Name" value={repository.fullName}/>
-                <RepoProp name="Description" value={repository.description}/>
-                <RepoProp name="ID" value={repository.id}/>
-                <RepoProp name="Installation id" value={repository.properties?.appInfo?.installationId}/>
-                <RepoProp name="Size Kb" value={repository.properties?.meta?.sizeKb}/>
+              <div className="space-y-2 text-sm">
+                <RepoProp name="URL">{repository.url}</RepoProp>
+                <RepoProp name="Full Name">{repository.fullName}</RepoProp>
+                <RepoProp name="Description">{repository.description}</RepoProp>
+                <RepoProp name="ID">{repository.id}</RepoProp>
+                <RepoProp name="Installation id">{repository.properties?.appInfo?.installationId}</RepoProp>
+                <RepoProp name="Size Kb">{repository.properties?.meta?.sizeKb}</RepoProp>
                 <div className="flex gap-2 items-center">
                   <DeleteRepoButton repoId={id!}/>
-                  <Button onClick={rescan}>Rescan</Button>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-          <RepoAnalysisList repo={repository}/>
+          <Tabs defaultValue="analysis" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="analysis">Repo Analysis</TabsTrigger>
+              <TabsTrigger value="changes">Change Reports</TabsTrigger>
+            </TabsList>
+            <TabsContent value="analysis">
+              <div className="space-y-4">
+                <Button onClick={rescan}>Rescan</Button>
+                <RepoAnalysisList repo={repository}/>
+              </div>
+            </TabsContent>
+            <TabsContent value="changes">
+              <div className="space-y-4">
+                <RequestRepoChangesSummaryButton gitRepoId={repository.id}/>
+                <ProcessingResults referenceId={repository.id}/>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       ) : (
         <div className="bg-muted p-8 rounded-lg text-center">
@@ -88,10 +106,13 @@ const RepositoryDetailsPage: React.FC = () => {
   );
 };
 
-function RepoProp({name, value}: { name: ReactNode, value: ReactNode }) {
+function RepoProp({name, children}: { name: ReactNode, children: ReactNode }) {
+  if (!children) {
+    return null;
+  }
   return <div className="flex gap-2 items-center">
     <h3 className="text-sm font-medium text-muted-foreground">{name}:</h3>
-    <p className="break-all">{value}</p>
+    <div>{children}</div>
   </div>
 }
 

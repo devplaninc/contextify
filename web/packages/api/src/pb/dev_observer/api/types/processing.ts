@@ -7,11 +7,23 @@
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { Timestamp } from "../../../google/protobuf/timestamp";
+import { ObservationKey } from "./observations";
+import { Schedule } from "./schedule";
 
 export const protobufPackage = "dev_observer.api.types.processing";
 
 export interface ProcessingItemKey {
-  entity?: { $case: "githubRepoId"; value: string } | { $case: "websiteUrl"; value: string } | undefined;
+  entity?:
+    | //
+    /** Repo summary processing. */
+    { $case: "githubRepoId"; value: string }
+    | //
+    /** Website summary processing. */
+    { $case: "websiteUrl"; value: string }
+    | //
+    /** One-off request */
+    { $case: "requestId"; value: string }
+    | undefined;
 }
 
 export interface ProcessingItem {
@@ -20,6 +32,44 @@ export interface ProcessingItem {
   lastProcessed?: Date | undefined;
   lastError?: string | undefined;
   noProcessing: boolean;
+  request?: ProcessingRequest | undefined;
+  schedule?: Schedule | undefined;
+  processingStartedAt?: Date | undefined;
+}
+
+export interface ProcessingRequest {
+  createdBy: string;
+  namespace: string;
+  /** Free form indexed reference id that may be useful for connecting request to a specific repo or other entity. */
+  referenceId: string;
+  type?: { $case: "gitChanges"; value: ProcessGitChangesRequest } | undefined;
+}
+
+export interface ProcessGitChangesRequest {
+  gitRepoId: string;
+  lookBackDays: number;
+}
+
+export interface ProcessingItemResult {
+  /** Unique id of the result */
+  id: string;
+  key: ProcessingItemKey | undefined;
+  observations: ObservationKey[];
+  errorMessage?: string | undefined;
+  createdAt: Date | undefined;
+  request?: ProcessingRequest | undefined;
+}
+
+export interface ProcessingResultFilter {
+  namespace?: string | undefined;
+  referenceId?: string | undefined;
+  requestType?: string | undefined;
+}
+
+export interface ProcessingItemsFilter {
+  namespace?: string | undefined;
+  referenceId?: string | undefined;
+  requestType?: string | undefined;
 }
 
 function createBaseProcessingItemKey(): ProcessingItemKey {
@@ -34,6 +84,9 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
         break;
       case "websiteUrl":
         writer.uint32(810).string(message.entity.value);
+        break;
+      case "requestId":
+        writer.uint32(818).string(message.entity.value);
         break;
     }
     return writer;
@@ -62,6 +115,14 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
           message.entity = { $case: "websiteUrl", value: reader.string() };
           continue;
         }
+        case 102: {
+          if (tag !== 818) {
+            break;
+          }
+
+          message.entity = { $case: "requestId", value: reader.string() };
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -77,6 +138,8 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
         ? { $case: "githubRepoId", value: gt.String(object.githubRepoId) }
         : isSet(object.websiteUrl)
         ? { $case: "websiteUrl", value: gt.String(object.websiteUrl) }
+        : isSet(object.requestId)
+        ? { $case: "requestId", value: gt.String(object.requestId) }
         : undefined,
     };
   },
@@ -87,6 +150,8 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
       obj.githubRepoId = message.entity.value;
     } else if (message.entity?.$case === "websiteUrl") {
       obj.websiteUrl = message.entity.value;
+    } else if (message.entity?.$case === "requestId") {
+      obj.requestId = message.entity.value;
     }
     return obj;
   },
@@ -109,6 +174,12 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
         }
         break;
       }
+      case "requestId": {
+        if (object.entity?.value !== undefined && object.entity?.value !== null) {
+          message.entity = { $case: "requestId", value: object.entity.value };
+        }
+        break;
+      }
     }
     return message;
   },
@@ -121,6 +192,9 @@ function createBaseProcessingItem(): ProcessingItem {
     lastProcessed: undefined,
     lastError: undefined,
     noProcessing: false,
+    request: undefined,
+    schedule: undefined,
+    processingStartedAt: undefined,
   };
 }
 
@@ -140,6 +214,15 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     }
     if (message.noProcessing !== false) {
       writer.uint32(40).bool(message.noProcessing);
+    }
+    if (message.request !== undefined) {
+      ProcessingRequest.encode(message.request, writer.uint32(50).fork()).join();
+    }
+    if (message.schedule !== undefined) {
+      Schedule.encode(message.schedule, writer.uint32(58).fork()).join();
+    }
+    if (message.processingStartedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.processingStartedAt), writer.uint32(66).fork()).join();
     }
     return writer;
   },
@@ -191,6 +274,30 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
           message.noProcessing = reader.bool();
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.request = ProcessingRequest.decode(reader, reader.uint32());
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.schedule = Schedule.decode(reader, reader.uint32());
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.processingStartedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -207,6 +314,11 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
       lastProcessed: isSet(object.lastProcessed) ? fromJsonTimestamp(object.lastProcessed) : undefined,
       lastError: isSet(object.lastError) ? gt.String(object.lastError) : undefined,
       noProcessing: isSet(object.noProcessing) ? gt.Boolean(object.noProcessing) : false,
+      request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
+      schedule: isSet(object.schedule) ? Schedule.fromJSON(object.schedule) : undefined,
+      processingStartedAt: isSet(object.processingStartedAt)
+        ? fromJsonTimestamp(object.processingStartedAt)
+        : undefined,
     };
   },
 
@@ -227,6 +339,15 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     if (message.noProcessing !== false) {
       obj.noProcessing = message.noProcessing;
     }
+    if (message.request !== undefined) {
+      obj.request = ProcessingRequest.toJSON(message.request);
+    }
+    if (message.schedule !== undefined) {
+      obj.schedule = Schedule.toJSON(message.schedule);
+    }
+    if (message.processingStartedAt !== undefined) {
+      obj.processingStartedAt = message.processingStartedAt.toISOString();
+    }
     return obj;
   },
 
@@ -242,6 +363,545 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     message.lastProcessed = object.lastProcessed ?? undefined;
     message.lastError = object.lastError ?? undefined;
     message.noProcessing = object.noProcessing ?? false;
+    message.request = (object.request !== undefined && object.request !== null)
+      ? ProcessingRequest.fromPartial(object.request)
+      : undefined;
+    message.schedule = (object.schedule !== undefined && object.schedule !== null)
+      ? Schedule.fromPartial(object.schedule)
+      : undefined;
+    message.processingStartedAt = object.processingStartedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBaseProcessingRequest(): ProcessingRequest {
+  return { createdBy: "", namespace: "", referenceId: "", type: undefined };
+}
+
+export const ProcessingRequest: MessageFns<ProcessingRequest> = {
+  encode(message: ProcessingRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.createdBy !== "") {
+      writer.uint32(10).string(message.createdBy);
+    }
+    if (message.namespace !== "") {
+      writer.uint32(18).string(message.namespace);
+    }
+    if (message.referenceId !== "") {
+      writer.uint32(26).string(message.referenceId);
+    }
+    switch (message.type?.$case) {
+      case "gitChanges":
+        ProcessGitChangesRequest.encode(message.type.value, writer.uint32(802).fork()).join();
+        break;
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProcessingRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProcessingRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.createdBy = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.namespace = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.referenceId = reader.string();
+          continue;
+        }
+        case 100: {
+          if (tag !== 802) {
+            break;
+          }
+
+          message.type = { $case: "gitChanges", value: ProcessGitChangesRequest.decode(reader, reader.uint32()) };
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProcessingRequest {
+    return {
+      createdBy: isSet(object.createdBy) ? gt.String(object.createdBy) : "",
+      namespace: isSet(object.namespace) ? gt.String(object.namespace) : "",
+      referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : "",
+      type: isSet(object.gitChanges)
+        ? { $case: "gitChanges", value: ProcessGitChangesRequest.fromJSON(object.gitChanges) }
+        : undefined,
+    };
+  },
+
+  toJSON(message: ProcessingRequest): unknown {
+    const obj: any = {};
+    if (message.createdBy !== "") {
+      obj.createdBy = message.createdBy;
+    }
+    if (message.namespace !== "") {
+      obj.namespace = message.namespace;
+    }
+    if (message.referenceId !== "") {
+      obj.referenceId = message.referenceId;
+    }
+    if (message.type?.$case === "gitChanges") {
+      obj.gitChanges = ProcessGitChangesRequest.toJSON(message.type.value);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ProcessingRequest>): ProcessingRequest {
+    return ProcessingRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ProcessingRequest>): ProcessingRequest {
+    const message = createBaseProcessingRequest();
+    message.createdBy = object.createdBy ?? "";
+    message.namespace = object.namespace ?? "";
+    message.referenceId = object.referenceId ?? "";
+    switch (object.type?.$case) {
+      case "gitChanges": {
+        if (object.type?.value !== undefined && object.type?.value !== null) {
+          message.type = { $case: "gitChanges", value: ProcessGitChangesRequest.fromPartial(object.type.value) };
+        }
+        break;
+      }
+    }
+    return message;
+  },
+};
+
+function createBaseProcessGitChangesRequest(): ProcessGitChangesRequest {
+  return { gitRepoId: "", lookBackDays: 0 };
+}
+
+export const ProcessGitChangesRequest: MessageFns<ProcessGitChangesRequest> = {
+  encode(message: ProcessGitChangesRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.gitRepoId !== "") {
+      writer.uint32(10).string(message.gitRepoId);
+    }
+    if (message.lookBackDays !== 0) {
+      writer.uint32(16).int32(message.lookBackDays);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProcessGitChangesRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProcessGitChangesRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.gitRepoId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.lookBackDays = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProcessGitChangesRequest {
+    return {
+      gitRepoId: isSet(object.gitRepoId) ? gt.String(object.gitRepoId) : "",
+      lookBackDays: isSet(object.lookBackDays) ? gt.Number(object.lookBackDays) : 0,
+    };
+  },
+
+  toJSON(message: ProcessGitChangesRequest): unknown {
+    const obj: any = {};
+    if (message.gitRepoId !== "") {
+      obj.gitRepoId = message.gitRepoId;
+    }
+    if (message.lookBackDays !== 0) {
+      obj.lookBackDays = Math.round(message.lookBackDays);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ProcessGitChangesRequest>): ProcessGitChangesRequest {
+    return ProcessGitChangesRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ProcessGitChangesRequest>): ProcessGitChangesRequest {
+    const message = createBaseProcessGitChangesRequest();
+    message.gitRepoId = object.gitRepoId ?? "";
+    message.lookBackDays = object.lookBackDays ?? 0;
+    return message;
+  },
+};
+
+function createBaseProcessingItemResult(): ProcessingItemResult {
+  return {
+    id: "",
+    key: undefined,
+    observations: [],
+    errorMessage: undefined,
+    createdAt: undefined,
+    request: undefined,
+  };
+}
+
+export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
+  encode(message: ProcessingItemResult, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.key !== undefined) {
+      ProcessingItemKey.encode(message.key, writer.uint32(18).fork()).join();
+    }
+    for (const v of message.observations) {
+      ObservationKey.encode(v!, writer.uint32(26).fork()).join();
+    }
+    if (message.errorMessage !== undefined) {
+      writer.uint32(34).string(message.errorMessage);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(42).fork()).join();
+    }
+    if (message.request !== undefined) {
+      ProcessingRequest.encode(message.request, writer.uint32(50).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProcessingItemResult {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProcessingItemResult();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.key = ProcessingItemKey.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.observations.push(ObservationKey.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.errorMessage = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.request = ProcessingRequest.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProcessingItemResult {
+    return {
+      id: isSet(object.id) ? gt.String(object.id) : "",
+      key: isSet(object.key) ? ProcessingItemKey.fromJSON(object.key) : undefined,
+      observations: gt.Array.isArray(object?.observations)
+        ? object.observations.map((e: any) => ObservationKey.fromJSON(e))
+        : [],
+      errorMessage: isSet(object.errorMessage) ? gt.String(object.errorMessage) : undefined,
+      createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
+      request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
+    };
+  },
+
+  toJSON(message: ProcessingItemResult): unknown {
+    const obj: any = {};
+    if (message.id !== "") {
+      obj.id = message.id;
+    }
+    if (message.key !== undefined) {
+      obj.key = ProcessingItemKey.toJSON(message.key);
+    }
+    if (message.observations?.length) {
+      obj.observations = message.observations.map((e) => ObservationKey.toJSON(e));
+    }
+    if (message.errorMessage !== undefined) {
+      obj.errorMessage = message.errorMessage;
+    }
+    if (message.createdAt !== undefined) {
+      obj.createdAt = message.createdAt.toISOString();
+    }
+    if (message.request !== undefined) {
+      obj.request = ProcessingRequest.toJSON(message.request);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ProcessingItemResult>): ProcessingItemResult {
+    return ProcessingItemResult.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ProcessingItemResult>): ProcessingItemResult {
+    const message = createBaseProcessingItemResult();
+    message.id = object.id ?? "";
+    message.key = (object.key !== undefined && object.key !== null)
+      ? ProcessingItemKey.fromPartial(object.key)
+      : undefined;
+    message.observations = object.observations?.map((e) => ObservationKey.fromPartial(e)) || [];
+    message.errorMessage = object.errorMessage ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.request = (object.request !== undefined && object.request !== null)
+      ? ProcessingRequest.fromPartial(object.request)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseProcessingResultFilter(): ProcessingResultFilter {
+  return { namespace: undefined, referenceId: undefined, requestType: undefined };
+}
+
+export const ProcessingResultFilter: MessageFns<ProcessingResultFilter> = {
+  encode(message: ProcessingResultFilter, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.namespace !== undefined) {
+      writer.uint32(10).string(message.namespace);
+    }
+    if (message.referenceId !== undefined) {
+      writer.uint32(18).string(message.referenceId);
+    }
+    if (message.requestType !== undefined) {
+      writer.uint32(26).string(message.requestType);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProcessingResultFilter {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProcessingResultFilter();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.namespace = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.referenceId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.requestType = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProcessingResultFilter {
+    return {
+      namespace: isSet(object.namespace) ? gt.String(object.namespace) : undefined,
+      referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : undefined,
+      requestType: isSet(object.requestType) ? gt.String(object.requestType) : undefined,
+    };
+  },
+
+  toJSON(message: ProcessingResultFilter): unknown {
+    const obj: any = {};
+    if (message.namespace !== undefined) {
+      obj.namespace = message.namespace;
+    }
+    if (message.referenceId !== undefined) {
+      obj.referenceId = message.referenceId;
+    }
+    if (message.requestType !== undefined) {
+      obj.requestType = message.requestType;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ProcessingResultFilter>): ProcessingResultFilter {
+    return ProcessingResultFilter.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ProcessingResultFilter>): ProcessingResultFilter {
+    const message = createBaseProcessingResultFilter();
+    message.namespace = object.namespace ?? undefined;
+    message.referenceId = object.referenceId ?? undefined;
+    message.requestType = object.requestType ?? undefined;
+    return message;
+  },
+};
+
+function createBaseProcessingItemsFilter(): ProcessingItemsFilter {
+  return { namespace: undefined, referenceId: undefined, requestType: undefined };
+}
+
+export const ProcessingItemsFilter: MessageFns<ProcessingItemsFilter> = {
+  encode(message: ProcessingItemsFilter, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.namespace !== undefined) {
+      writer.uint32(10).string(message.namespace);
+    }
+    if (message.referenceId !== undefined) {
+      writer.uint32(18).string(message.referenceId);
+    }
+    if (message.requestType !== undefined) {
+      writer.uint32(26).string(message.requestType);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProcessingItemsFilter {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProcessingItemsFilter();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.namespace = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.referenceId = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.requestType = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProcessingItemsFilter {
+    return {
+      namespace: isSet(object.namespace) ? gt.String(object.namespace) : undefined,
+      referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : undefined,
+      requestType: isSet(object.requestType) ? gt.String(object.requestType) : undefined,
+    };
+  },
+
+  toJSON(message: ProcessingItemsFilter): unknown {
+    const obj: any = {};
+    if (message.namespace !== undefined) {
+      obj.namespace = message.namespace;
+    }
+    if (message.referenceId !== undefined) {
+      obj.referenceId = message.referenceId;
+    }
+    if (message.requestType !== undefined) {
+      obj.requestType = message.requestType;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ProcessingItemsFilter>): ProcessingItemsFilter {
+    return ProcessingItemsFilter.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ProcessingItemsFilter>): ProcessingItemsFilter {
+    const message = createBaseProcessingItemsFilter();
+    message.namespace = object.namespace ?? undefined;
+    message.referenceId = object.referenceId ?? undefined;
+    message.requestType = object.requestType ?? undefined;
     return message;
   },
 };

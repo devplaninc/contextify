@@ -32,6 +32,34 @@ export function observationAPI<K extends string, N extends string, C extends str
   return `${baseAPI()}/observation/${kind}/${encodeURIComponent(name)}/${enc(key)}` as const;
 }
 
+export function processingItemsAPI() {
+  return `${baseAPI()}/processing/items` as const;
+}
+
+export function processingItemsFilterAPI() {
+  return `${processingItemsAPI()}/filter` as const;
+}
+
+export function processingResultsAPI() {
+  return `${baseAPI()}/processing/results` as const;
+}
+
+export function processingResultAPI<I extends string>(id: I) {
+  return `${processingResultsAPI()}/${id}` as const;
+}
+
+export function processingRequestsAPI() {
+  return `${baseAPI()}/processing/requests` as const;
+}
+
+export function processingRequestRunsAPI() {
+  return `${processingRequestsAPI()}/runs` as const;
+}
+
+export function processingRequestRunAPI<R extends string>(requestId: R) {
+  return `${processingRequestRunsAPI()}/${requestId}` as const;
+}
+
 // Encodes as base64
 function enc(v: string): string {
   // TODO: perform safe encoding

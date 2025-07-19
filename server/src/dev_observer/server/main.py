@@ -41,7 +41,7 @@ auth_middleware = AuthMiddleware(env.users, env.api_keys)
 # Create services
 config_service = ConfigService(env.storage, env.users)
 repos_service = RepositoriesService(env.storage)
-observations_service = ObservationsService(env.observations)
+observations_service = ObservationsService(env.observations, env.storage)
 websites_service = WebSitesService(env.storage)
 
 # Include routers with authentication

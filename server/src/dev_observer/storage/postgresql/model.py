@@ -61,6 +61,10 @@ class ProcessingItemEntity(Base):
     next_processing: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True))
     last_processed: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True))
     last_error: Mapped[Optional[str]]
+    namespace: Mapped[Optional[str]] = mapped_column(index=True, default=None)
+    created_by: Mapped[Optional[str]] = mapped_column(index=True, default=None)
+    reference_id: Mapped[Optional[str]] = mapped_column(index=True, default=None)
+    request_type: Mapped[Optional[str]] = mapped_column(index=True, default=None)
     no_processing: Mapped[bool] = mapped_column(default=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
@@ -73,6 +77,10 @@ class ProcessingItemEntity(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False
+    )
+    processing_started_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
     )
 
     def __repr__(self):
@@ -100,3 +108,24 @@ class WebsiteEntity(Base):
 
     def __repr__(self):
         return f"WebsiteEntity(id={self.id}, json_data={self.json_data})"
+
+
+class ProcessingItemResultEntity(Base):
+    __tablename__ = "processing_item_result"
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(index=True)
+    json_data: Mapped[str]
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+    error_message: Mapped[Optional[str]] = mapped_column(default=None)
+    created_by: Mapped[Optional[str]] = mapped_column(default=None)
+    namespace: Mapped[Optional[str]] = mapped_column(default=None)
+    reference_id: Mapped[Optional[str]] = mapped_column(index=True, default=None)
+    request_type: Mapped[Optional[str]] = mapped_column(index=True, default=None)
+
+    def __repr__(self):
+        return f"ProcessingItemResultEntity(id={self.id}, key={self.key}, json_data={self.json_data})"

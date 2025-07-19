@@ -1,10 +1,10 @@
-import { BaseClient } from './base';
+import {BaseClient} from './base';
 import {
   AddGithubRepositoryRequest,
   AddGithubRepositoryResponse,
-  ListGithubRepositoriesResponse,
-  GetRepositoryResponse,
   DeleteRepositoryResponse,
+  GetRepositoryResponse,
+  ListGithubRepositoriesResponse,
   RescanRepositoryResponse
 } from '../pb/dev_observer/api/web/repositories';
 

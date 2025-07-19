@@ -1,0 +1,12 @@
+[system]
+text ='''You will be given combined analysis of different parts of a repository diff over a period of time. Combine that into a single cohesive description without loosing any important details.
+'''
+[user]
+text = '''Here are the summaries of different chunks of a diff:
+
+{{content}}
+'''
+[config.model]
+provider="google_genai"
+model_name="gemini-2.0-flash-lite"
+temperature=0.1

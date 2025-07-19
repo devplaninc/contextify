@@ -1,5 +1,6 @@
 import os.path
 import subprocess
+from typing import Optional
 
 from dev_observer.repository.types import ObservedRepo
 from dev_observer.repository.parser import parse_github_url
@@ -23,7 +24,7 @@ class CopyingGitRepositoryProvider(GitRepositoryProvider):
             size_kb=500,
         )
 
-    async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str):
+    async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str, depth: Optional[str] = None):
         repo_root = _get_git_root()
         if self._shallow:
             subprocess.run(

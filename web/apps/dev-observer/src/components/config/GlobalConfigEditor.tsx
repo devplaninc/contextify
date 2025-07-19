@@ -24,6 +24,7 @@ const analysisConfigSchema = z.object({
   repoAnalyzers: z.array(analyzerSchema),
   siteAnalyzers: z.array(analyzerSchema),
   disableMasking: z.boolean(),
+  defaultGitChangesAnalyzer: analyzerSchema.optional(),
 })
 
 const repoAnalysisConfigFlattenSchema = z.object({
@@ -78,7 +79,7 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
     defaultValues: config,
   });
   const onSubmit = useCallback((values: globalConfigType) => {
-    console.log("Submitting", {values})
+      console.log("Submitting", {values})
       updateGlobalConfig(values)
         .then(() => toast.success("Config updated"))
         .catch(e => {
@@ -150,6 +151,49 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
         </Button>
       </div>
       <Separator/>
+      <div className="border rounded-md p-4 space-y-4">
+        <h1>Default git changes analyzer</h1>
+        <FormField
+          control={form.control}
+          name={`analysis.defaultGitChangesAnalyzer.name`}
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[100px]">Name:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input placeholder="Analyzer name" {...field}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name={`analysis.defaultGitChangesAnalyzer.promptPrefix`}
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[100px]">Prompt Prefix:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input placeholder="Analyzer prompt prefix" {...field}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name={`analysis.defaultGitChangesAnalyzer.fileName`}
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[100px]">File Name:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input placeholder="Analyzer file name" {...field}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+      </div>
+      <Separator/>
 
       <div className="space-y-4">
         <h2 className="font-semibold text-lg">Site Analyzers:</h2>
@@ -213,7 +257,7 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
         render={({field}) => <FormItem>
           <div className="flex items-center gap-2">
             <FormControl>
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+              <Checkbox checked={field.value} onCheckedChange={field.onChange}/>
             </FormControl>
             <FormLabel>Disable Traces Masking</FormLabel>
           </div>
