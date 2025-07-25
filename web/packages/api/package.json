@@ -1,6 +1,6 @@
 {
   "name": "@devplan/observer-api",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "API for dev-observer",
   "type": "module",
   "main": "dist/index.cjs",
