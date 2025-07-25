@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {usersStatusAPI} from '@/store/apiPaths.tsx';
-import {GetUserManagementStatusResponse} from "@devplan/observer-api";
-import type { UserManagementStatus } from "@devplan/observer-api";
+import {GetUserManagementStatusResponse} from "@devplan/contextify-api";
+import type { UserManagementStatus } from "@devplan/contextify-api";
 
 export function useUserManagementStatus() {
   const [status, setStatus] = useState<UserManagementStatus | undefined>(undefined);

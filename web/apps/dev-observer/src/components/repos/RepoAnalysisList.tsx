@@ -1,4 +1,4 @@
-import type {GitHubRepository} from "@devplan/observer-api";
+import type {GitHubRepository} from "@devplan/contextify-api";
 import {AnalysisList} from "@/components/analysis/AnalysisList.tsx";
 
 export function RepoAnalysisList({repo}: { repo: GitHubRepository }) {

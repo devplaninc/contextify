@@ -1,4 +1,4 @@
-import type {ObservationKey} from "@devplan/observer-api";
+import type {ObservationKey} from "@devplan/contextify-api";
 import {useBoundStore} from "@/store/use-bound-store.tsx";
 import {useShallow} from "zustand/react/shallow";
 import {Loader} from "@/components/Loader.tsx";

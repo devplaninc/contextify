@@ -5,7 +5,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { WebSite } from "@devplan/observer-api";
+import { WebSite } from "@devplan/contextify-api";
 import { useWebsites } from "@/hooks/useWebsiteQueries.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { ErrorAlert } from "@/components/ErrorAlert.tsx";

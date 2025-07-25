@@ -1,7 +1,7 @@
 import {useProcessingResultsForNamespace} from "@/components/processing/use-processing.tsx";
 import {ErrorAlert} from "@/components/ErrorAlert.tsx";
 import {Loader} from "@/components/Loader.tsx";
-import type {ProcessingItemResult, ProcessingResultFilter} from "@devplan/observer-api";
+import type {ProcessingItemResult, ProcessingResultFilter} from "@devplan/contextify-api";
 import {Link} from "react-router";
 import {processingResultPath} from "@/paths.tsx";
 import {ProcessingResultHeader} from "@/components/processing/ProcessingResult.tsx";

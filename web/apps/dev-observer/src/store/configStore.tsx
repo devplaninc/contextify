@@ -1,10 +1,10 @@
-import type {GlobalConfig, UserManagementStatus} from "@devplan/observer-api";
+import type {GlobalConfig, UserManagementStatus} from "@devplan/contextify-api";
 import {
   GetGlobalConfigResponse,
   GetUserManagementStatusResponse,
   UpdateGlobalConfigRequest,
   UpdateGlobalConfigResponse
-} from "@devplan/observer-api";
+} from "@devplan/contextify-api";
 import type {StateCreator} from "zustand";
 import {configAPI, usersStatusAPI} from "@/store/apiPaths.tsx";
 import {fetchWithAuth} from "@/store/api.tsx";

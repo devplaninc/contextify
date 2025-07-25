@@ -1,7 +1,7 @@
 import {useFieldArray, useForm} from "react-hook-form";
 import {z} from "zod";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {Analyzer, GlobalConfig} from "@devplan/observer-api";
+import {Analyzer, GlobalConfig} from "@devplan/contextify-api";
 import {useCallback} from "react";
 import {useBoundStore} from "@/store/use-bound-store.tsx";
 import {toast} from "sonner";

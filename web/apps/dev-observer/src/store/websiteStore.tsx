@@ -8,7 +8,7 @@ import {
   ListWebSitesResponse,
   RescanWebSiteResponse,
   WebSite
-} from "@devplan/observer-api";
+} from "@devplan/contextify-api";
 import {fetchWithAuth} from "@/store/api.tsx";
 
 // Define API paths for websites

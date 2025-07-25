@@ -3,7 +3,7 @@ import {useCallback} from "react";
 import {useShallow} from "zustand/react/shallow";
 import {useBoundStore} from "@/store/use-bound-store.tsx";
 import type {QueryResultCommon} from "@/hooks/queries.tsx";
-import type {WebSite} from "@devplan/observer-api";
+import type {WebSite} from "@devplan/contextify-api";
 
 // Query keys for caching and invalidation
 export const websiteKeys = {

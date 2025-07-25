@@ -4,7 +4,7 @@ import {
   type Observation,
   type ObservationKey,
   type ProcessingItem, type ProcessingItemsFilter
-} from "@devplan/observer-api"
+} from "@devplan/contextify-api"
 import {
   GetObservationResponse,
   GetObservationsResponse,
@@ -15,7 +15,7 @@ import {
   GetProcessingResultResponse,
   ProcessingItemKey,
   ProcessingItemResult,
-} from "@devplan/observer-api";
+} from "@devplan/contextify-api";
 import {fetchWithAuth} from "@/store/api.tsx";
 
 export interface ObservationsState {

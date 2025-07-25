@@ -2,7 +2,7 @@ import {useBoundStore} from "@/store/use-bound-store.tsx";
 import {useCallback} from "react";
 import {useQuery} from "@tanstack/react-query";
 import {useShallow} from "zustand/react/shallow";
-import type {GlobalConfig} from "@devplan/observer-api";
+import type {GlobalConfig} from "@devplan/contextify-api";
 import type {QueryResultCommon} from "@/hooks/queries.tsx";
 
 const configKeys = {

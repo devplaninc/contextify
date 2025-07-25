@@ -1,4 +1,4 @@
-import type {ProcessGitChangesRequest, ProcessingItemResult, ProcessingRequest} from "@devplan/observer-api";
+import type {ProcessGitChangesRequest, ProcessingItemResult, ProcessingRequest} from "@devplan/contextify-api";
 import {AnalysisContents} from "@/components/analysis/AnalysisList.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 

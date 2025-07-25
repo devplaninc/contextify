@@ -1,5 +1,5 @@
 import type {ValidationError} from "@/types/repository.ts";
-import type {GitHubRepository} from "@devplan/observer-api";
+import type {GitHubRepository} from "@devplan/contextify-api";
 
 // Validate GitHub repository URL
 export const validateGitHubUrl = (url: string, repos: Record<string, GitHubRepository>): ValidationError | null => {

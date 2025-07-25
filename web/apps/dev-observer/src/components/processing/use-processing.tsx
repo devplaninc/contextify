@@ -2,7 +2,7 @@ import {useBoundStore} from "@/store/use-bound-store.tsx";
 import {useCallback} from "react";
 import {useQuery} from "@tanstack/react-query";
 import {useShallow} from "zustand/react/shallow";
-import {ProcessingItemResult, ProcessingItemsFilter, ProcessingResultFilter} from "@devplan/observer-api";
+import {ProcessingItemResult, ProcessingItemsFilter, ProcessingResultFilter} from "@devplan/contextify-api";
 
 export const processingKeys = {
   all: ['processing'] as const,

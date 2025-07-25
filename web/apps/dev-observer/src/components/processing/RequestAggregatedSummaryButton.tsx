@@ -2,7 +2,7 @@ import {Button} from "../ui/button";
 import {useCallback, useState} from "react";
 import {processingItemsAPI} from "@/store/apiPaths.tsx";
 import {fetchWithAuth} from "@/store/api.tsx";
-import {CreateProcessingItemRequest, CreateProcessingItemResponse} from "@devplan/observer-api";
+import {CreateProcessingItemRequest, CreateProcessingItemResponse} from "@devplan/contextify-api";
 import {Loader} from "@/components/Loader.tsx";
 import {toast} from "sonner";
 import {

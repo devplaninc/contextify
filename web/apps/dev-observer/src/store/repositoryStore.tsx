@@ -6,8 +6,8 @@ import {
   DeleteRepositoryResponse,
   GetRepositoryResponse,
   ListGithubRepositoriesResponse
-} from "@devplan/observer-api";
-import type {GitHubRepository} from "@devplan/observer-api";
+} from "@devplan/contextify-api";
+import type {GitHubRepository} from "@devplan/contextify-api";
 import {fetchWithAuth, VoidParser} from "@/store/api.tsx";
 
 export interface RepositoryState {

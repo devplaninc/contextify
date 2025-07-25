@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog.tsx";
 import {ErrorAlert} from "@/components/ErrorAlert.tsx";
 import {AnalysisList} from "@/components/analysis/AnalysisList.tsx";
-import {normalizeDomain} from "@devplan/observer-api";
+import {normalizeDomain} from "@devplan/contextify-api";
 
 interface WebSiteDetailsProps {
   websiteId: string;

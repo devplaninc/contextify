@@ -4,7 +4,7 @@ import {useCallback} from "react";
 import {useShallow} from "zustand/react/shallow";
 import {useBoundStore} from "@/store/use-bound-store.tsx";
 import type {QueryResultCommon} from "@/hooks/queries.tsx";
-import type {GitHubRepository} from "@devplan/observer-api";
+import type {GitHubRepository} from "@devplan/contextify-api";
 
 // Query keys for caching and invalidation
 export const repositoryKeys = {
