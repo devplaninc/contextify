@@ -23,6 +23,7 @@ export interface ProcessingItemKey {
     | //
     /** One-off request */
     { $case: "requestId"; value: string }
+    | { $case: "periodicProcessingId"; value: string }
     | undefined;
 }
 
@@ -33,8 +34,20 @@ export interface ProcessingItem {
   lastError?: string | undefined;
   noProcessing: boolean;
   request?: ProcessingRequest | undefined;
-  schedule?: Schedule | undefined;
   processingStartedAt?: Date | undefined;
+  periodicProcessing?: PeriodicProcessing | undefined;
+}
+
+export interface PeriodicProcessing {
+  folderPrefix: string;
+  lookBackDays: number;
+  endDate: Date | undefined;
+  target: PeriodicProcessing_Target | undefined;
+  schedule: Schedule | undefined;
+}
+
+export interface PeriodicProcessing_Target {
+  gitRepoIds: string[];
 }
 
 export interface ProcessingRequest {
@@ -58,6 +71,7 @@ export interface ProcessingItemResult {
   errorMessage?: string | undefined;
   createdAt: Date | undefined;
   request?: ProcessingRequest | undefined;
+  periodicProcessing?: PeriodicProcessing | undefined;
 }
 
 export interface ProcessingResultFilter {
@@ -87,6 +101,9 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
         break;
       case "requestId":
         writer.uint32(818).string(message.entity.value);
+        break;
+      case "periodicProcessingId":
+        writer.uint32(826).string(message.entity.value);
         break;
     }
     return writer;
@@ -123,6 +140,14 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
           message.entity = { $case: "requestId", value: reader.string() };
           continue;
         }
+        case 103: {
+          if (tag !== 826) {
+            break;
+          }
+
+          message.entity = { $case: "periodicProcessingId", value: reader.string() };
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -140,6 +165,8 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
         ? { $case: "websiteUrl", value: gt.String(object.websiteUrl) }
         : isSet(object.requestId)
         ? { $case: "requestId", value: gt.String(object.requestId) }
+        : isSet(object.periodicProcessingId)
+        ? { $case: "periodicProcessingId", value: gt.String(object.periodicProcessingId) }
         : undefined,
     };
   },
@@ -152,6 +179,8 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
       obj.websiteUrl = message.entity.value;
     } else if (message.entity?.$case === "requestId") {
       obj.requestId = message.entity.value;
+    } else if (message.entity?.$case === "periodicProcessingId") {
+      obj.periodicProcessingId = message.entity.value;
     }
     return obj;
   },
@@ -180,6 +209,12 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
         }
         break;
       }
+      case "periodicProcessingId": {
+        if (object.entity?.value !== undefined && object.entity?.value !== null) {
+          message.entity = { $case: "periodicProcessingId", value: object.entity.value };
+        }
+        break;
+      }
     }
     return message;
   },
@@ -193,8 +228,8 @@ function createBaseProcessingItem(): ProcessingItem {
     lastError: undefined,
     noProcessing: false,
     request: undefined,
-    schedule: undefined,
     processingStartedAt: undefined,
+    periodicProcessing: undefined,
   };
 }
 
@@ -218,11 +253,11 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     if (message.request !== undefined) {
       ProcessingRequest.encode(message.request, writer.uint32(50).fork()).join();
     }
-    if (message.schedule !== undefined) {
-      Schedule.encode(message.schedule, writer.uint32(58).fork()).join();
-    }
     if (message.processingStartedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.processingStartedAt), writer.uint32(66).fork()).join();
+      Timestamp.encode(toTimestamp(message.processingStartedAt), writer.uint32(58).fork()).join();
+    }
+    if (message.periodicProcessing !== undefined) {
+      PeriodicProcessing.encode(message.periodicProcessing, writer.uint32(802).fork()).join();
     }
     return writer;
   },
@@ -287,15 +322,15 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
             break;
           }
 
-          message.schedule = Schedule.decode(reader, reader.uint32());
+          message.processingStartedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           continue;
         }
-        case 8: {
-          if (tag !== 66) {
+        case 100: {
+          if (tag !== 802) {
             break;
           }
 
-          message.processingStartedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.periodicProcessing = PeriodicProcessing.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -315,9 +350,11 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
       lastError: isSet(object.lastError) ? gt.String(object.lastError) : undefined,
       noProcessing: isSet(object.noProcessing) ? gt.Boolean(object.noProcessing) : false,
       request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
-      schedule: isSet(object.schedule) ? Schedule.fromJSON(object.schedule) : undefined,
       processingStartedAt: isSet(object.processingStartedAt)
         ? fromJsonTimestamp(object.processingStartedAt)
+        : undefined,
+      periodicProcessing: isSet(object.periodicProcessing)
+        ? PeriodicProcessing.fromJSON(object.periodicProcessing)
         : undefined,
     };
   },
@@ -342,11 +379,11 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     if (message.request !== undefined) {
       obj.request = ProcessingRequest.toJSON(message.request);
     }
-    if (message.schedule !== undefined) {
-      obj.schedule = Schedule.toJSON(message.schedule);
-    }
     if (message.processingStartedAt !== undefined) {
       obj.processingStartedAt = message.processingStartedAt.toISOString();
+    }
+    if (message.periodicProcessing !== undefined) {
+      obj.periodicProcessing = PeriodicProcessing.toJSON(message.periodicProcessing);
     }
     return obj;
   },
@@ -366,10 +403,196 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     message.request = (object.request !== undefined && object.request !== null)
       ? ProcessingRequest.fromPartial(object.request)
       : undefined;
+    message.processingStartedAt = object.processingStartedAt ?? undefined;
+    message.periodicProcessing = (object.periodicProcessing !== undefined && object.periodicProcessing !== null)
+      ? PeriodicProcessing.fromPartial(object.periodicProcessing)
+      : undefined;
+    return message;
+  },
+};
+
+function createBasePeriodicProcessing(): PeriodicProcessing {
+  return { folderPrefix: "", lookBackDays: 0, endDate: undefined, target: undefined, schedule: undefined };
+}
+
+export const PeriodicProcessing: MessageFns<PeriodicProcessing> = {
+  encode(message: PeriodicProcessing, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.folderPrefix !== "") {
+      writer.uint32(10).string(message.folderPrefix);
+    }
+    if (message.lookBackDays !== 0) {
+      writer.uint32(16).int32(message.lookBackDays);
+    }
+    if (message.endDate !== undefined) {
+      Timestamp.encode(toTimestamp(message.endDate), writer.uint32(26).fork()).join();
+    }
+    if (message.target !== undefined) {
+      PeriodicProcessing_Target.encode(message.target, writer.uint32(34).fork()).join();
+    }
+    if (message.schedule !== undefined) {
+      Schedule.encode(message.schedule, writer.uint32(42).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PeriodicProcessing {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePeriodicProcessing();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.folderPrefix = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.lookBackDays = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.endDate = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.target = PeriodicProcessing_Target.decode(reader, reader.uint32());
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.schedule = Schedule.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PeriodicProcessing {
+    return {
+      folderPrefix: isSet(object.folderPrefix) ? gt.String(object.folderPrefix) : "",
+      lookBackDays: isSet(object.lookBackDays) ? gt.Number(object.lookBackDays) : 0,
+      endDate: isSet(object.endDate) ? fromJsonTimestamp(object.endDate) : undefined,
+      target: isSet(object.target) ? PeriodicProcessing_Target.fromJSON(object.target) : undefined,
+      schedule: isSet(object.schedule) ? Schedule.fromJSON(object.schedule) : undefined,
+    };
+  },
+
+  toJSON(message: PeriodicProcessing): unknown {
+    const obj: any = {};
+    if (message.folderPrefix !== "") {
+      obj.folderPrefix = message.folderPrefix;
+    }
+    if (message.lookBackDays !== 0) {
+      obj.lookBackDays = Math.round(message.lookBackDays);
+    }
+    if (message.endDate !== undefined) {
+      obj.endDate = message.endDate.toISOString();
+    }
+    if (message.target !== undefined) {
+      obj.target = PeriodicProcessing_Target.toJSON(message.target);
+    }
+    if (message.schedule !== undefined) {
+      obj.schedule = Schedule.toJSON(message.schedule);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<PeriodicProcessing>): PeriodicProcessing {
+    return PeriodicProcessing.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<PeriodicProcessing>): PeriodicProcessing {
+    const message = createBasePeriodicProcessing();
+    message.folderPrefix = object.folderPrefix ?? "";
+    message.lookBackDays = object.lookBackDays ?? 0;
+    message.endDate = object.endDate ?? undefined;
+    message.target = (object.target !== undefined && object.target !== null)
+      ? PeriodicProcessing_Target.fromPartial(object.target)
+      : undefined;
     message.schedule = (object.schedule !== undefined && object.schedule !== null)
       ? Schedule.fromPartial(object.schedule)
       : undefined;
-    message.processingStartedAt = object.processingStartedAt ?? undefined;
+    return message;
+  },
+};
+
+function createBasePeriodicProcessing_Target(): PeriodicProcessing_Target {
+  return { gitRepoIds: [] };
+}
+
+export const PeriodicProcessing_Target: MessageFns<PeriodicProcessing_Target> = {
+  encode(message: PeriodicProcessing_Target, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.gitRepoIds) {
+      writer.uint32(10).string(v!);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PeriodicProcessing_Target {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePeriodicProcessing_Target();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.gitRepoIds.push(reader.string());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PeriodicProcessing_Target {
+    return { gitRepoIds: gt.Array.isArray(object?.gitRepoIds) ? object.gitRepoIds.map((e: any) => gt.String(e)) : [] };
+  },
+
+  toJSON(message: PeriodicProcessing_Target): unknown {
+    const obj: any = {};
+    if (message.gitRepoIds?.length) {
+      obj.gitRepoIds = message.gitRepoIds;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<PeriodicProcessing_Target>): PeriodicProcessing_Target {
+    return PeriodicProcessing_Target.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<PeriodicProcessing_Target>): PeriodicProcessing_Target {
+    const message = createBasePeriodicProcessing_Target();
+    message.gitRepoIds = object.gitRepoIds?.map((e) => e) || [];
     return message;
   },
 };
@@ -577,6 +800,7 @@ function createBaseProcessingItemResult(): ProcessingItemResult {
     errorMessage: undefined,
     createdAt: undefined,
     request: undefined,
+    periodicProcessing: undefined,
   };
 }
 
@@ -599,6 +823,9 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     }
     if (message.request !== undefined) {
       ProcessingRequest.encode(message.request, writer.uint32(50).fork()).join();
+    }
+    if (message.periodicProcessing !== undefined) {
+      PeriodicProcessing.encode(message.periodicProcessing, writer.uint32(802).fork()).join();
     }
     return writer;
   },
@@ -658,6 +885,14 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
           message.request = ProcessingRequest.decode(reader, reader.uint32());
           continue;
         }
+        case 100: {
+          if (tag !== 802) {
+            break;
+          }
+
+          message.periodicProcessing = PeriodicProcessing.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -677,6 +912,9 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
       errorMessage: isSet(object.errorMessage) ? gt.String(object.errorMessage) : undefined,
       createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
       request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
+      periodicProcessing: isSet(object.periodicProcessing)
+        ? PeriodicProcessing.fromJSON(object.periodicProcessing)
+        : undefined,
     };
   },
 
@@ -700,6 +938,9 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     if (message.request !== undefined) {
       obj.request = ProcessingRequest.toJSON(message.request);
     }
+    if (message.periodicProcessing !== undefined) {
+      obj.periodicProcessing = PeriodicProcessing.toJSON(message.periodicProcessing);
+    }
     return obj;
   },
 
@@ -717,6 +958,9 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     message.createdAt = object.createdAt ?? undefined;
     message.request = (object.request !== undefined && object.request !== null)
       ? ProcessingRequest.fromPartial(object.request)
+      : undefined;
+    message.periodicProcessing = (object.periodicProcessing !== undefined && object.periodicProcessing !== null)
+      ? PeriodicProcessing.fromPartial(object.periodicProcessing)
       : undefined;
     return message;
   },

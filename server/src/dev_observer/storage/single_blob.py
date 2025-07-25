@@ -218,14 +218,20 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
 
         await self._update(up)
 
-    async def update_processing_item(self, key: ProcessingItemKey, schedule: Optional[Schedule] = None):
+    async def update_processing_item(
+            self,
+            key: ProcessingItemKey,
+            updater: Callable[[ProcessingItem], None],
+            next_time: Optional[datetime.datetime],
+    ):
         def up(d: LocalStorageData):
             for item in d.processing_items:
                 if item.key == key:
-                    if schedule is None:
-                        item.ClearField("schedule")
+                    updater(item)
+                    if next_time is None:
+                        item.ClearField("next_processing")
                     else:
-                        item.schedule.CopyFrom(schedule)
+                        item.next_processing.CopyFrom(timestamp.from_milliseconds(int(next_time.timestamp() * 1000)))
                     return
             raise ValueError(f"Processing item with key {key} not found")
 

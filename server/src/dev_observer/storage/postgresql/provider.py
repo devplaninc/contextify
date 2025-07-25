@@ -1,6 +1,6 @@
 import datetime
 import uuid
-from typing import Optional, MutableSequence, List, Sequence
+from typing import Optional, MutableSequence, List, Sequence, Callable
 
 from google.protobuf import json_format
 from sqlalchemy import select, delete, update
@@ -184,20 +184,22 @@ class PostgresqlStorageProvider(StorageProvider):
                     )),
                 ))
 
-    async def update_processing_item(self, key: ProcessingItemKey, schedule: Optional[Schedule] = None):
+    async def update_processing_item(
+            self,
+            key: ProcessingItemKey,
+            updater: Callable[[ProcessingItem], None],
+            next_time: Optional[datetime.datetime],
+    ):
         key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 existing = await session.get(ProcessingItemEntity, key_str)
                 item = _to_item(existing)
-                if schedule is None:
-                    item.ClearField("schedule")
-                else:
-                    item.schedule.CopyFrom(schedule)
+                updater(item)
                 await session.execute(
                     update(ProcessingItemEntity)
                     .where(ProcessingItemEntity.key == key_str)
-                    .values(json_data=pb_to_json(item))
+                    .values(json_data=pb_to_json(item), next_processing=next_time)
                 )
 
     async def delete_processing_item(self, key: ProcessingItemKey):

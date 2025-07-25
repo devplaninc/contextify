@@ -27,25 +27,29 @@ from dev_observer.api.types import observations_pb2 as dev__observer_dot_api_dot
 from dev_observer.api.types import schedule_pb2 as dev__observer_dot_api_dot_types_dot_schedule__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'dev_observer/api/types/processing.proto\x12!dev_observer.api.types.processing\x1a\x1fgoogle/protobuf/timestamp.proto\x1a)dev_observer/api/types/observations.proto\x1a%dev_observer/api/types/schedule.proto\"d\n\x11ProcessingItemKey\x12\x18\n\x0egithub_repo_id\x18\x64 \x01(\tH\x00\x12\x15\n\x0bwebsite_url\x18\x65 \x01(\tH\x00\x12\x14\n\nrequest_id\x18\x66 \x01(\tH\x00\x42\x08\n\x06\x65ntity\"\xad\x04\n\x0eProcessingItem\x12\x41\n\x03key\x18\x01 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingItemKey\x12\x38\n\x0fnext_processing\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x00\x88\x01\x01\x12\x37\n\x0elast_processed\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x01\x88\x01\x01\x12\x17\n\nlast_error\x18\x04 \x01(\tH\x02\x88\x01\x01\x12\x15\n\rno_processing\x18\x05 \x01(\x08\x12J\n\x07request\x18\x06 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingRequestH\x03\x88\x01\x01\x12@\n\x08schedule\x18\x07 \x01(\x0b\x32).dev_observer.api.types.schedule.ScheduleH\x04\x88\x01\x01\x12>\n\x15processing_started_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x05\x88\x01\x01\x42\x12\n\x10_next_processingB\x11\n\x0f_last_processedB\r\n\x0b_last_errorB\n\n\x08_requestB\x0b\n\t_scheduleB\x18\n\x16_processing_started_at\"\xac\x01\n\x11ProcessingRequest\x12\x12\n\ncreated_by\x18\x01 \x01(\t\x12\x11\n\tnamespace\x18\x02 \x01(\t\x12\x14\n\x0creference_id\x18\x03 \x01(\t\x12R\n\x0bgit_changes\x18\x64 \x01(\x0b\x32;.dev_observer.api.types.processing.ProcessGitChangesRequestH\x00\x42\x06\n\x04type\"G\n\x18ProcessGitChangesRequest\x12\x13\n\x0bgit_repo_id\x18\x01 \x01(\t\x12\x16\n\x0elook_back_days\x18\x02 \x01(\x05\"\xe6\x02\n\x14ProcessingItemResult\x12\n\n\x02id\x18\x01 \x01(\t\x12\x41\n\x03key\x18\x02 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingItemKey\x12I\n\x0cobservations\x18\x03 \x03(\x0b\x32\x33.dev_observer.api.types.observations.ObservationKey\x12\x1a\n\rerror_message\x18\x04 \x01(\tH\x00\x88\x01\x01\x12.\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12J\n\x07request\x18\x06 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingRequestH\x01\x88\x01\x01\x42\x10\n\x0e_error_messageB\n\n\x08_request\"\x96\x01\n\x16ProcessingResultFilter\x12\x16\n\tnamespace\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x19\n\x0creference_id\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x19\n\x0crequest_type\x18\x03 \x01(\tH\x02\x88\x01\x01\x42\x0c\n\n_namespaceB\x0f\n\r_reference_idB\x0f\n\r_request_type\"\x95\x01\n\x15ProcessingItemsFilter\x12\x16\n\tnamespace\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x19\n\x0creference_id\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x19\n\x0crequest_type\x18\x03 \x01(\tH\x02\x88\x01\x01\x42\x0c\n\n_namespaceB\x0f\n\r_reference_idB\x0f\n\r_request_typeb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'dev_observer/api/types/processing.proto\x12!dev_observer.api.types.processing\x1a\x1fgoogle/protobuf/timestamp.proto\x1a)dev_observer/api/types/observations.proto\x1a%dev_observer/api/types/schedule.proto\"\x86\x01\n\x11ProcessingItemKey\x12\x18\n\x0egithub_repo_id\x18\x64 \x01(\tH\x00\x12\x15\n\x0bwebsite_url\x18\x65 \x01(\tH\x00\x12\x14\n\nrequest_id\x18\x66 \x01(\tH\x00\x12 \n\x16periodic_processing_id\x18g \x01(\tH\x00\x42\x08\n\x06\x65ntity\"\xcf\x04\n\x0eProcessingItem\x12\x41\n\x03key\x18\x01 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingItemKey\x12\x38\n\x0fnext_processing\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x00\x88\x01\x01\x12\x37\n\x0elast_processed\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x01\x88\x01\x01\x12\x17\n\nlast_error\x18\x04 \x01(\tH\x02\x88\x01\x01\x12\x15\n\rno_processing\x18\x05 \x01(\x08\x12J\n\x07request\x18\x06 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingRequestH\x03\x88\x01\x01\x12>\n\x15processing_started_at\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x04\x88\x01\x01\x12W\n\x13periodic_processing\x18\x64 \x01(\x0b\x32\x35.dev_observer.api.types.processing.PeriodicProcessingH\x05\x88\x01\x01\x42\x12\n\x10_next_processingB\x11\n\x0f_last_processedB\r\n\x0b_last_errorB\n\n\x08_requestB\x18\n\x16_processing_started_atB\x16\n\x14_periodic_processing\"\x9c\x02\n\x12PeriodicProcessing\x12\x15\n\rfolder_prefix\x18\x01 \x01(\t\x12\x16\n\x0elook_back_days\x18\x02 \x01(\x05\x12,\n\x08\x65nd_date\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12L\n\x06target\x18\x04 \x01(\x0b\x32<.dev_observer.api.types.processing.PeriodicProcessing.Target\x12;\n\x08schedule\x18\x05 \x01(\x0b\x32).dev_observer.api.types.schedule.Schedule\x1a\x1e\n\x06Target\x12\x14\n\x0cgit_repo_ids\x18\x01 \x03(\t\"\xac\x01\n\x11ProcessingRequest\x12\x12\n\ncreated_by\x18\x01 \x01(\t\x12\x11\n\tnamespace\x18\x02 \x01(\t\x12\x14\n\x0creference_id\x18\x03 \x01(\t\x12R\n\x0bgit_changes\x18\x64 \x01(\x0b\x32;.dev_observer.api.types.processing.ProcessGitChangesRequestH\x00\x42\x06\n\x04type\"G\n\x18ProcessGitChangesRequest\x12\x13\n\x0bgit_repo_id\x18\x01 \x01(\t\x12\x16\n\x0elook_back_days\x18\x02 \x01(\x05\"\xd7\x03\n\x14ProcessingItemResult\x12\n\n\x02id\x18\x01 \x01(\t\x12\x41\n\x03key\x18\x02 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingItemKey\x12I\n\x0cobservations\x18\x03 \x03(\x0b\x32\x33.dev_observer.api.types.observations.ObservationKey\x12\x1a\n\rerror_message\x18\x04 \x01(\tH\x00\x88\x01\x01\x12.\n\ncreated_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12J\n\x07request\x18\x06 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingRequestH\x01\x88\x01\x01\x12W\n\x13periodic_processing\x18\x64 \x01(\x0b\x32\x35.dev_observer.api.types.processing.PeriodicProcessingH\x02\x88\x01\x01\x42\x10\n\x0e_error_messageB\n\n\x08_requestB\x16\n\x14_periodic_processing\"\x96\x01\n\x16ProcessingResultFilter\x12\x16\n\tnamespace\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x19\n\x0creference_id\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x19\n\x0crequest_type\x18\x03 \x01(\tH\x02\x88\x01\x01\x42\x0c\n\n_namespaceB\x0f\n\r_reference_idB\x0f\n\r_request_type\"\x95\x01\n\x15ProcessingItemsFilter\x12\x16\n\tnamespace\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x19\n\x0creference_id\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x19\n\x0crequest_type\x18\x03 \x01(\tH\x02\x88\x01\x01\x42\x0c\n\n_namespaceB\x0f\n\r_reference_idB\x0f\n\r_request_typeb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.types.processing_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_PROCESSINGITEMKEY']._serialized_start=193
-  _globals['_PROCESSINGITEMKEY']._serialized_end=293
-  _globals['_PROCESSINGITEM']._serialized_start=296
-  _globals['_PROCESSINGITEM']._serialized_end=853
-  _globals['_PROCESSINGREQUEST']._serialized_start=856
-  _globals['_PROCESSINGREQUEST']._serialized_end=1028
-  _globals['_PROCESSGITCHANGESREQUEST']._serialized_start=1030
-  _globals['_PROCESSGITCHANGESREQUEST']._serialized_end=1101
-  _globals['_PROCESSINGITEMRESULT']._serialized_start=1104
-  _globals['_PROCESSINGITEMRESULT']._serialized_end=1462
-  _globals['_PROCESSINGRESULTFILTER']._serialized_start=1465
-  _globals['_PROCESSINGRESULTFILTER']._serialized_end=1615
-  _globals['_PROCESSINGITEMSFILTER']._serialized_start=1618
-  _globals['_PROCESSINGITEMSFILTER']._serialized_end=1767
+  _globals['_PROCESSINGITEMKEY']._serialized_start=194
+  _globals['_PROCESSINGITEMKEY']._serialized_end=328
+  _globals['_PROCESSINGITEM']._serialized_start=331
+  _globals['_PROCESSINGITEM']._serialized_end=922
+  _globals['_PERIODICPROCESSING']._serialized_start=925
+  _globals['_PERIODICPROCESSING']._serialized_end=1209
+  _globals['_PERIODICPROCESSING_TARGET']._serialized_start=1179
+  _globals['_PERIODICPROCESSING_TARGET']._serialized_end=1209
+  _globals['_PROCESSINGREQUEST']._serialized_start=1212
+  _globals['_PROCESSINGREQUEST']._serialized_end=1384
+  _globals['_PROCESSGITCHANGESREQUEST']._serialized_start=1386
+  _globals['_PROCESSGITCHANGESREQUEST']._serialized_end=1457
+  _globals['_PROCESSINGITEMRESULT']._serialized_start=1460
+  _globals['_PROCESSINGITEMRESULT']._serialized_end=1931
+  _globals['_PROCESSINGRESULTFILTER']._serialized_start=1934
+  _globals['_PROCESSINGRESULTFILTER']._serialized_end=2084
+  _globals['_PROCESSINGITEMSFILTER']._serialized_start=2087
+  _globals['_PROCESSINGITEMSFILTER']._serialized_end=2236
 # @@protoc_insertion_point(module_scope)

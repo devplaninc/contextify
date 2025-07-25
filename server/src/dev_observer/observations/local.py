@@ -30,6 +30,10 @@ class LocalObservationsProvider(ObservationsProvider):
     async def get(self, key: ObservationKey) -> Observation:
         return Observation(key=key, content=self._read_content(key))
 
+    async def exists(self, key: ObservationKey) -> bool:
+        file_path = self._get_key_path(key)
+        return os.path.exists(file_path)
+
     def _get_root(self, kind: str) -> str:
         return os.path.join(self._dir, kind)
 

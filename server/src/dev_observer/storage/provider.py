@@ -1,5 +1,6 @@
 import dataclasses
 import datetime
+from collections.abc import Callable
 from typing import Protocol, Optional, MutableSequence, List, Sequence
 
 from dev_observer.api.types.config_pb2 import GlobalConfig
@@ -62,7 +63,10 @@ class StorageProvider(Protocol):
     async def get_processing_items(self, filter: ProcessingItemsFilter) -> Sequence[ProcessingItem]:
         ...
 
-    async def update_processing_item(self, key: ProcessingItemKey, schedule: Optional[Schedule] = None):
+    async def update_processing_item(self,
+                                     key: ProcessingItemKey,
+                                     updater: Callable[[ProcessingItem], None],
+                                     next_time: Optional[datetime.datetime]):
         ...
 
     async def delete_processing_item(self, key: ProcessingItemKey):

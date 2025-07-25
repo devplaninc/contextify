@@ -18,3 +18,9 @@ class MemoryObservationsProvider(ObservationsProvider):
             if o.key == key:
                 return o
         raise ValueError(f"Observation {key} not found")
+
+    async def exists(self, key: ObservationKey) -> bool:
+        for o in self._observations:
+            if o.key == key:
+                return True
+        return False

@@ -14,6 +14,7 @@ message ProcessingItemKey {
     string website_url = 101;
     // One-off request
     string request_id = 102;
+    string periodic_processing_id = 103;
   }
 }
 
@@ -24,8 +25,21 @@ message ProcessingItem {
   optional string last_error = 4;
   bool no_processing = 5;
   optional ProcessingRequest request = 6;
-  optional dev_observer.api.types.schedule.Schedule schedule = 7;
-  optional google.protobuf.Timestamp processing_started_at = 8;
+  optional google.protobuf.Timestamp processing_started_at = 7;
+
+  optional PeriodicProcessing periodic_processing = 100;
+}
+
+message PeriodicProcessing {
+  string folder_prefix = 1;
+  int32 look_back_days = 2;
+  google.protobuf.Timestamp end_date = 3;
+  Target target = 4;
+  dev_observer.api.types.schedule.Schedule schedule = 5;
+
+  message Target {
+    repeated string git_repo_ids = 1;
+  }
 }
 
 message ProcessingRequest {
@@ -51,6 +65,8 @@ message ProcessingItemResult {
   optional string error_message = 4;
   google.protobuf.Timestamp created_at = 5;
   optional ProcessingRequest request = 6;
+
+  optional PeriodicProcessing periodic_processing = 100;
 }
 
 message ProcessingResultFilter {

@@ -5,14 +5,15 @@ from typing import List, Optional
 
 from dev_observer.api.types.observations_pb2 import ObservationKey
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingRequest, ProcessGitChangesRequest, \
-    ProcessingItemResult
+    ProcessingItemResult, PeriodicProcessing, ProcessingItemKey
 from dev_observer.common.errors import TerminalError
+from dev_observer.common.schedule import get_next_date
 from dev_observer.log import s_
 from dev_observer.processors.flattening import ObservationRequest
 from dev_observer.processors.git_changes import GitChangesProcessor
 from dev_observer.processors.repos import ReposProcessor
-from dev_observer.repository.types import ObservedRepo, ObservedGitChanges
 from dev_observer.processors.websites import WebsitesProcessor, ObservedWebsite
+from dev_observer.repository.types import ObservedRepo, ObservedGitChanges
 from dev_observer.storage.provider import StorageProvider
 from dev_observer.util import Clock, RealClock
 from dev_observer.website.cloner import normalize_domain, normalize_name
@@ -88,11 +89,23 @@ class PeriodicProcessor:
             ))
             if ent_type == "request_id":
                 await self._storage.delete_processing_item(item.key)
+            if ent_type == "periodic_processing_id":
+                await self._schedule_periodic(item.key, item.periodic_processing)
             else:
                 await self._storage.set_next_processing_time(item.key, None, error)
         else:
             if error:
                 await self._storage.set_processing_error(item.key, error)
+
+    async def _schedule_periodic(self, key: ProcessingItemKey, item: PeriodicProcessing) -> Optional[List[ObservationKey]]:
+        if not item.HasField("schedule"):
+            raise ValueError(f"Schedule not provided")
+        next_date = get_next_date(item.end_date, item.schedule)
+        item.end_date = next_date
+        next_processing = next_date if self._clock.now() < next_date else self._clock.now() + timedelta(seconds=5)
+        def updater(db_item: ProcessingItem):
+            db_item.periodic_processing.CopyFrom(item)
+        await self._storage.update_processing_item(key, updater, next_processing)
 
 
     async def _process_item(self, item: ProcessingItem) -> Optional[List[ObservationKey]]:

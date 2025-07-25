@@ -16,3 +16,7 @@ class ObservationsProvider(Protocol):
     @abstractmethod
     async def get(self, key: ObservationKey) -> Observation:
         ...
+
+    @abstractmethod
+    async def exists(self, key: ObservationKey) -> bool:
+        ...

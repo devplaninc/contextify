@@ -39,7 +39,8 @@ dependencies = [
     "greenlet>=3.2.2",
     "scrapy>=2.11.0",
     "beautifulsoup4>=4.13.4",
-    "boto3>=1.34.0",
+    "types-aiobotocore[essential]>=2.23.2",
+    "aiobotocore>=2.23.2",
 ]
 
 [build-system]
