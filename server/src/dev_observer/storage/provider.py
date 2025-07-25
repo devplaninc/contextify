@@ -5,7 +5,7 @@ from typing import Protocol, Optional, MutableSequence, List, Sequence
 
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
-    ProcessingRequest, ProcessingResultFilter, ProcessingItemsFilter
+    ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
 from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
 from dev_observer.api.types.schedule_pb2 import Schedule
 from dev_observer.api.types.sites_pb2 import WebSite
@@ -54,8 +54,7 @@ class StorageProvider(Protocol):
     async def create_processing_time(
             self,
             key: ProcessingItemKey,
-            request: Optional[ProcessingRequest] = None,
-            schedule: Optional[Schedule] = None,
+            data: Optional[ProcessingItemData] = None,
             next_time: Optional[datetime.datetime] = None,
     ):
         ...
@@ -65,7 +64,7 @@ class StorageProvider(Protocol):
 
     async def update_processing_item(self,
                                      key: ProcessingItemKey,
-                                     updater: Callable[[ProcessingItem], None],
+                                     updater: Callable[[ProcessingItem], ProcessingItem],
                                      next_time: Optional[datetime.datetime]):
         ...
 

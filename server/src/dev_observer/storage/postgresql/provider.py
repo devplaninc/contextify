@@ -1,4 +1,5 @@
 import datetime
+import logging
 import uuid
 from typing import Optional, MutableSequence, List, Sequence, Callable
 
@@ -8,14 +9,16 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSessio
 
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, \
-    ProcessingItemResult, ProcessingRequest, ProcessingResultFilter, ProcessingItemsFilter
+    ProcessingItemResult, ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
 from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
-from dev_observer.api.types.schedule_pb2 import Schedule
 from dev_observer.api.types.sites_pb2 import WebSite
+from dev_observer.log import s_
 from dev_observer.storage.postgresql.model import GitRepoEntity, ProcessingItemEntity, GlobalConfigEntity, \
     WebsiteEntity, ProcessingItemResultEntity
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
 from dev_observer.util import parse_json_pb, pb_to_json, Clock, RealClock
+
+_log = logging.getLogger(__name__)
 
 
 class PostgresqlStorageProvider(StorageProvider):
@@ -163,31 +166,27 @@ class PostgresqlStorageProvider(StorageProvider):
     async def create_processing_time(
             self,
             key: ProcessingItemKey,
-            request: Optional[ProcessingRequest] = None,
-            schedule: Optional[Schedule] = None,
+            data: Optional[ProcessingItemData] = None,
             next_time: Optional[datetime.datetime] = None,
     ):
         key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
+                is_req = data and data.WhichOneof("type") == "request"
                 session.add(ProcessingItemEntity(
                     key=key_str,
                     next_processing=next_time,
-                    request_type=request.WhichOneof("type") if request else None,
-                    reference_id=request.reference_id if request else None,
-                    namespace=request.namespace if request else None,
-                    created_by=request.created_by if request else None,
-                    json_data=pb_to_json(ProcessingItem(
-                        key=key,
-                        schedule=schedule,
-                        request=request,
-                    )),
+                    request_type=data.request.WhichOneof("type") if is_req else None,
+                    reference_id=data.reference_id if data else None,
+                    namespace=data.namespace if data else None,
+                    created_by=data.created_by if data else None,
+                    json_data=pb_to_json(ProcessingItem(key=key, data=data)),
                 ))
 
     async def update_processing_item(
             self,
             key: ProcessingItemKey,
-            updater: Callable[[ProcessingItem], None],
+            updater: Callable[[ProcessingItem], ProcessingItem],
             next_time: Optional[datetime.datetime],
     ):
         key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
@@ -195,11 +194,11 @@ class PostgresqlStorageProvider(StorageProvider):
             async with session.begin():
                 existing = await session.get(ProcessingItemEntity, key_str)
                 item = _to_item(existing)
-                updater(item)
+                updated = updater(item)
                 await session.execute(
                     update(ProcessingItemEntity)
                     .where(ProcessingItemEntity.key == key_str)
-                    .values(json_data=pb_to_json(item), next_processing=next_time)
+                    .values(json_data=pb_to_json(updated), next_processing=next_time)
                 )
 
     async def delete_processing_item(self, key: ProcessingItemKey):
@@ -215,15 +214,16 @@ class PostgresqlStorageProvider(StorageProvider):
             new_id = str(uuid.uuid4())
         async with AsyncSession(self._engine) as session:
             async with session.begin():
+                is_req = item.HasField("data") and item.data.WhichOneof("type") == "request"
                 session.add(ProcessingItemResultEntity(
                     id=new_id,
                     key=key_str,
                     json_data=pb_to_json(item),
                     error_message=item.error_message,
-                    namespace=item.request.namespace or None,
-                    created_by=item.request.created_by or None,
-                    reference_id=item.request.reference_id or None,
-                    request_type=item.request.WhichOneof("type") if item.HasField("request") else None,
+                    namespace=item.data.namespace or None,
+                    created_by=item.data.created_by or None,
+                    reference_id=item.data.reference_id or None,
+                    request_type=item.data.request.WhichOneof("type") if is_req else None,
                 ))
         return new_id
 

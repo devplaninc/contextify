@@ -10,10 +10,10 @@ import { Timestamp } from "../../../google/protobuf/timestamp";
 import { Observation, ObservationKey } from "../types/observations";
 import {
   ProcessingItem,
+  ProcessingItemData,
   ProcessingItemKey,
   ProcessingItemResult,
   ProcessingItemsFilter,
-  ProcessingRequest,
   ProcessingResultFilter,
 } from "../types/processing";
 
@@ -47,8 +47,8 @@ export interface GetProcessingResultResponse {
 
 export interface CreateProcessingItemRequest {
   key: ProcessingItemKey | undefined;
-  request?: ProcessingRequest | undefined;
   processImmediately: boolean;
+  data: ProcessingItemData | undefined;
 }
 
 export interface CreateProcessingItemResponse {
@@ -59,15 +59,6 @@ export interface DeleteProcessingItemRequest {
 }
 
 export interface DeleteProcessingItemResponse {
-}
-
-export interface RunProcessingRequest {
-  /** Must be a globally unique UUID */
-  requestId: string;
-  request: ProcessingRequest | undefined;
-}
-
-export interface RunProcessingResponse {
 }
 
 export interface GetProcessingRunStatusResponse {
@@ -418,7 +409,7 @@ export const GetProcessingResultResponse: MessageFns<GetProcessingResultResponse
 };
 
 function createBaseCreateProcessingItemRequest(): CreateProcessingItemRequest {
-  return { key: undefined, request: undefined, processImmediately: false };
+  return { key: undefined, processImmediately: false, data: undefined };
 }
 
 export const CreateProcessingItemRequest: MessageFns<CreateProcessingItemRequest> = {
@@ -426,11 +417,11 @@ export const CreateProcessingItemRequest: MessageFns<CreateProcessingItemRequest
     if (message.key !== undefined) {
       ProcessingItemKey.encode(message.key, writer.uint32(10).fork()).join();
     }
-    if (message.request !== undefined) {
-      ProcessingRequest.encode(message.request, writer.uint32(18).fork()).join();
-    }
     if (message.processImmediately !== false) {
-      writer.uint32(24).bool(message.processImmediately);
+      writer.uint32(16).bool(message.processImmediately);
+    }
+    if (message.data !== undefined) {
+      ProcessingItemData.encode(message.data, writer.uint32(26).fork()).join();
     }
     return writer;
   },
@@ -451,19 +442,19 @@ export const CreateProcessingItemRequest: MessageFns<CreateProcessingItemRequest
           continue;
         }
         case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.request = ProcessingRequest.decode(reader, reader.uint32());
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
+          if (tag !== 16) {
             break;
           }
 
           message.processImmediately = reader.bool();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.data = ProcessingItemData.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -478,8 +469,8 @@ export const CreateProcessingItemRequest: MessageFns<CreateProcessingItemRequest
   fromJSON(object: any): CreateProcessingItemRequest {
     return {
       key: isSet(object.key) ? ProcessingItemKey.fromJSON(object.key) : undefined,
-      request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
       processImmediately: isSet(object.processImmediately) ? gt.Boolean(object.processImmediately) : false,
+      data: isSet(object.data) ? ProcessingItemData.fromJSON(object.data) : undefined,
     };
   },
 
@@ -488,11 +479,11 @@ export const CreateProcessingItemRequest: MessageFns<CreateProcessingItemRequest
     if (message.key !== undefined) {
       obj.key = ProcessingItemKey.toJSON(message.key);
     }
-    if (message.request !== undefined) {
-      obj.request = ProcessingRequest.toJSON(message.request);
-    }
     if (message.processImmediately !== false) {
       obj.processImmediately = message.processImmediately;
+    }
+    if (message.data !== undefined) {
+      obj.data = ProcessingItemData.toJSON(message.data);
     }
     return obj;
   },
@@ -505,10 +496,10 @@ export const CreateProcessingItemRequest: MessageFns<CreateProcessingItemRequest
     message.key = (object.key !== undefined && object.key !== null)
       ? ProcessingItemKey.fromPartial(object.key)
       : undefined;
-    message.request = (object.request !== undefined && object.request !== null)
-      ? ProcessingRequest.fromPartial(object.request)
-      : undefined;
     message.processImmediately = object.processImmediately ?? false;
+    message.data = (object.data !== undefined && object.data !== null)
+      ? ProcessingItemData.fromPartial(object.data)
+      : undefined;
     return message;
   },
 };
@@ -655,127 +646,6 @@ export const DeleteProcessingItemResponse: MessageFns<DeleteProcessingItemRespon
   },
   fromPartial(_: DeepPartial<DeleteProcessingItemResponse>): DeleteProcessingItemResponse {
     const message = createBaseDeleteProcessingItemResponse();
-    return message;
-  },
-};
-
-function createBaseRunProcessingRequest(): RunProcessingRequest {
-  return { requestId: "", request: undefined };
-}
-
-export const RunProcessingRequest: MessageFns<RunProcessingRequest> = {
-  encode(message: RunProcessingRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.requestId !== "") {
-      writer.uint32(10).string(message.requestId);
-    }
-    if (message.request !== undefined) {
-      ProcessingRequest.encode(message.request, writer.uint32(18).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RunProcessingRequest {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRunProcessingRequest();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.requestId = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.request = ProcessingRequest.decode(reader, reader.uint32());
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): RunProcessingRequest {
-    return {
-      requestId: isSet(object.requestId) ? gt.String(object.requestId) : "",
-      request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
-    };
-  },
-
-  toJSON(message: RunProcessingRequest): unknown {
-    const obj: any = {};
-    if (message.requestId !== "") {
-      obj.requestId = message.requestId;
-    }
-    if (message.request !== undefined) {
-      obj.request = ProcessingRequest.toJSON(message.request);
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<RunProcessingRequest>): RunProcessingRequest {
-    return RunProcessingRequest.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<RunProcessingRequest>): RunProcessingRequest {
-    const message = createBaseRunProcessingRequest();
-    message.requestId = object.requestId ?? "";
-    message.request = (object.request !== undefined && object.request !== null)
-      ? ProcessingRequest.fromPartial(object.request)
-      : undefined;
-    return message;
-  },
-};
-
-function createBaseRunProcessingResponse(): RunProcessingResponse {
-  return {};
-}
-
-export const RunProcessingResponse: MessageFns<RunProcessingResponse> = {
-  encode(_: RunProcessingResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): RunProcessingResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRunProcessingResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(_: any): RunProcessingResponse {
-    return {};
-  },
-
-  toJSON(_: RunProcessingResponse): unknown {
-    const obj: any = {};
-    return obj;
-  },
-
-  create(base?: DeepPartial<RunProcessingResponse>): RunProcessingResponse {
-    return RunProcessingResponse.fromPartial(base ?? {});
-  },
-  fromPartial(_: DeepPartial<RunProcessingResponse>): RunProcessingResponse {
-    const message = createBaseRunProcessingResponse();
     return message;
   },
 };

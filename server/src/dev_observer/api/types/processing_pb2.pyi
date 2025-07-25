@@ -21,24 +21,22 @@ class ProcessingItemKey(_message.Message):
     def __init__(self, github_repo_id: _Optional[str] = ..., website_url: _Optional[str] = ..., request_id: _Optional[str] = ..., periodic_aggregation_id: _Optional[str] = ...) -> None: ...
 
 class ProcessingItem(_message.Message):
-    __slots__ = ("key", "next_processing", "last_processed", "last_error", "no_processing", "request", "processing_started_at", "periodic_aggregation")
+    __slots__ = ("key", "next_processing", "last_processed", "last_error", "no_processing", "processing_started_at", "data")
     KEY_FIELD_NUMBER: _ClassVar[int]
     NEXT_PROCESSING_FIELD_NUMBER: _ClassVar[int]
     LAST_PROCESSED_FIELD_NUMBER: _ClassVar[int]
     LAST_ERROR_FIELD_NUMBER: _ClassVar[int]
     NO_PROCESSING_FIELD_NUMBER: _ClassVar[int]
-    REQUEST_FIELD_NUMBER: _ClassVar[int]
     PROCESSING_STARTED_AT_FIELD_NUMBER: _ClassVar[int]
-    PERIODIC_AGGREGATION_FIELD_NUMBER: _ClassVar[int]
+    DATA_FIELD_NUMBER: _ClassVar[int]
     key: ProcessingItemKey
     next_processing: _timestamp_pb2.Timestamp
     last_processed: _timestamp_pb2.Timestamp
     last_error: str
     no_processing: bool
-    request: ProcessingRequest
     processing_started_at: _timestamp_pb2.Timestamp
-    periodic_aggregation: PeriodicAggregation
-    def __init__(self, key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., next_processing: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., last_processed: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., last_error: _Optional[str] = ..., no_processing: bool = ..., request: _Optional[_Union[ProcessingRequest, _Mapping]] = ..., processing_started_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., periodic_aggregation: _Optional[_Union[PeriodicAggregation, _Mapping]] = ...) -> None: ...
+    data: ProcessingItemData
+    def __init__(self, key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., next_processing: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., last_processed: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., last_error: _Optional[str] = ..., no_processing: bool = ..., processing_started_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., data: _Optional[_Union[ProcessingItemData, _Mapping]] = ...) -> None: ...
 
 class PeriodicAggregation(_message.Message):
     __slots__ = ("params", "schedule")
@@ -64,16 +62,10 @@ class AggregatedSummaryParams(_message.Message):
     def __init__(self, look_back_days: _Optional[int] = ..., end_date: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., target: _Optional[_Union[AggregatedSummaryParams.Target, _Mapping]] = ...) -> None: ...
 
 class ProcessingRequest(_message.Message):
-    __slots__ = ("created_by", "namespace", "reference_id", "git_changes")
-    CREATED_BY_FIELD_NUMBER: _ClassVar[int]
-    NAMESPACE_FIELD_NUMBER: _ClassVar[int]
-    REFERENCE_ID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("git_changes",)
     GIT_CHANGES_FIELD_NUMBER: _ClassVar[int]
-    created_by: str
-    namespace: str
-    reference_id: str
     git_changes: ProcessGitChangesRequest
-    def __init__(self, created_by: _Optional[str] = ..., namespace: _Optional[str] = ..., reference_id: _Optional[str] = ..., git_changes: _Optional[_Union[ProcessGitChangesRequest, _Mapping]] = ...) -> None: ...
+    def __init__(self, git_changes: _Optional[_Union[ProcessGitChangesRequest, _Mapping]] = ...) -> None: ...
 
 class ProcessGitChangesRequest(_message.Message):
     __slots__ = ("git_repo_id", "look_back_days")
@@ -84,22 +76,34 @@ class ProcessGitChangesRequest(_message.Message):
     def __init__(self, git_repo_id: _Optional[str] = ..., look_back_days: _Optional[int] = ...) -> None: ...
 
 class ProcessingItemResult(_message.Message):
-    __slots__ = ("id", "key", "observations", "error_message", "created_at", "request", "periodic_aggregation")
+    __slots__ = ("id", "key", "observations", "error_message", "created_at", "data")
     ID_FIELD_NUMBER: _ClassVar[int]
     KEY_FIELD_NUMBER: _ClassVar[int]
     OBSERVATIONS_FIELD_NUMBER: _ClassVar[int]
     ERROR_MESSAGE_FIELD_NUMBER: _ClassVar[int]
     CREATED_AT_FIELD_NUMBER: _ClassVar[int]
-    REQUEST_FIELD_NUMBER: _ClassVar[int]
-    PERIODIC_AGGREGATION_FIELD_NUMBER: _ClassVar[int]
+    DATA_FIELD_NUMBER: _ClassVar[int]
     id: str
     key: ProcessingItemKey
     observations: _containers.RepeatedCompositeFieldContainer[_observations_pb2.ObservationKey]
     error_message: str
     created_at: _timestamp_pb2.Timestamp
+    data: ProcessingItemData
+    def __init__(self, id: _Optional[str] = ..., key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., observations: _Optional[_Iterable[_Union[_observations_pb2.ObservationKey, _Mapping]]] = ..., error_message: _Optional[str] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., data: _Optional[_Union[ProcessingItemData, _Mapping]] = ...) -> None: ...
+
+class ProcessingItemData(_message.Message):
+    __slots__ = ("reference_id", "namespace", "created_by", "request", "periodic_aggregation")
+    REFERENCE_ID_FIELD_NUMBER: _ClassVar[int]
+    NAMESPACE_FIELD_NUMBER: _ClassVar[int]
+    CREATED_BY_FIELD_NUMBER: _ClassVar[int]
+    REQUEST_FIELD_NUMBER: _ClassVar[int]
+    PERIODIC_AGGREGATION_FIELD_NUMBER: _ClassVar[int]
+    reference_id: str
+    namespace: str
+    created_by: str
     request: ProcessingRequest
     periodic_aggregation: PeriodicAggregation
-    def __init__(self, id: _Optional[str] = ..., key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., observations: _Optional[_Iterable[_Union[_observations_pb2.ObservationKey, _Mapping]]] = ..., error_message: _Optional[str] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., request: _Optional[_Union[ProcessingRequest, _Mapping]] = ..., periodic_aggregation: _Optional[_Union[PeriodicAggregation, _Mapping]] = ...) -> None: ...
+    def __init__(self, reference_id: _Optional[str] = ..., namespace: _Optional[str] = ..., created_by: _Optional[str] = ..., request: _Optional[_Union[ProcessingRequest, _Mapping]] = ..., periodic_aggregation: _Optional[_Union[PeriodicAggregation, _Mapping]] = ...) -> None: ...
 
 class ProcessingResultFilter(_message.Message):
     __slots__ = ("namespace", "reference_id", "request_type")

@@ -27,7 +27,7 @@ from dev_observer.api.types import processing_pb2 as dev__observer_dot_api_dot_t
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'dev_observer/api/web/observations.proto\x12!dev_observer.api.web.observations\x1a)dev_observer/api/types/observations.proto\x1a\'dev_observer/api/types/processing.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\\\n\x17GetObservationsResponse\x12\x41\n\x04keys\x18\x01 \x03(\x0b\x32\x33.dev_observer.api.types.observations.ObservationKey\"_\n\x16GetObservationResponse\x12\x45\n\x0bobservation\x18\x01 \x01(\x0b\x32\x30.dev_observer.api.types.observations.Observation\"\xe8\x01\n\x1bGetProcessingResultsRequest\x12\x32\n\tfrom_date\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x00\x88\x01\x01\x12\x30\n\x07to_date\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x01\x88\x01\x01\x12I\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x39.dev_observer.api.types.processing.ProcessingResultFilterB\x0c\n\n_from_dateB\n\n\x08_to_date\"h\n\x1cGetProcessingResultsResponse\x12H\n\x07results\x18\x01 \x03(\x0b\x32\x37.dev_observer.api.types.processing.ProcessingItemResult\"v\n\x1bGetProcessingResultResponse\x12L\n\x06result\x18\x01 \x01(\x0b\x32\x37.dev_observer.api.types.processing.ProcessingItemResultH\x00\x88\x01\x01\x42\t\n\x07_result\"\xd5\x01\n\x1b\x43reateProcessingItemRequest\x12\x41\n\x03key\x18\x01 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingItemKey\x12J\n\x07request\x18\x02 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingRequestH\x00\x88\x01\x01\x12\x1b\n\x13process_immediately\x18\x03 \x01(\x08\x42\n\n\x08_request\"\x1e\n\x1c\x43reateProcessingItemResponse\"`\n\x1b\x44\x65leteProcessingItemRequest\x12\x41\n\x03key\x18\x01 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingItemKey\"\x1e\n\x1c\x44\x65leteProcessingItemResponse\"q\n\x14RunProcessingRequest\x12\x12\n\nrequest_id\x18\x01 \x01(\t\x12\x45\n\x07request\x18\x02 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingRequest\"\x17\n\x15RunProcessingResponse\"\xc8\x01\n\x1eGetProcessingRunStatusResponse\x12L\n\x06result\x18\x01 \x01(\x0b\x32\x37.dev_observer.api.types.processing.ProcessingItemResultH\x00\x88\x01\x01\x12\x44\n\x04item\x18\x02 \x01(\x0b\x32\x31.dev_observer.api.types.processing.ProcessingItemH\x01\x88\x01\x01\x42\t\n\x07_resultB\x07\n\x05_item\"e\n\x19GetProcessingItemsRequest\x12H\n\x06\x66ilter\x18\x01 \x01(\x0b\x32\x38.dev_observer.api.types.processing.ProcessingItemsFilter\"^\n\x1aGetProcessingItemsResponse\x12@\n\x05items\x18\x01 \x03(\x0b\x32\x31.dev_observer.api.types.processing.ProcessingItemb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'dev_observer/api/web/observations.proto\x12!dev_observer.api.web.observations\x1a)dev_observer/api/types/observations.proto\x1a\'dev_observer/api/types/processing.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\\\n\x17GetObservationsResponse\x12\x41\n\x04keys\x18\x01 \x03(\x0b\x32\x33.dev_observer.api.types.observations.ObservationKey\"_\n\x16GetObservationResponse\x12\x45\n\x0bobservation\x18\x01 \x01(\x0b\x32\x30.dev_observer.api.types.observations.Observation\"\xe8\x01\n\x1bGetProcessingResultsRequest\x12\x32\n\tfrom_date\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x00\x88\x01\x01\x12\x30\n\x07to_date\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x01\x88\x01\x01\x12I\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x39.dev_observer.api.types.processing.ProcessingResultFilterB\x0c\n\n_from_dateB\n\n\x08_to_date\"h\n\x1cGetProcessingResultsResponse\x12H\n\x07results\x18\x01 \x03(\x0b\x32\x37.dev_observer.api.types.processing.ProcessingItemResult\"v\n\x1bGetProcessingResultResponse\x12L\n\x06result\x18\x01 \x01(\x0b\x32\x37.dev_observer.api.types.processing.ProcessingItemResultH\x00\x88\x01\x01\x42\t\n\x07_result\"\xc2\x01\n\x1b\x43reateProcessingItemRequest\x12\x41\n\x03key\x18\x01 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingItemKey\x12\x1b\n\x13process_immediately\x18\x02 \x01(\x08\x12\x43\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x35.dev_observer.api.types.processing.ProcessingItemData\"\x1e\n\x1c\x43reateProcessingItemResponse\"`\n\x1b\x44\x65leteProcessingItemRequest\x12\x41\n\x03key\x18\x01 \x01(\x0b\x32\x34.dev_observer.api.types.processing.ProcessingItemKey\"\x1e\n\x1c\x44\x65leteProcessingItemResponse\"\xc8\x01\n\x1eGetProcessingRunStatusResponse\x12L\n\x06result\x18\x01 \x01(\x0b\x32\x37.dev_observer.api.types.processing.ProcessingItemResultH\x00\x88\x01\x01\x12\x44\n\x04item\x18\x02 \x01(\x0b\x32\x31.dev_observer.api.types.processing.ProcessingItemH\x01\x88\x01\x01\x42\t\n\x07_resultB\x07\n\x05_item\"e\n\x19GetProcessingItemsRequest\x12H\n\x06\x66ilter\x18\x01 \x01(\x0b\x32\x38.dev_observer.api.types.processing.ProcessingItemsFilter\"^\n\x1aGetProcessingItemsResponse\x12@\n\x05items\x18\x01 \x03(\x0b\x32\x31.dev_observer.api.types.processing.ProcessingItemb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -45,21 +45,17 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETPROCESSINGRESULTRESPONSE']._serialized_start=727
   _globals['_GETPROCESSINGRESULTRESPONSE']._serialized_end=845
   _globals['_CREATEPROCESSINGITEMREQUEST']._serialized_start=848
-  _globals['_CREATEPROCESSINGITEMREQUEST']._serialized_end=1061
-  _globals['_CREATEPROCESSINGITEMRESPONSE']._serialized_start=1063
-  _globals['_CREATEPROCESSINGITEMRESPONSE']._serialized_end=1093
-  _globals['_DELETEPROCESSINGITEMREQUEST']._serialized_start=1095
-  _globals['_DELETEPROCESSINGITEMREQUEST']._serialized_end=1191
-  _globals['_DELETEPROCESSINGITEMRESPONSE']._serialized_start=1193
-  _globals['_DELETEPROCESSINGITEMRESPONSE']._serialized_end=1223
-  _globals['_RUNPROCESSINGREQUEST']._serialized_start=1225
-  _globals['_RUNPROCESSINGREQUEST']._serialized_end=1338
-  _globals['_RUNPROCESSINGRESPONSE']._serialized_start=1340
-  _globals['_RUNPROCESSINGRESPONSE']._serialized_end=1363
-  _globals['_GETPROCESSINGRUNSTATUSRESPONSE']._serialized_start=1366
-  _globals['_GETPROCESSINGRUNSTATUSRESPONSE']._serialized_end=1566
-  _globals['_GETPROCESSINGITEMSREQUEST']._serialized_start=1568
-  _globals['_GETPROCESSINGITEMSREQUEST']._serialized_end=1669
-  _globals['_GETPROCESSINGITEMSRESPONSE']._serialized_start=1671
-  _globals['_GETPROCESSINGITEMSRESPONSE']._serialized_end=1765
+  _globals['_CREATEPROCESSINGITEMREQUEST']._serialized_end=1042
+  _globals['_CREATEPROCESSINGITEMRESPONSE']._serialized_start=1044
+  _globals['_CREATEPROCESSINGITEMRESPONSE']._serialized_end=1074
+  _globals['_DELETEPROCESSINGITEMREQUEST']._serialized_start=1076
+  _globals['_DELETEPROCESSINGITEMREQUEST']._serialized_end=1172
+  _globals['_DELETEPROCESSINGITEMRESPONSE']._serialized_start=1174
+  _globals['_DELETEPROCESSINGITEMRESPONSE']._serialized_end=1204
+  _globals['_GETPROCESSINGRUNSTATUSRESPONSE']._serialized_start=1207
+  _globals['_GETPROCESSINGRUNSTATUSRESPONSE']._serialized_end=1407
+  _globals['_GETPROCESSINGITEMSREQUEST']._serialized_start=1409
+  _globals['_GETPROCESSINGITEMSREQUEST']._serialized_end=1510
+  _globals['_GETPROCESSINGITEMSRESPONSE']._serialized_start=1512
+  _globals['_GETPROCESSINGITEMSRESPONSE']._serialized_end=1606
 # @@protoc_insertion_point(module_scope)

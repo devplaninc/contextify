@@ -12,6 +12,7 @@ from dev_observer.repository.provider import GitRepositoryProvider, RepositoryIn
 from dev_observer.repository.types import ObservedRepo
 from dev_observer.repository.util import get_valid_repo_meta
 from dev_observer.storage.provider import StorageProvider
+from dev_observer.util import Clock, RealClock
 
 _log = logging.getLogger(__name__)
 
@@ -29,10 +30,12 @@ class GithubAuthProvider(Protocol):
 class GithubProvider(GitRepositoryProvider):
     _auth_provider: GithubAuthProvider
     _storage: StorageProvider
+    _clock: Clock
 
-    def __init__(self, auth_provider: GithubAuthProvider, storage: StorageProvider):
+    def __init__(self, auth_provider: GithubAuthProvider, storage: StorageProvider, clock: Clock = RealClock()):
         self._auth_provider = auth_provider
         self._storage = storage
+        self._clock = clock
 
     async def get_repo(self, repo: ObservedRepo) -> RepositoryInfo:
         full_name = repo.github_repo.full_name
@@ -44,7 +47,7 @@ class GithubProvider(GitRepositoryProvider):
             with Github(auth=auth) as gh:
                 gh_repo = gh.get_repo(full_name)
             meta = GitMeta(
-                last_refresh=datetime.now(),
+                last_refresh=self._clock.now(),
                 size_kb=gh_repo.size,
                 clone_url=gh_repo.clone_url,
             )

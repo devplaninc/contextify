@@ -32,8 +32,8 @@ message GetProcessingResultResponse {
 
 message CreateProcessingItemRequest {
   dev_observer.api.types.processing.ProcessingItemKey key = 1;
-  optional dev_observer.api.types.processing.ProcessingRequest request = 2;
-  bool process_immediately = 3;
+  bool process_immediately = 2;
+  dev_observer.api.types.processing.ProcessingItemData data = 3;
 }
 
 message CreateProcessingItemResponse {
@@ -44,15 +44,6 @@ message DeleteProcessingItemRequest {
 }
 
 message DeleteProcessingItemResponse {
-}
-
-message RunProcessingRequest {
-  // Must be a globally unique UUID
-  string request_id = 1;
-  dev_observer.api.types.processing.ProcessingRequest request = 2;
-}
-
-message RunProcessingResponse {
 }
 
 message GetProcessingRunStatusResponse {

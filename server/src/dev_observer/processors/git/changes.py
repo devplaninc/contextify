@@ -3,6 +3,8 @@ import datetime
 import logging
 from typing import Optional, List
 
+from google.protobuf import timestamp
+
 from dev_observer.api.types.observations_pb2 import ObservationKey
 from dev_observer.api.types.repo_pb2 import GitHubRepository
 from dev_observer.common.errors import TerminalError
@@ -61,9 +63,10 @@ class GitChangesHandler:
             raise TerminalError(f"Repo with id [{repo_id}] is not found")
         _log.debug(s_("Processing git changes repo", repo=repo))
         requests: List[ObservationRequest] = []
-        from_date = params.end_date - datetime.timedelta(params.look_back_days)
+        end_date = params.end_date
+        from_date = end_date - datetime.timedelta(params.look_back_days)
         analyzer = config.analysis.default_git_changes_analyzer
-        period_str = f"{params.end_date.strftime('%Y%m%dT%H%M%S')}_{params.look_back_days}d"
+        period_str = f"{end_date.strftime('%Y%m%dT%H%M')}_{params.look_back_days}d"
         key = ObservationKey(
             kind="git_changes",
             name=analyzer.file_name,
@@ -73,6 +76,6 @@ class GitChangesHandler:
             return GitChangesResult(repo=repo, observation_keys=[key])
         requests.append(ObservationRequest(prompt_prefix=analyzer.prompt_prefix, key=key))
         observed_repo = ObservedRepo(url=repo.url, github_repo=repo)
-        params = ObservedGitChanges(repo=observed_repo, from_date=from_date, to_date=params.end_date)
+        params = ObservedGitChanges(repo=observed_repo, from_date=from_date, to_date=end_date)
         keys = await self._git_changes_processor.process(params, requests, config)
         return GitChangesResult(repo=repo, observation_keys=keys)

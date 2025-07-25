@@ -25,6 +25,7 @@ const analysisConfigSchema = z.object({
   siteAnalyzers: z.array(analyzerSchema),
   disableMasking: z.boolean(),
   defaultGitChangesAnalyzer: analyzerSchema.optional(),
+  defaultAggregatedSummaryAnalyzer: analyzerSchema.optional(),
 })
 
 const repoAnalysisConfigFlattenSchema = z.object({
@@ -182,6 +183,49 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
         <FormField
           control={form.control}
           name={`analysis.defaultGitChangesAnalyzer.fileName`}
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[100px]">File Name:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input placeholder="Analyzer file name" {...field}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+      </div>
+      <Separator/>
+      <div className="border rounded-md p-4 space-y-4">
+        <h1>Default aggregated summary analyzer</h1>
+        <FormField
+          control={form.control}
+          name={`analysis.defaultAggregatedSummaryAnalyzer.name`}
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[100px]">Name:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input placeholder="Analyzer name" {...field}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name={`analysis.defaultAggregatedSummaryAnalyzer.promptPrefix`}
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[100px]">Prompt Prefix:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input placeholder="Analyzer prompt prefix" {...field}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name={`analysis.defaultAggregatedSummaryAnalyzer.fileName`}
           render={({field}) => (
             <FormItem className="flex items-center gap-4">
               <FormLabel className="w-[100px]">File Name:</FormLabel>

@@ -43,14 +43,14 @@ class GetProcessingResultResponse(_message.Message):
     def __init__(self, result: _Optional[_Union[_processing_pb2.ProcessingItemResult, _Mapping]] = ...) -> None: ...
 
 class CreateProcessingItemRequest(_message.Message):
-    __slots__ = ("key", "request", "process_immediately")
+    __slots__ = ("key", "process_immediately", "data")
     KEY_FIELD_NUMBER: _ClassVar[int]
-    REQUEST_FIELD_NUMBER: _ClassVar[int]
     PROCESS_IMMEDIATELY_FIELD_NUMBER: _ClassVar[int]
+    DATA_FIELD_NUMBER: _ClassVar[int]
     key: _processing_pb2.ProcessingItemKey
-    request: _processing_pb2.ProcessingRequest
     process_immediately: bool
-    def __init__(self, key: _Optional[_Union[_processing_pb2.ProcessingItemKey, _Mapping]] = ..., request: _Optional[_Union[_processing_pb2.ProcessingRequest, _Mapping]] = ..., process_immediately: bool = ...) -> None: ...
+    data: _processing_pb2.ProcessingItemData
+    def __init__(self, key: _Optional[_Union[_processing_pb2.ProcessingItemKey, _Mapping]] = ..., process_immediately: bool = ..., data: _Optional[_Union[_processing_pb2.ProcessingItemData, _Mapping]] = ...) -> None: ...
 
 class CreateProcessingItemResponse(_message.Message):
     __slots__ = ()
@@ -63,18 +63,6 @@ class DeleteProcessingItemRequest(_message.Message):
     def __init__(self, key: _Optional[_Union[_processing_pb2.ProcessingItemKey, _Mapping]] = ...) -> None: ...
 
 class DeleteProcessingItemResponse(_message.Message):
-    __slots__ = ()
-    def __init__(self) -> None: ...
-
-class RunProcessingRequest(_message.Message):
-    __slots__ = ("request_id", "request")
-    REQUEST_ID_FIELD_NUMBER: _ClassVar[int]
-    REQUEST_FIELD_NUMBER: _ClassVar[int]
-    request_id: str
-    request: _processing_pb2.ProcessingRequest
-    def __init__(self, request_id: _Optional[str] = ..., request: _Optional[_Union[_processing_pb2.ProcessingRequest, _Mapping]] = ...) -> None: ...
-
-class RunProcessingResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
 

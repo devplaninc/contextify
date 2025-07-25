@@ -7,11 +7,11 @@ from dev_observer.api.types.observations_pb2 import ObservationKey
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingRequest, ProcessGitChangesRequest, \
     ProcessingItemResult, ProcessingItemKey, PeriodicAggregation
 from dev_observer.common.errors import TerminalError
-from dev_observer.common.schedule import get_next_date
+from dev_observer.common.schedule import get_next_date, pb_to_datetime
 from dev_observer.log import s_
+from dev_observer.processors.aggregated_summary import AggregatedSummaryProcessor
 from dev_observer.processors.flattening import ObservationRequest
 from dev_observer.processors.git.changes import GitChangesHandler, ProcessGitChangesParams
-from dev_observer.processors.git_changes import GitChangesProcessor
 from dev_observer.processors.repos import ReposProcessor
 from dev_observer.processors.websites import WebsitesProcessor, ObservedWebsite
 from dev_observer.repository.types import ObservedRepo
@@ -25,6 +25,7 @@ _log = logging.getLogger(__name__)
 class PeriodicProcessor:
     _storage: StorageProvider
     _repos_processor: ReposProcessor
+    _aggregated_summary_processor: AggregatedSummaryProcessor
     _git_changes_handler: GitChangesHandler
     _websites_processor: Optional[WebsitesProcessor]
     _clock: Clock
@@ -32,18 +33,15 @@ class PeriodicProcessor:
     def __init__(self,
                  storage: StorageProvider,
                  repos_processor: ReposProcessor,
-                 git_changes_processor: GitChangesProcessor,
+                 aggregated_summary_processor: AggregatedSummaryProcessor,
+                 git_changes_handler: GitChangesHandler,
                  websites_processor: Optional[WebsitesProcessor] = None,
                  clock: Clock = RealClock(),
                  ):
         self._storage = storage
         self._repos_processor = repos_processor
-        self._git_changes_handler = GitChangesHandler(
-            git_changes_processor=git_changes_processor,
-            storage=storage,
-            observations=repos_processor.observations,
-            clock=clock,
-        )
+        self._git_changes_handler = git_changes_handler
+        self._aggregated_summary_processor = aggregated_summary_processor
         self._websites_processor = websites_processor
         self._clock = clock
 
@@ -86,37 +84,42 @@ class PeriodicProcessor:
             error: Optional[str] = None,
     ):
         ent_type = item.key.WhichOneof("entity")
-        if result is not None:
-            await self._storage.add_processing_result(ProcessingItemResult(
-                id=item.key.request_id,
-                key=item.key,
-                error_message=error,
-                observations=result,
-                request=item.request if item.HasField("request") else None,
-            ))
-            if ent_type == "request_id":
-                await self._storage.delete_processing_item(item.key)
-            if ent_type == "periodic_aggregation_id":
-                await self._schedule_periodic(item.key, item.periodic_aggregation)
-            else:
-                await self._storage.set_next_processing_time(item.key, None, error)
-        else:
-            if error:
-                await self._storage.set_processing_error(item.key, error)
-
-    async def _schedule_periodic(
-            self, key: ProcessingItemKey, item: PeriodicAggregation) -> Optional[List[ObservationKey]]:
-        if not item.HasField("schedule"):
-            raise TerminalError("Schedule not provided")
         try:
-            next_date = get_next_date(item.params.end_date, item.schedule)
+            if result is not None:
+                await self._storage.add_processing_result(ProcessingItemResult(
+                    id=item.key.request_id,
+                    key=item.key,
+                    error_message=error,
+                    observations=result,
+                    data=item.data,
+                ))
+                if ent_type == "request_id":
+                    await self._storage.delete_processing_item(item.key)
+                if ent_type == "periodic_aggregation_id":
+                    await self._finalize_periodic_aggregation(item.key, item.data.periodic_aggregation)
+                else:
+                    await self._storage.set_next_processing_time(item.key, None, error)
+            else:
+                # If result is none, keep retrying periodically. That means processing is not enabled yet.
+                if error:
+                    await self._storage.set_processing_error(item.key, error)
+        except TerminalError as e:
+            _log.exception(s_("Failed to finalize execution due to terminal error, deleting", item=item, err=e))
+            await self._storage.set_next_processing_time(item.key, None, f"{e}")
+
+    async def _finalize_periodic_aggregation(self, key: ProcessingItemKey, aggregation: PeriodicAggregation):
+        if not aggregation.HasField("schedule"):
+            raise TerminalError("Schedule not provided")
+        old_end = pb_to_datetime(aggregation.params.end_date)
+        try:
+            next_date = get_next_date(old_end, aggregation.schedule)
         except Exception as e:
             raise TerminalError(f"Failed to compute next run: {e}")
-        item.params.end_date = next_date
         next_processing = next_date if self._clock.now() < next_date else self._clock.now() + timedelta(seconds=5)
 
         def updater(db_item: ProcessingItem):
-            db_item.periodic_aggregation.CopyFrom(item)
+            db_item.data.periodic_aggregation.params.end_date = next_date
+            return db_item
 
         await self._storage.update_processing_item(key, updater, next_processing)
 
@@ -130,9 +133,15 @@ class PeriodicProcessor:
                 raise ValueError(f"Website processor is not configured")
             return await self._process_website(item.key.website_url)
         elif ent_type == "request_id":
-            if not item.HasField("request"):
+            if not item.HasField("data") or not item.data.HasField("request"):
                 raise TerminalError(f"Request not defined for request id {item.key.request_id}")
-            return await self._process_request(item.request)
+            return await self._process_request(item.data.request)
+        elif ent_type == "periodic_aggregation_id":
+            if not item.HasField("data") or not item.data.HasField("periodic_aggregation"):
+                raise TerminalError(
+                    f"Periodic aggregation not defined for aggregation id {item.key.periodic_aggregation_id}")
+            return await self._process_periodic_aggregation(
+                item.key.periodic_aggregation_id, item.data.periodic_aggregation)
         else:
             raise ValueError(f"[{ent_type}] is not supported")
 
@@ -194,3 +203,30 @@ class PeriodicProcessor:
             repo_id=req.git_repo_id,
         ))
         return res.observation_keys if res else None
+
+    async def _process_periodic_aggregation(
+            self, aggregation_id: str, req: PeriodicAggregation) -> Optional[List[ObservationKey]]:
+        config = await self._storage.get_global_config()
+        if not config.analysis.HasField("default_aggregated_summary_analyzer"):
+            _log.warning(s_("Aggregated summary disabled"))
+            return None
+        analyzer = config.analysis.default_aggregated_summary_analyzer
+        params = req.params
+        end_date = pb_to_datetime(params.end_date)
+        period_str = f"{end_date.strftime('%Y%m%dT%H%M')}_{params.look_back_days}d"
+        key = ObservationKey(
+            kind="aggregated_summary",
+            name=analyzer.file_name,
+            key=f"{aggregation_id}/{period_str}/{analyzer.file_name}",
+        )
+        obs_request = ObservationRequest(prompt_prefix=analyzer.prompt_prefix, key=key)
+        extra = {
+            "op": "process_periodic_aggregation",
+            "aggregation_id": aggregation_id,
+            "params": params,
+            "request": obs_request,
+        }
+        _log.info(s_("Starting", **extra))
+        result = await self._aggregated_summary_processor.process(params, [obs_request], config)
+        _log.info(s_("Processed", **extra))
+        return result

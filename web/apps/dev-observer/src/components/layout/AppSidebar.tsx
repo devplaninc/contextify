@@ -1,5 +1,5 @@
 import * as React from "react"
-import {ShieldUser, SquareTerminal, Globe} from "lucide-react"
+import {ShieldUser, SquareTerminal, Globe, ScanSearch} from "lucide-react"
 
 import {NavSecondary} from "@/components/nav-secondary.tsx"
 import {
@@ -16,6 +16,7 @@ import {useRepositories} from "@/hooks/useRepositoryQueries.ts";
 import {ErrorAlert} from "@/components/ErrorAlert.tsx";
 import {Loader} from "@/components/Loader.tsx";
 import {Link} from "react-router";
+import {processingPath} from "@/paths.tsx";
 
 const data = {
   user: {
@@ -34,6 +35,11 @@ const data = {
       title: "Websites",
       url: "/websites",
       icon: Globe,
+    },
+    {
+      title: "Processing",
+      url: processingPath(),
+      icon: ScanSearch,
     },
     {
       title: "Admin",

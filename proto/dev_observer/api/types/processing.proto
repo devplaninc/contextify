@@ -19,15 +19,15 @@ message ProcessingItemKey {
 }
 
 message ProcessingItem {
+  reserved 6;
+  reserved "request";
   ProcessingItemKey key = 1;
   optional google.protobuf.Timestamp next_processing = 2;
   optional google.protobuf.Timestamp last_processed = 3;
   optional string last_error = 4;
   bool no_processing = 5;
-  optional ProcessingRequest request = 6;
   optional google.protobuf.Timestamp processing_started_at = 7;
-
-  optional PeriodicAggregation periodic_aggregation = 100;
+  optional ProcessingItemData data = 8;
 }
 
 message PeriodicAggregation {
@@ -46,10 +46,6 @@ message AggregatedSummaryParams {
 }
 
 message ProcessingRequest {
-  string created_by = 1;
-  string namespace = 2;
-  // Free form indexed reference id that may be useful for connecting request to a specific repo or other entity.
-  string reference_id = 3;
   oneof type {
     ProcessGitChangesRequest git_changes = 100;
   }
@@ -61,15 +57,26 @@ message ProcessGitChangesRequest {
 }
 
 message ProcessingItemResult {
+  reserved 6;
+  reserved "request";
   // Unique id of the result
   string id = 1;
   ProcessingItemKey key = 2;
   repeated dev_observer.api.types.observations.ObservationKey observations = 3;
   optional string error_message = 4;
   google.protobuf.Timestamp created_at = 5;
-  optional ProcessingRequest request = 6;
+  optional ProcessingItemData data = 7;
+}
 
-  optional PeriodicAggregation periodic_aggregation = 100;
+message ProcessingItemData {
+  // Free form indexed reference id that may be useful for connecting request to a specific repo or other entity.
+  string reference_id = 1;
+  string namespace = 2;
+  string created_by = 3;
+  oneof type {
+    ProcessingRequest request = 100;
+    PeriodicAggregation periodic_aggregation = 101;
+  }
 }
 
 message ProcessingResultFilter {

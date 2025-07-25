@@ -19,8 +19,8 @@ export function ProcessingResultHeader({result}: { result: ProcessingItemResult 
 }
 
 function ResultSpecificHeader({result}: { result: ProcessingItemResult }) {
-  if (result.request) {
-    return <RequestHeader result={result} request={result.request}/>
+  if (result.data?.type?.$case === "request") {
+    return <RequestHeader result={result} request={result.data.type.value}/>
   }
   return null
 }
@@ -29,8 +29,8 @@ function RequestHeader(params: { result: ProcessingItemResult, request: Processi
   const {result} = params
   return <div className="flex items-center gap-2">
     <RequestTypeHeader {...params} />
-    {result.request?.namespace && <div>ns: {result.request?.createdBy}</div>}
-    {result.request?.createdBy && <div>createdBy: {result.request?.createdBy}</div>}
+    {result.data?.namespace && <div>ns: {result.data?.namespace}</div>}
+    {result.data?.createdBy && <div>createdBy: {result.data?.createdBy}</div>}
   </div>
 }
 

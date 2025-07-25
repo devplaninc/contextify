@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from dev_observer.api.types import observations_pb2 as dev__observer_dot_api_dot_types_dot_observations__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#dev_observer/api/types/config.proto\x12\x1d\x64\x65v_observer.api.types.config\x1a)dev_observer/api/types/observations.proto\"\xe9\x01\n\x0cGlobalConfig\x12?\n\x08\x61nalysis\x18\x01 \x01(\x0b\x32-.dev_observer.api.types.config.AnalysisConfig\x12H\n\rrepo_analysis\x18\x02 \x01(\x0b\x32\x31.dev_observer.api.types.config.RepoAnalysisConfig\x12N\n\x10website_crawling\x18\x03 \x01(\x0b\x32\x34.dev_observer.api.types.config.WebsiteCrawlingConfig\"\xb2\x02\n\x0e\x41nalysisConfig\x12\x45\n\x0erepo_analyzers\x18\x01 \x03(\x0b\x32-.dev_observer.api.types.observations.Analyzer\x12\x45\n\x0esite_analyzers\x18\x02 \x03(\x0b\x32-.dev_observer.api.types.observations.Analyzer\x12\x17\n\x0f\x64isable_masking\x18\x03 \x01(\x08\x12X\n\x1c\x64\x65\x66\x61ult_git_changes_analyzer\x18\x04 \x01(\x0b\x32-.dev_observer.api.types.observations.AnalyzerH\x00\x88\x01\x01\x42\x1f\n\x1d_default_git_changes_analyzer\"W\n\x14UserManagementStatus\x12\x0f\n\x07\x65nabled\x18\x01 \x01(\x08\x12\x1b\n\x0epublic_api_key\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x11\n\x0f_public_api_key\"\xa9\x03\n\x12RepoAnalysisConfig\x12J\n\x07\x66latten\x18\x01 \x01(\x0b\x32\x39.dev_observer.api.types.config.RepoAnalysisConfig.Flatten\x12\x1f\n\x17processing_interval_sec\x18\x02 \x01(\x05\x12\x10\n\x08\x64isabled\x18\x03 \x01(\x08\x1a\x93\x02\n\x07\x46latten\x12\x10\n\x08\x63ompress\x18\x01 \x01(\x08\x12\x1a\n\x12remove_empty_lines\x18\x02 \x01(\x08\x12\x11\n\tout_style\x18\x03 \x01(\t\x12\x1c\n\x14max_tokens_per_chunk\x18\x04 \x01(\x05\x12\x18\n\x10max_repo_size_mb\x18\x05 \x01(\x05\x12\x16\n\x0eignore_pattern\x18\x06 \x01(\t\x12\x1f\n\x17large_repo_threshold_mb\x18\x07 \x01(\x05\x12!\n\x19large_repo_ignore_pattern\x18\x08 \x01(\t\x12\x16\n\x0e\x63ompress_large\x18\t \x01(\x08\x12\x1b\n\x13max_file_size_bytes\x18\n \x01(\x05\"\xa1\x01\n\x15WebsiteCrawlingConfig\x12$\n\x1cwebsite_scan_timeout_seconds\x18\x01 \x01(\x05\x12\'\n\x1fscrapy_response_timeout_seconds\x18\x02 \x01(\x05\x12\x13\n\x0b\x63rawl_depth\x18\x03 \x01(\x05\x12$\n\x1ctimeout_without_data_seconds\x18\x04 \x01(\x05\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#dev_observer/api/types/config.proto\x12\x1d\x64\x65v_observer.api.types.config\x1a)dev_observer/api/types/observations.proto\"\xe9\x01\n\x0cGlobalConfig\x12?\n\x08\x61nalysis\x18\x01 \x01(\x0b\x32-.dev_observer.api.types.config.AnalysisConfig\x12H\n\rrepo_analysis\x18\x02 \x01(\x0b\x32\x31.dev_observer.api.types.config.RepoAnalysisConfig\x12N\n\x10website_crawling\x18\x03 \x01(\x0b\x32\x34.dev_observer.api.types.config.WebsiteCrawlingConfig\"\xbb\x03\n\x0e\x41nalysisConfig\x12\x45\n\x0erepo_analyzers\x18\x01 \x03(\x0b\x32-.dev_observer.api.types.observations.Analyzer\x12\x45\n\x0esite_analyzers\x18\x02 \x03(\x0b\x32-.dev_observer.api.types.observations.Analyzer\x12\x17\n\x0f\x64isable_masking\x18\x03 \x01(\x08\x12X\n\x1c\x64\x65\x66\x61ult_git_changes_analyzer\x18\x04 \x01(\x0b\x32-.dev_observer.api.types.observations.AnalyzerH\x00\x88\x01\x01\x12_\n#default_aggregated_summary_analyzer\x18\x05 \x01(\x0b\x32-.dev_observer.api.types.observations.AnalyzerH\x01\x88\x01\x01\x42\x1f\n\x1d_default_git_changes_analyzerB&\n$_default_aggregated_summary_analyzer\"W\n\x14UserManagementStatus\x12\x0f\n\x07\x65nabled\x18\x01 \x01(\x08\x12\x1b\n\x0epublic_api_key\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x11\n\x0f_public_api_key\"\xa9\x03\n\x12RepoAnalysisConfig\x12J\n\x07\x66latten\x18\x01 \x01(\x0b\x32\x39.dev_observer.api.types.config.RepoAnalysisConfig.Flatten\x12\x1f\n\x17processing_interval_sec\x18\x02 \x01(\x05\x12\x10\n\x08\x64isabled\x18\x03 \x01(\x08\x1a\x93\x02\n\x07\x46latten\x12\x10\n\x08\x63ompress\x18\x01 \x01(\x08\x12\x1a\n\x12remove_empty_lines\x18\x02 \x01(\x08\x12\x11\n\tout_style\x18\x03 \x01(\t\x12\x1c\n\x14max_tokens_per_chunk\x18\x04 \x01(\x05\x12\x18\n\x10max_repo_size_mb\x18\x05 \x01(\x05\x12\x16\n\x0eignore_pattern\x18\x06 \x01(\t\x12\x1f\n\x17large_repo_threshold_mb\x18\x07 \x01(\x05\x12!\n\x19large_repo_ignore_pattern\x18\x08 \x01(\t\x12\x16\n\x0e\x63ompress_large\x18\t \x01(\x08\x12\x1b\n\x13max_file_size_bytes\x18\n \x01(\x05\"\xa1\x01\n\x15WebsiteCrawlingConfig\x12$\n\x1cwebsite_scan_timeout_seconds\x18\x01 \x01(\x05\x12\'\n\x1fscrapy_response_timeout_seconds\x18\x02 \x01(\x05\x12\x13\n\x0b\x63rawl_depth\x18\x03 \x01(\x05\x12$\n\x1ctimeout_without_data_seconds\x18\x04 \x01(\x05\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,13 +35,13 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GLOBALCONFIG']._serialized_start=114
   _globals['_GLOBALCONFIG']._serialized_end=347
   _globals['_ANALYSISCONFIG']._serialized_start=350
-  _globals['_ANALYSISCONFIG']._serialized_end=656
-  _globals['_USERMANAGEMENTSTATUS']._serialized_start=658
-  _globals['_USERMANAGEMENTSTATUS']._serialized_end=745
-  _globals['_REPOANALYSISCONFIG']._serialized_start=748
-  _globals['_REPOANALYSISCONFIG']._serialized_end=1173
-  _globals['_REPOANALYSISCONFIG_FLATTEN']._serialized_start=898
-  _globals['_REPOANALYSISCONFIG_FLATTEN']._serialized_end=1173
-  _globals['_WEBSITECRAWLINGCONFIG']._serialized_start=1176
-  _globals['_WEBSITECRAWLINGCONFIG']._serialized_end=1337
+  _globals['_ANALYSISCONFIG']._serialized_end=793
+  _globals['_USERMANAGEMENTSTATUS']._serialized_start=795
+  _globals['_USERMANAGEMENTSTATUS']._serialized_end=882
+  _globals['_REPOANALYSISCONFIG']._serialized_start=885
+  _globals['_REPOANALYSISCONFIG']._serialized_end=1310
+  _globals['_REPOANALYSISCONFIG_FLATTEN']._serialized_start=1035
+  _globals['_REPOANALYSISCONFIG_FLATTEN']._serialized_end=1310
+  _globals['_WEBSITECRAWLINGCONFIG']._serialized_start=1313
+  _globals['_WEBSITECRAWLINGCONFIG']._serialized_end=1474
 # @@protoc_insertion_point(module_scope)

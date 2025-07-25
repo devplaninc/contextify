@@ -75,6 +75,21 @@ class TestGetNextDate:
 
         assert result == expected
 
+    def test_weekly_schedule_same_day_same_time(self):
+        current_time = datetime.datetime(2025, 7, 24, 15, 30, 0, tzinfo=ZoneInfo('UTC'))
+
+        # Schedule for Thursday 15:30 UTC weekly
+        schedule = Schedule()
+        schedule.frequency.weekly.day_of_week = DayOfWeek.THURSDAY
+        schedule.frequency.weekly.time.time_of_day.hours = 15
+        schedule.frequency.weekly.time.time_of_day.minutes = 30
+        schedule.frequency.weekly.time.time_zone.id = 'UTC'
+
+        result = get_next_date(current_time, schedule)
+        expected = datetime.datetime(2025, 7, 31, 15, 30, 0, tzinfo=ZoneInfo('UTC'))
+
+        assert result == expected
+
     def test_weekly_schedule_same_day_past_time(self):
         """Test weekly schedule when target day is today but time has passed."""
         # Current time: Thursday 2025-07-24 16:00:00 UTC

@@ -8,6 +8,7 @@ from dev_observer.repository.types import ObservedRepo
 from dev_observer.repository.github import GithubAuthProvider
 from dev_observer.repository.util import get_valid_repo_app_info
 from dev_observer.storage.provider import StorageProvider
+from dev_observer.util import Clock, RealClock
 
 _log = logging.getLogger(__name__)
 
@@ -16,11 +17,13 @@ class GithubAppAuthProvider(GithubAuthProvider):
     _private_key: str
     _app_id: str
     _storage: StorageProvider
+    _clock: Clock
 
-    def __init__(self, app_id: str, private_key: str, storage: StorageProvider):
+    def __init__(self, app_id: str, private_key: str, storage: StorageProvider, clock: Clock = RealClock()):
         self._private_key = private_key
         self._app_id = app_id
         self._storage = storage
+        self._clock = clock
 
     async def get_auth(self, repo: ObservedRepo) -> Auth:
         auth = Auth.AppAuth(self._app_id, self._private_key)
@@ -46,7 +49,7 @@ class GithubAppAuthProvider(GithubAuthProvider):
         with GithubIntegration(auth=auth) as gh:
             installation_id = gh.get_repo_installation(parts[0], parts[1]).id
             app_info = GitAppInfo(
-                last_refresh=datetime.now(),
+                last_refresh=self._clock.now(),
                 installation_id=installation_id
             )
         stored_repo = repo.github_repo

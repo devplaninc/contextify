@@ -9,8 +9,8 @@ from dev_observer.api.types.observations_pb2 import ObservationKey
 from dev_observer.api.types.processing_pb2 import ProcessingItemKey
 from dev_observer.api.web.observations_pb2 import GetObservationResponse, GetObservationsResponse, \
     CreateProcessingItemRequest, CreateProcessingItemResponse, DeleteProcessingItemRequest, \
-    DeleteProcessingItemResponse, GetProcessingResultsRequest, GetProcessingResultsResponse, RunProcessingRequest, \
-    RunProcessingResponse, GetProcessingRunStatusResponse, GetProcessingItemsRequest, GetProcessingItemsResponse, \
+    DeleteProcessingItemResponse, GetProcessingResultsRequest, GetProcessingResultsResponse, \
+    GetProcessingRunStatusResponse, GetProcessingItemsRequest, GetProcessingItemsResponse, \
     GetProcessingResultResponse
 from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
@@ -40,7 +40,6 @@ class ObservationsService:
         self.router.add_api_route("/processing/items", self.delete_processing_item, methods=["DELETE"])
         self.router.add_api_route("/processing/results", self.get_processing_results, methods=["POST"])
         self.router.add_api_route("/processing/results/{result_id}", self.get_processing_result, methods=["GET"])
-        self.router.add_api_route("/processing/requests/runs", self.run_processing_request, methods=["POST"])
         self.router.add_api_route("/processing/requests/runs/{request_id}",
                                   self.get_processing_request_status, methods=["GET"])
 
@@ -57,7 +56,7 @@ class ObservationsService:
         req = parse_dict_pb(await request.json(), CreateProcessingItemRequest())
         _log.debug(s_("Adding processing item", req=req))
         next_process = self._clock.now() if req.process_immediately else None
-        await self._store.create_processing_time(req.key, req.request, schedule=None, next_time=next_process)
+        await self._store.create_processing_time(req.key, req.data, next_time=next_process)
         return pb_to_dict(CreateProcessingItemResponse())
 
     async def get_filtered_processing_tems(self, request: Request):
@@ -87,19 +86,6 @@ class ObservationsService:
         _log.debug(s_("Get processing result", result_id=result_id))
         result = await self._store.get_processing_result(result_id)
         return pb_to_dict(GetProcessingResultResponse(result=result))
-
-    async def run_processing_request(self, request: Request):
-        req = parse_dict_pb(await request.json(), RunProcessingRequest())
-        _log.debug(s_("Run processing request", req=req))
-        req_id = req.request_id
-        # validating that request id is UUID
-        uuid.UUID(req_id)
-        await self._store.create_processing_time(
-            key=ProcessingItemKey(request_id=req_id),
-            request=req.request if req.HasField("request") else None,
-            next_time=self._clock.now(),
-        )
-        return pb_to_dict(RunProcessingResponse())
 
     async def get_processing_request_status(self, request_id: str):
         _log.debug(s_("Get processing status", request_id=request_id))

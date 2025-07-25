@@ -11,10 +11,10 @@ from google.protobuf import timestamp
 from dev_observer.api.storage.local_pb2 import LocalStorageData
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
-    ProcessingRequest, ProcessingResultFilter, ProcessingItemsFilter
+    ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
 from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
-from dev_observer.api.types.schedule_pb2 import Schedule
 from dev_observer.api.types.sites_pb2 import WebSite
+from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
 from dev_observer.util import Clock, RealClock
 
@@ -118,23 +118,23 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
     async def next_processing_item(self) -> Optional[ProcessingItem]:
         now = self._clock.now()
         items = [i for i in self._get().processing_items if
-                 i.HasField("next_processing") and timestamp.to_datetime(i.next_processing,
-                                                                         tz=datetime.timezone.utc) < now]
+                 i.HasField("next_processing") and pb_to_datetime(i.next_processing) < now]
         if len(items) == 0:
             return None
-        items.sort(key=lambda item: timestamp.to_datetime(item.next_processing))
+        items.sort(key=lambda item: pb_to_datetime(item.next_processing))
         return items[0]
 
     async def get_processing_items(self, filter: ProcessingItemsFilter) -> Sequence[ProcessingItem]:
         items = []
 
         for item in self._get().processing_items:
-            if filter.namespace and filter.namespace != item.request.namespace:
+            if filter.namespace and filter.namespace != item.data.namespace:
                 continue
-            if filter.reference_id and filter.reference_id != item.request.reference_id:
+            if filter.reference_id and filter.reference_id != item.data.reference_id:
                 continue
             if filter.request_type:
-                if not item.HasField("request") or filter.request_type != item.request.WhichOneof("type"):
+                is_req = item.HasField("data") and item.data.WhichOneof("type") == "request"
+                if not is_req or filter.request_type != item.data.request.WhichOneof("type"):
                     continue
 
             items.append(item)
@@ -198,19 +198,14 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
             return self._get()
 
     async def create_processing_time(self, key: ProcessingItemKey,
-                                     request: Optional[ProcessingRequest] = None,
-                                     schedule: Optional[Schedule] = None,
+                                     data: Optional[ProcessingItemData] = None,
                                      next_time: Optional[datetime.datetime] = None):
         def up(d: LocalStorageData):
             for item in d.processing_items:
                 if item.key == key:
                     return
 
-            new_item = ProcessingItem(
-                key=key,
-                schedule=schedule,
-                request=request,
-            )
+            new_item = ProcessingItem(key=key, data=data)
             if next_time is not None:
                 new_item.next_processing.CopyFrom(timestamp.from_milliseconds(int(next_time.timestamp() * 1000)))
 
@@ -221,7 +216,7 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
     async def update_processing_item(
             self,
             key: ProcessingItemKey,
-            updater: Callable[[ProcessingItem], None],
+            updater: Callable[[ProcessingItem], ProcessingItem],
             next_time: Optional[datetime.datetime],
     ):
         def up(d: LocalStorageData):
@@ -281,19 +276,20 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
             to_date = to_date.replace(tzinfo=datetime.timezone.utc)
 
         for result in self._get().processing_results:
-            if filter.namespace and filter.namespace != result.request.namespace:
+            if filter.namespace and filter.namespace != result.data.namespace:
                 continue
-            if filter.reference_id and filter.reference_id != result.request.reference_id:
+            if filter.reference_id and filter.reference_id != result.data.reference_id:
                 continue
-            if filter.request_type and (not result.HasField("request")
-                                        or filter.request_type != result.request.WhichOneof("type")):
+            is_req = result.HasField("data") and result.data.WhichOneof("type") == "request"
+            if filter.request_type and (not is_req
+                                        or filter.request_type != result.data.request.WhichOneof("type")):
                 continue
-            created_at = timestamp.to_datetime(result.created_at, tz=datetime.timezone.utc)
+            created_at = pb_to_datetime(result.created_at)
             if from_date <= created_at <= to_date:
                 results.append(result)
 
         # Sort by created_at descending (most recent first)
-        results.sort(key=lambda r: timestamp.to_datetime(r.created_at, tz=datetime.timezone.utc), reverse=True)
+        results.sort(key=lambda r: pb_to_datetime(r.created_at), reverse=True)
         return results
 
     async def get_processing_time(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:

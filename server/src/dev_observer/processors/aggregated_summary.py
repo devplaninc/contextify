@@ -10,6 +10,7 @@ from dev_observer.analysis.provider import AnalysisProvider
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.observations_pb2 import ObservationKey, Observation
 from dev_observer.api.types.processing_pb2 import AggregatedSummaryParams
+from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.flatten.flatten import FlattenResult, tokenize_file
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.processors.flattening import FlatteningProcessor
@@ -37,22 +38,27 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
             prompts: PromptsProvider,
             observations: ObservationsProvider,
             tokenizer: TokenizerProvider,
+            git_changes_handler: GitChangesHandler
     ):
         super().__init__(analysis, prompts, observations)
         self.repository = repository
         self.tokenizer = tokenizer
+        self.git_changes_handler=git_changes_handler
 
     async def get_flatten(self, params: AggregatedSummaryParams, config: GlobalConfig) -> FlattenResult:
         items: List[AggregatedItem] = []
+        extra_keys: List[ObservationKey] = []
+        end_date = pb_to_datetime(params.end_date)
         for repo_id in params.target.git_repo_ids:
             git_result = await self.git_changes_handler.process_git_changes(ProcessGitChangesParams(
                 repo_id=repo_id,
-                end_date=params.end_date,
+                end_date=end_date,
                 look_back_days=params.look_back_days,
             ))
             repo = git_result.repo
             header = f"Changes for repository **{repo.full_name}**"
             items.append(AggregatedItem(header=header, keys=git_result.observation_keys))
+            extra_keys.extend(git_result.observation_keys)
 
         # Download all observations in parallel
         async def process_item(item: AggregatedItem):
@@ -68,8 +74,8 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
         combined_file_path = os.path.join(temp_dir, "combined_observations.md")
 
         with open(combined_file_path, 'w', encoding='utf-8') as f:
-            start_date = params.end_date - datetime.timedelta(params.look_back_days)
-            f.write(f"# Summaries of changes between: {_fmt_date(start_date)} - {_fmt_date(params.end_date)}:\n\n")
+            start_date = end_date - datetime.timedelta(params.look_back_days)
+            f.write(f"# Summaries of changes between: {_fmt_date(start_date)} - {_fmt_date(end_date)}:\n\n")
             for part in parts:
                 f.write(part)
                 f.write("\n\n---\n\n")
@@ -84,12 +90,12 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
                 return True
             return False
 
-        # Return FlattenResult
         return FlattenResult(
             full_file_path=combined_file_path,
             file_paths=tokenize_result.file_paths,
             total_tokens=tokenize_result.total_tokens,
             clean_up=clean_up,
+            extra_keys=extra_keys,
         )
 
 

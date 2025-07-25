@@ -5,6 +5,6 @@ export interface NamespaceProcessingItemsProps {
 }
 
 export function NamespaceProcessingItems({namespace}: NamespaceProcessingItemsProps) {
-  useProcessingItemsForNamespace(namespace);
+  useProcessingItemsForNamespace({namespace});
   return <div>{namespace}</div>
 }

@@ -15,6 +15,7 @@ message AnalysisConfig {
   repeated dev_observer.api.types.observations.Analyzer site_analyzers = 2;
   bool disable_masking = 3;
   optional dev_observer.api.types.observations.Analyzer default_git_changes_analyzer = 4;
+  optional dev_observer.api.types.observations.Analyzer default_aggregated_summary_analyzer = 5;
 }
 
 message UserManagementStatus {

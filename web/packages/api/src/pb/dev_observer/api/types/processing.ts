@@ -33,9 +33,8 @@ export interface ProcessingItem {
   lastProcessed?: Date | undefined;
   lastError?: string | undefined;
   noProcessing: boolean;
-  request?: ProcessingRequest | undefined;
   processingStartedAt?: Date | undefined;
-  periodicAggregation?: PeriodicAggregation | undefined;
+  data?: ProcessingItemData | undefined;
 }
 
 export interface PeriodicAggregation {
@@ -54,10 +53,6 @@ export interface AggregatedSummaryParams_Target {
 }
 
 export interface ProcessingRequest {
-  createdBy: string;
-  namespace: string;
-  /** Free form indexed reference id that may be useful for connecting request to a specific repo or other entity. */
-  referenceId: string;
   type?: { $case: "gitChanges"; value: ProcessGitChangesRequest } | undefined;
 }
 
@@ -73,8 +68,18 @@ export interface ProcessingItemResult {
   observations: ObservationKey[];
   errorMessage?: string | undefined;
   createdAt: Date | undefined;
-  request?: ProcessingRequest | undefined;
-  periodicAggregation?: PeriodicAggregation | undefined;
+  data?: ProcessingItemData | undefined;
+}
+
+export interface ProcessingItemData {
+  /** Free form indexed reference id that may be useful for connecting request to a specific repo or other entity. */
+  referenceId: string;
+  namespace: string;
+  createdBy: string;
+  type?:
+    | { $case: "request"; value: ProcessingRequest }
+    | { $case: "periodicAggregation"; value: PeriodicAggregation }
+    | undefined;
 }
 
 export interface ProcessingResultFilter {
@@ -230,9 +235,8 @@ function createBaseProcessingItem(): ProcessingItem {
     lastProcessed: undefined,
     lastError: undefined,
     noProcessing: false,
-    request: undefined,
     processingStartedAt: undefined,
-    periodicAggregation: undefined,
+    data: undefined,
   };
 }
 
@@ -253,14 +257,11 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     if (message.noProcessing !== false) {
       writer.uint32(40).bool(message.noProcessing);
     }
-    if (message.request !== undefined) {
-      ProcessingRequest.encode(message.request, writer.uint32(50).fork()).join();
-    }
     if (message.processingStartedAt !== undefined) {
       Timestamp.encode(toTimestamp(message.processingStartedAt), writer.uint32(58).fork()).join();
     }
-    if (message.periodicAggregation !== undefined) {
-      PeriodicAggregation.encode(message.periodicAggregation, writer.uint32(802).fork()).join();
+    if (message.data !== undefined) {
+      ProcessingItemData.encode(message.data, writer.uint32(66).fork()).join();
     }
     return writer;
   },
@@ -312,14 +313,6 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
           message.noProcessing = reader.bool();
           continue;
         }
-        case 6: {
-          if (tag !== 50) {
-            break;
-          }
-
-          message.request = ProcessingRequest.decode(reader, reader.uint32());
-          continue;
-        }
         case 7: {
           if (tag !== 58) {
             break;
@@ -328,12 +321,12 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
           message.processingStartedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           continue;
         }
-        case 100: {
-          if (tag !== 802) {
+        case 8: {
+          if (tag !== 66) {
             break;
           }
 
-          message.periodicAggregation = PeriodicAggregation.decode(reader, reader.uint32());
+          message.data = ProcessingItemData.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -352,13 +345,10 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
       lastProcessed: isSet(object.lastProcessed) ? fromJsonTimestamp(object.lastProcessed) : undefined,
       lastError: isSet(object.lastError) ? gt.String(object.lastError) : undefined,
       noProcessing: isSet(object.noProcessing) ? gt.Boolean(object.noProcessing) : false,
-      request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
       processingStartedAt: isSet(object.processingStartedAt)
         ? fromJsonTimestamp(object.processingStartedAt)
         : undefined,
-      periodicAggregation: isSet(object.periodicAggregation)
-        ? PeriodicAggregation.fromJSON(object.periodicAggregation)
-        : undefined,
+      data: isSet(object.data) ? ProcessingItemData.fromJSON(object.data) : undefined,
     };
   },
 
@@ -379,14 +369,11 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     if (message.noProcessing !== false) {
       obj.noProcessing = message.noProcessing;
     }
-    if (message.request !== undefined) {
-      obj.request = ProcessingRequest.toJSON(message.request);
-    }
     if (message.processingStartedAt !== undefined) {
       obj.processingStartedAt = message.processingStartedAt.toISOString();
     }
-    if (message.periodicAggregation !== undefined) {
-      obj.periodicAggregation = PeriodicAggregation.toJSON(message.periodicAggregation);
+    if (message.data !== undefined) {
+      obj.data = ProcessingItemData.toJSON(message.data);
     }
     return obj;
   },
@@ -403,12 +390,9 @@ export const ProcessingItem: MessageFns<ProcessingItem> = {
     message.lastProcessed = object.lastProcessed ?? undefined;
     message.lastError = object.lastError ?? undefined;
     message.noProcessing = object.noProcessing ?? false;
-    message.request = (object.request !== undefined && object.request !== null)
-      ? ProcessingRequest.fromPartial(object.request)
-      : undefined;
     message.processingStartedAt = object.processingStartedAt ?? undefined;
-    message.periodicAggregation = (object.periodicAggregation !== undefined && object.periodicAggregation !== null)
-      ? PeriodicAggregation.fromPartial(object.periodicAggregation)
+    message.data = (object.data !== undefined && object.data !== null)
+      ? ProcessingItemData.fromPartial(object.data)
       : undefined;
     return message;
   },
@@ -647,20 +631,11 @@ export const AggregatedSummaryParams_Target: MessageFns<AggregatedSummaryParams_
 };
 
 function createBaseProcessingRequest(): ProcessingRequest {
-  return { createdBy: "", namespace: "", referenceId: "", type: undefined };
+  return { type: undefined };
 }
 
 export const ProcessingRequest: MessageFns<ProcessingRequest> = {
   encode(message: ProcessingRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.createdBy !== "") {
-      writer.uint32(10).string(message.createdBy);
-    }
-    if (message.namespace !== "") {
-      writer.uint32(18).string(message.namespace);
-    }
-    if (message.referenceId !== "") {
-      writer.uint32(26).string(message.referenceId);
-    }
     switch (message.type?.$case) {
       case "gitChanges":
         ProcessGitChangesRequest.encode(message.type.value, writer.uint32(802).fork()).join();
@@ -676,30 +651,6 @@ export const ProcessingRequest: MessageFns<ProcessingRequest> = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.createdBy = reader.string();
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.namespace = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.referenceId = reader.string();
-          continue;
-        }
         case 100: {
           if (tag !== 802) {
             break;
@@ -719,9 +670,6 @@ export const ProcessingRequest: MessageFns<ProcessingRequest> = {
 
   fromJSON(object: any): ProcessingRequest {
     return {
-      createdBy: isSet(object.createdBy) ? gt.String(object.createdBy) : "",
-      namespace: isSet(object.namespace) ? gt.String(object.namespace) : "",
-      referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : "",
       type: isSet(object.gitChanges)
         ? { $case: "gitChanges", value: ProcessGitChangesRequest.fromJSON(object.gitChanges) }
         : undefined,
@@ -730,15 +678,6 @@ export const ProcessingRequest: MessageFns<ProcessingRequest> = {
 
   toJSON(message: ProcessingRequest): unknown {
     const obj: any = {};
-    if (message.createdBy !== "") {
-      obj.createdBy = message.createdBy;
-    }
-    if (message.namespace !== "") {
-      obj.namespace = message.namespace;
-    }
-    if (message.referenceId !== "") {
-      obj.referenceId = message.referenceId;
-    }
     if (message.type?.$case === "gitChanges") {
       obj.gitChanges = ProcessGitChangesRequest.toJSON(message.type.value);
     }
@@ -750,9 +689,6 @@ export const ProcessingRequest: MessageFns<ProcessingRequest> = {
   },
   fromPartial(object: DeepPartial<ProcessingRequest>): ProcessingRequest {
     const message = createBaseProcessingRequest();
-    message.createdBy = object.createdBy ?? "";
-    message.namespace = object.namespace ?? "";
-    message.referenceId = object.referenceId ?? "";
     switch (object.type?.$case) {
       case "gitChanges": {
         if (object.type?.value !== undefined && object.type?.value !== null) {
@@ -842,15 +778,7 @@ export const ProcessGitChangesRequest: MessageFns<ProcessGitChangesRequest> = {
 };
 
 function createBaseProcessingItemResult(): ProcessingItemResult {
-  return {
-    id: "",
-    key: undefined,
-    observations: [],
-    errorMessage: undefined,
-    createdAt: undefined,
-    request: undefined,
-    periodicAggregation: undefined,
-  };
+  return { id: "", key: undefined, observations: [], errorMessage: undefined, createdAt: undefined, data: undefined };
 }
 
 export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
@@ -870,11 +798,8 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     if (message.createdAt !== undefined) {
       Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(42).fork()).join();
     }
-    if (message.request !== undefined) {
-      ProcessingRequest.encode(message.request, writer.uint32(50).fork()).join();
-    }
-    if (message.periodicAggregation !== undefined) {
-      PeriodicAggregation.encode(message.periodicAggregation, writer.uint32(802).fork()).join();
+    if (message.data !== undefined) {
+      ProcessingItemData.encode(message.data, writer.uint32(58).fork()).join();
     }
     return writer;
   },
@@ -926,20 +851,12 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
           message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           continue;
         }
-        case 6: {
-          if (tag !== 50) {
+        case 7: {
+          if (tag !== 58) {
             break;
           }
 
-          message.request = ProcessingRequest.decode(reader, reader.uint32());
-          continue;
-        }
-        case 100: {
-          if (tag !== 802) {
-            break;
-          }
-
-          message.periodicAggregation = PeriodicAggregation.decode(reader, reader.uint32());
+          message.data = ProcessingItemData.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -960,10 +877,7 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
         : [],
       errorMessage: isSet(object.errorMessage) ? gt.String(object.errorMessage) : undefined,
       createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
-      request: isSet(object.request) ? ProcessingRequest.fromJSON(object.request) : undefined,
-      periodicAggregation: isSet(object.periodicAggregation)
-        ? PeriodicAggregation.fromJSON(object.periodicAggregation)
-        : undefined,
+      data: isSet(object.data) ? ProcessingItemData.fromJSON(object.data) : undefined,
     };
   },
 
@@ -984,11 +898,8 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     if (message.createdAt !== undefined) {
       obj.createdAt = message.createdAt.toISOString();
     }
-    if (message.request !== undefined) {
-      obj.request = ProcessingRequest.toJSON(message.request);
-    }
-    if (message.periodicAggregation !== undefined) {
-      obj.periodicAggregation = PeriodicAggregation.toJSON(message.periodicAggregation);
+    if (message.data !== undefined) {
+      obj.data = ProcessingItemData.toJSON(message.data);
     }
     return obj;
   },
@@ -1005,12 +916,149 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     message.observations = object.observations?.map((e) => ObservationKey.fromPartial(e)) || [];
     message.errorMessage = object.errorMessage ?? undefined;
     message.createdAt = object.createdAt ?? undefined;
-    message.request = (object.request !== undefined && object.request !== null)
-      ? ProcessingRequest.fromPartial(object.request)
+    message.data = (object.data !== undefined && object.data !== null)
+      ? ProcessingItemData.fromPartial(object.data)
       : undefined;
-    message.periodicAggregation = (object.periodicAggregation !== undefined && object.periodicAggregation !== null)
-      ? PeriodicAggregation.fromPartial(object.periodicAggregation)
-      : undefined;
+    return message;
+  },
+};
+
+function createBaseProcessingItemData(): ProcessingItemData {
+  return { referenceId: "", namespace: "", createdBy: "", type: undefined };
+}
+
+export const ProcessingItemData: MessageFns<ProcessingItemData> = {
+  encode(message: ProcessingItemData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.referenceId !== "") {
+      writer.uint32(10).string(message.referenceId);
+    }
+    if (message.namespace !== "") {
+      writer.uint32(18).string(message.namespace);
+    }
+    if (message.createdBy !== "") {
+      writer.uint32(26).string(message.createdBy);
+    }
+    switch (message.type?.$case) {
+      case "request":
+        ProcessingRequest.encode(message.type.value, writer.uint32(802).fork()).join();
+        break;
+      case "periodicAggregation":
+        PeriodicAggregation.encode(message.type.value, writer.uint32(810).fork()).join();
+        break;
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProcessingItemData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProcessingItemData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.referenceId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.namespace = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.createdBy = reader.string();
+          continue;
+        }
+        case 100: {
+          if (tag !== 802) {
+            break;
+          }
+
+          message.type = { $case: "request", value: ProcessingRequest.decode(reader, reader.uint32()) };
+          continue;
+        }
+        case 101: {
+          if (tag !== 810) {
+            break;
+          }
+
+          message.type = { $case: "periodicAggregation", value: PeriodicAggregation.decode(reader, reader.uint32()) };
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProcessingItemData {
+    return {
+      referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : "",
+      namespace: isSet(object.namespace) ? gt.String(object.namespace) : "",
+      createdBy: isSet(object.createdBy) ? gt.String(object.createdBy) : "",
+      type: isSet(object.request)
+        ? { $case: "request", value: ProcessingRequest.fromJSON(object.request) }
+        : isSet(object.periodicAggregation)
+        ? { $case: "periodicAggregation", value: PeriodicAggregation.fromJSON(object.periodicAggregation) }
+        : undefined,
+    };
+  },
+
+  toJSON(message: ProcessingItemData): unknown {
+    const obj: any = {};
+    if (message.referenceId !== "") {
+      obj.referenceId = message.referenceId;
+    }
+    if (message.namespace !== "") {
+      obj.namespace = message.namespace;
+    }
+    if (message.createdBy !== "") {
+      obj.createdBy = message.createdBy;
+    }
+    if (message.type?.$case === "request") {
+      obj.request = ProcessingRequest.toJSON(message.type.value);
+    } else if (message.type?.$case === "periodicAggregation") {
+      obj.periodicAggregation = PeriodicAggregation.toJSON(message.type.value);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ProcessingItemData>): ProcessingItemData {
+    return ProcessingItemData.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ProcessingItemData>): ProcessingItemData {
+    const message = createBaseProcessingItemData();
+    message.referenceId = object.referenceId ?? "";
+    message.namespace = object.namespace ?? "";
+    message.createdBy = object.createdBy ?? "";
+    switch (object.type?.$case) {
+      case "request": {
+        if (object.type?.value !== undefined && object.type?.value !== null) {
+          message.type = { $case: "request", value: ProcessingRequest.fromPartial(object.type.value) };
+        }
+        break;
+      }
+      case "periodicAggregation": {
+        if (object.type?.value !== undefined && object.type?.value !== null) {
+          message.type = { $case: "periodicAggregation", value: PeriodicAggregation.fromPartial(object.type.value) };
+        }
+        break;
+      }
+    }
     return message;
   },
 };

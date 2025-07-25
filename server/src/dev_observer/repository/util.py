@@ -1,12 +1,12 @@
 import datetime
 from typing import Optional
 
-from google.protobuf import timestamp
-
 from dev_observer.api.types.repo_pb2 import GitHubRepository, GitMeta, GitAppInfo
+from dev_observer.common.schedule import pb_to_datetime
+from dev_observer.util import RealClock, Clock
 
 
-def get_valid_repo_meta(repo: GitHubRepository) -> Optional[GitMeta]:
+def get_valid_repo_meta(repo: GitHubRepository, clock: Clock = RealClock()) -> Optional[GitMeta]:
     if repo.properties is None:
         return None
     if repo.properties.meta is None:
@@ -14,11 +14,11 @@ def get_valid_repo_meta(repo: GitHubRepository) -> Optional[GitMeta]:
     last_refresh = repo.properties.meta.last_refresh
     if last_refresh is None:
         return None
-    ts = timestamp.to_datetime(last_refresh)
-    return repo.properties.meta if ts + datetime.timedelta(hours=3) > datetime.datetime.now() else None
+    ts = pb_to_datetime(last_refresh)
+    return repo.properties.meta if ts + datetime.timedelta(hours=3) > clock.now() else None
 
 
-def get_valid_repo_app_info(repo: GitHubRepository) -> Optional[GitAppInfo]:
+def get_valid_repo_app_info(repo: GitHubRepository, clock: Clock = RealClock()) -> Optional[GitAppInfo]:
     if repo.properties is None:
         return None
     if repo.properties.app_info is None:
@@ -26,5 +26,5 @@ def get_valid_repo_app_info(repo: GitHubRepository) -> Optional[GitAppInfo]:
     last_refresh = repo.properties.app_info.last_refresh
     if last_refresh is None:
         return None
-    ts = timestamp.to_datetime(last_refresh)
-    return repo.properties.app_info if ts + datetime.timedelta(hours=3) > datetime.datetime.now() else None
+    ts = pb_to_datetime(last_refresh)
+    return repo.properties.app_info if ts + datetime.timedelta(hours=3) > clock.now() else None

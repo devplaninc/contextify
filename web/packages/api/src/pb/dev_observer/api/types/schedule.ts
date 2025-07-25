@@ -99,13 +99,6 @@ export interface TimeOfDay {
   hours: number;
   /** Minutes of hour of day. Must be from 0 to 59. */
   minutes: number;
-  /**
-   * Seconds of minutes of the time. Must normally be from 0 to 59. An API may
-   * allow the value 60 if it allows leap-seconds.
-   */
-  seconds: number;
-  /** Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999. */
-  nanos: number;
 }
 
 export interface Time {
@@ -409,7 +402,7 @@ export const Frequency_Weekly: MessageFns<Frequency_Weekly> = {
 };
 
 function createBaseTimeOfDay(): TimeOfDay {
-  return { hours: 0, minutes: 0, seconds: 0, nanos: 0 };
+  return { hours: 0, minutes: 0 };
 }
 
 export const TimeOfDay: MessageFns<TimeOfDay> = {
@@ -419,12 +412,6 @@ export const TimeOfDay: MessageFns<TimeOfDay> = {
     }
     if (message.minutes !== 0) {
       writer.uint32(16).int32(message.minutes);
-    }
-    if (message.seconds !== 0) {
-      writer.uint32(24).int32(message.seconds);
-    }
-    if (message.nanos !== 0) {
-      writer.uint32(32).int32(message.nanos);
     }
     return writer;
   },
@@ -452,22 +439,6 @@ export const TimeOfDay: MessageFns<TimeOfDay> = {
           message.minutes = reader.int32();
           continue;
         }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.seconds = reader.int32();
-          continue;
-        }
-        case 4: {
-          if (tag !== 32) {
-            break;
-          }
-
-          message.nanos = reader.int32();
-          continue;
-        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -481,8 +452,6 @@ export const TimeOfDay: MessageFns<TimeOfDay> = {
     return {
       hours: isSet(object.hours) ? gt.Number(object.hours) : 0,
       minutes: isSet(object.minutes) ? gt.Number(object.minutes) : 0,
-      seconds: isSet(object.seconds) ? gt.Number(object.seconds) : 0,
-      nanos: isSet(object.nanos) ? gt.Number(object.nanos) : 0,
     };
   },
 
@@ -494,12 +463,6 @@ export const TimeOfDay: MessageFns<TimeOfDay> = {
     if (message.minutes !== 0) {
       obj.minutes = Math.round(message.minutes);
     }
-    if (message.seconds !== 0) {
-      obj.seconds = Math.round(message.seconds);
-    }
-    if (message.nanos !== 0) {
-      obj.nanos = Math.round(message.nanos);
-    }
     return obj;
   },
 
@@ -510,8 +473,6 @@ export const TimeOfDay: MessageFns<TimeOfDay> = {
     const message = createBaseTimeOfDay();
     message.hours = object.hours ?? 0;
     message.minutes = object.minutes ?? 0;
-    message.seconds = object.seconds ?? 0;
-    message.nanos = object.nanos ?? 0;
     return message;
   },
 };

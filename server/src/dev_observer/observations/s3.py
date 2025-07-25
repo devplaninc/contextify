@@ -47,8 +47,7 @@ class S3ObservationsProvider(ObservationsProvider):
                 await client.head_object(Bucket=self._bucket, Key=object_key)
             return True
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
-            if error_code == 'NoSuchKey':
+            if _is_not_found_err(e):
                 return False
             else:
                 error_msg = f"Error checking existence of observation {key.kind}/{key.name} in S3: {str(e)}"
@@ -163,13 +162,15 @@ class S3ObservationsProvider(ObservationsProvider):
                 content = body.decode("utf-8")
                 return Observation(key=key, content=content)
         except ClientError as e:
-            error_code = e.response.get('Error', {}).get('Code', 'Unknown')
-            
-            if error_code == 'NoSuchKey':
+            if _is_not_found_err(e):
                 error_msg = f"Observation {key.kind}/{key.name} not found in S3"
                 _log.error(error_msg)
                 raise RuntimeError(error_msg) from e
-            else:
-                error_msg = f"Error getting observation {key.kind}/{key.name} from S3: {str(e)}"
-                _log.error(error_msg)
-                raise RuntimeError(error_msg) from e
+            error_msg = f"Error getting observation {key.kind}/{key.name} from S3: {str(e)}"
+            _log.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
+
+def _is_not_found_err(err: ClientError) -> bool:
+    code = err.response.get('Error', {}).get('Code', 'Unknown')
+    return code == 'NoSuchKey' or code == '404'

@@ -28,8 +28,6 @@ export {
   GetProcessingResultsRequest,
   GetProcessingResultResponse,
   GetProcessingResultsResponse,
-  RunProcessingRequest,
-  RunProcessingResponse,
   CreateProcessingItemRequest,
   CreateProcessingItemResponse, DeleteProcessingItemRequest, DeleteProcessingItemResponse,
   GetProcessingRunStatusResponse

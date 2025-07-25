@@ -57,6 +57,8 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
                     result.append(key)
                 except Exception as e:
                     _log.exception(s_("Analysis failed.", request=request), exc_info=e)
+            if res.extra_keys:
+                result.extend(res.extra_keys)
             return result
         finally:
             if clean:

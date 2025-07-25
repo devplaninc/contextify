@@ -21,6 +21,7 @@ export interface AnalysisConfig {
   siteAnalyzers: Analyzer[];
   disableMasking: boolean;
   defaultGitChangesAnalyzer?: Analyzer | undefined;
+  defaultAggregatedSummaryAnalyzer?: Analyzer | undefined;
 }
 
 export interface UserManagementStatus {
@@ -157,7 +158,13 @@ export const GlobalConfig: MessageFns<GlobalConfig> = {
 };
 
 function createBaseAnalysisConfig(): AnalysisConfig {
-  return { repoAnalyzers: [], siteAnalyzers: [], disableMasking: false, defaultGitChangesAnalyzer: undefined };
+  return {
+    repoAnalyzers: [],
+    siteAnalyzers: [],
+    disableMasking: false,
+    defaultGitChangesAnalyzer: undefined,
+    defaultAggregatedSummaryAnalyzer: undefined,
+  };
 }
 
 export const AnalysisConfig: MessageFns<AnalysisConfig> = {
@@ -173,6 +180,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     }
     if (message.defaultGitChangesAnalyzer !== undefined) {
       Analyzer.encode(message.defaultGitChangesAnalyzer, writer.uint32(34).fork()).join();
+    }
+    if (message.defaultAggregatedSummaryAnalyzer !== undefined) {
+      Analyzer.encode(message.defaultAggregatedSummaryAnalyzer, writer.uint32(42).fork()).join();
     }
     return writer;
   },
@@ -216,6 +226,14 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
           message.defaultGitChangesAnalyzer = Analyzer.decode(reader, reader.uint32());
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.defaultAggregatedSummaryAnalyzer = Analyzer.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -237,6 +255,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
       defaultGitChangesAnalyzer: isSet(object.defaultGitChangesAnalyzer)
         ? Analyzer.fromJSON(object.defaultGitChangesAnalyzer)
         : undefined,
+      defaultAggregatedSummaryAnalyzer: isSet(object.defaultAggregatedSummaryAnalyzer)
+        ? Analyzer.fromJSON(object.defaultAggregatedSummaryAnalyzer)
+        : undefined,
     };
   },
 
@@ -254,6 +275,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     if (message.defaultGitChangesAnalyzer !== undefined) {
       obj.defaultGitChangesAnalyzer = Analyzer.toJSON(message.defaultGitChangesAnalyzer);
     }
+    if (message.defaultAggregatedSummaryAnalyzer !== undefined) {
+      obj.defaultAggregatedSummaryAnalyzer = Analyzer.toJSON(message.defaultAggregatedSummaryAnalyzer);
+    }
     return obj;
   },
 
@@ -268,6 +292,10 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     message.defaultGitChangesAnalyzer =
       (object.defaultGitChangesAnalyzer !== undefined && object.defaultGitChangesAnalyzer !== null)
         ? Analyzer.fromPartial(object.defaultGitChangesAnalyzer)
+        : undefined;
+    message.defaultAggregatedSummaryAnalyzer =
+      (object.defaultAggregatedSummaryAnalyzer !== undefined && object.defaultAggregatedSummaryAnalyzer !== null)
+        ? Analyzer.fromPartial(object.defaultAggregatedSummaryAnalyzer)
         : undefined;
     return message;
   },

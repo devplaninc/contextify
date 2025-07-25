@@ -1,7 +1,17 @@
 import { BaseClient } from './base';
 import {
   GetObservationResponse,
-  GetObservationsResponse
+  GetObservationsResponse,
+  CreateProcessingItemRequest,
+  CreateProcessingItemResponse,
+  DeleteProcessingItemRequest,
+  DeleteProcessingItemResponse,
+  GetProcessingResultsRequest,
+  GetProcessingResultsResponse,
+  GetProcessingResultResponse,
+  GetProcessingRunStatusResponse,
+  GetProcessingItemsRequest,
+  GetProcessingItemsResponse
 } from '../pb/dev_observer/api/web/observations';
 
 /**
@@ -16,5 +26,29 @@ export class ObservationsClient extends BaseClient {
     // The server replaces / with | in the key parameter
     const encodedKey = key.replace(/\//g, '|');
     return this._get(`/api/v1/observation/${kind}/${name}/${encodedKey}`, GetObservationResponse);
+  }
+
+  async addProcessingItem(request: CreateProcessingItemRequest): Promise<CreateProcessingItemResponse> {
+    return this._post(`/api/v1/processing/items`, CreateProcessingItemResponse, request);
+  }
+
+  async getFilteredProcessingItems(request: GetProcessingItemsRequest): Promise<GetProcessingItemsResponse> {
+    return this._post(`/api/v1/processing/items/filter`, GetProcessingItemsResponse, request);
+  }
+
+  async deleteProcessingItem(request: DeleteProcessingItemRequest): Promise<DeleteProcessingItemResponse> {
+    return this._delete(`/api/v1/processing/items`, DeleteProcessingItemResponse, request);
+  }
+
+  async getProcessingResults(request: GetProcessingResultsRequest): Promise<GetProcessingResultsResponse> {
+    return this._post(`/api/v1/processing/results`, GetProcessingResultsResponse, request);
+  }
+
+  async getProcessingResult(resultId: string): Promise<GetProcessingResultResponse> {
+    return this._get(`/api/v1/processing/results/${resultId}`, GetProcessingResultResponse);
+  }
+
+  async getProcessingRequestStatus(requestId: string): Promise<GetProcessingRunStatusResponse> {
+    return this._get(`/api/v1/processing/requests/runs/${requestId}`, GetProcessingRunStatusResponse);
   }
 }

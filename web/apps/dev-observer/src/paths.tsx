@@ -1,3 +1,7 @@
+export function processingPath() {
+  return `/processing` as const;
+}
+
 export function processingResultPath<I extends string>(id: I) {
-  return `/processing/results/${id}` as const;
+  return `${processingPath()}/results/${id}` as const;
 }
