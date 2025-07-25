@@ -40,8 +40,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/devplaninc/dev-observer-web
-            ghcr.io/devplaninc/dev-observer-server
+            ghcr.io/devplaninc/contextify-web
+            ghcr.io/devplaninc/contextify-server
           tags: |
             type=raw,value=${{ github.event.inputs.version }}
 
@@ -53,8 +53,8 @@ jobs:
             -f ./docker/web/Dockerfile \
             --push \
             --platform linux/amd64,linux/arm64 \
-            -t ghcr.io/devplaninc/dev-observer-web:${{ github.event.inputs.version }} \
-            -t ghcr.io/devplaninc/dev-observer-web:latest \
+            -t ghcr.io/devplaninc/contextify-web:${{ github.event.inputs.version }} \
+            -t ghcr.io/devplaninc/contextify-web:latest \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
             . &
@@ -64,8 +64,8 @@ jobs:
             -f ./docker/server/Dockerfile \
             --push \
             --platform linux/amd64,linux/arm64 \
-            -t ghcr.io/devplaninc/dev-observer-server:${{ github.event.inputs.version }} \
-            -t ghcr.io/devplaninc/dev-observer-server:latest \
+            -t ghcr.io/devplaninc/contextify-server:${{ github.event.inputs.version }} \
+            -t ghcr.io/devplaninc/contextify-server:latest \
             --cache-from type=gha \
             --cache-to type=gha,mode=max \
             . &
@@ -84,9 +84,9 @@ jobs:
 
           # Try to pull the images without authentication
           echo "Pulling web image..."
-          docker pull ghcr.io/devplaninc/dev-observer-web:${{ github.event.inputs.version }}
+          docker pull ghcr.io/devplaninc/contextify-web:${{ github.event.inputs.version }}
 
           echo "Pulling server image..."
-          docker pull ghcr.io/devplaninc/dev-observer-server:${{ github.event.inputs.version }}
+          docker pull ghcr.io/devplaninc/contextify-server:${{ github.event.inputs.version }}
 
           echo "Images are publicly accessible!"

@@ -34,10 +34,10 @@ You can also build the Docker images locally:
 ```bash
 # Navigate to the repository root
 # Build the web frontend image
-docker build -t dev-observer-web:local -f docker/web/Dockerfile .
+docker build -t contextify-web:local -f docker/web/Dockerfile .
 
 # Build the server backend image
-docker build -t dev-observer-server:local -f docker/server/Dockerfile .
+docker build -t contextify-server:local -f docker/server/Dockerfile .
 ```
 
 Note that you must run these commands from the repository root directory, as the Dockerfiles reference files relative to this location.
