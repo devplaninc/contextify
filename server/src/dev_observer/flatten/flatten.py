@@ -150,7 +150,7 @@ class TokenizeResult:
     total_tokens: int
 
 
-def _tokenize_file(
+def tokenize_file(
         file_path: str,
         out_dir: str,
         tokenizer: TokenizerProvider,
@@ -222,7 +222,7 @@ async def flatten_repository(
     combined_file_path = combine_result.file_path
     out_dir = combine_result.output_dir
     _log.debug(s_("Tokenizing..."))
-    tokenize_result = _tokenize_file(combined_file_path, out_dir, tokenizer, config)
+    tokenize_result = tokenize_file(combined_file_path, out_dir, tokenizer, config)
     _log.debug(s_("File tokenized"))
     flatten_result = FlattenResult(
         full_file_path=combined_file_path,
@@ -260,7 +260,7 @@ async def flatten_repo_changes(
     combined_file_path = combine_result.file_path
     out_dir = combine_result.output_dir
     _log.debug(s_("Tokenizing...", combine_result=combine_result))
-    tokenize_result = _tokenize_file(combined_file_path, out_dir, tokenizer, config)
+    tokenize_result = tokenize_file(combined_file_path, out_dir, tokenizer, config)
     _log.debug(s_("File tokenized", tokenize_result=tokenize_result))
     flatten_result = FlattenResult(
         full_file_path=combined_file_path,

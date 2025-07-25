@@ -15,3 +15,10 @@ class ObservedGitChanges:
     repo: ObservedRepo
     from_date: datetime
     to_date: datetime
+
+
+@dataclasses.dataclass
+class ObservedAggregatedChanges:
+    repo: ObservedRepo
+    from_date: datetime
+    to_date: datetime

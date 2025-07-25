@@ -14,7 +14,7 @@ message ProcessingItemKey {
     string website_url = 101;
     // One-off request
     string request_id = 102;
-    string periodic_processing_id = 103;
+    string periodic_aggregation_id = 103;
   }
 }
 
@@ -27,15 +27,18 @@ message ProcessingItem {
   optional ProcessingRequest request = 6;
   optional google.protobuf.Timestamp processing_started_at = 7;
 
-  optional PeriodicProcessing periodic_processing = 100;
+  optional PeriodicAggregation periodic_aggregation = 100;
 }
 
-message PeriodicProcessing {
-  string folder_prefix = 1;
-  int32 look_back_days = 2;
-  google.protobuf.Timestamp end_date = 3;
-  Target target = 4;
-  dev_observer.api.types.schedule.Schedule schedule = 5;
+message PeriodicAggregation {
+  AggregatedSummaryParams params = 1;
+  dev_observer.api.types.schedule.Schedule schedule = 2;
+}
+
+message AggregatedSummaryParams {
+  int32 look_back_days = 1;
+  google.protobuf.Timestamp end_date = 2;
+  Target target = 3;
 
   message Target {
     repeated string git_repo_ids = 1;
@@ -66,7 +69,7 @@ message ProcessingItemResult {
   google.protobuf.Timestamp created_at = 5;
   optional ProcessingRequest request = 6;
 
-  optional PeriodicProcessing periodic_processing = 100;
+  optional PeriodicAggregation periodic_aggregation = 100;
 }
 
 message ProcessingResultFilter {
