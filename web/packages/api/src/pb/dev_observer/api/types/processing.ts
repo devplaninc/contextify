@@ -86,12 +86,14 @@ export interface ProcessingResultFilter {
   namespace?: string | undefined;
   referenceId?: string | undefined;
   requestType?: string | undefined;
+  keys: ProcessingItemKey[];
 }
 
 export interface ProcessingItemsFilter {
   namespace?: string | undefined;
   referenceId?: string | undefined;
   requestType?: string | undefined;
+  keys: ProcessingItemKey[];
 }
 
 function createBaseProcessingItemKey(): ProcessingItemKey {
@@ -1064,7 +1066,7 @@ export const ProcessingItemData: MessageFns<ProcessingItemData> = {
 };
 
 function createBaseProcessingResultFilter(): ProcessingResultFilter {
-  return { namespace: undefined, referenceId: undefined, requestType: undefined };
+  return { namespace: undefined, referenceId: undefined, requestType: undefined, keys: [] };
 }
 
 export const ProcessingResultFilter: MessageFns<ProcessingResultFilter> = {
@@ -1077,6 +1079,9 @@ export const ProcessingResultFilter: MessageFns<ProcessingResultFilter> = {
     }
     if (message.requestType !== undefined) {
       writer.uint32(26).string(message.requestType);
+    }
+    for (const v of message.keys) {
+      ProcessingItemKey.encode(v!, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -1112,6 +1117,14 @@ export const ProcessingResultFilter: MessageFns<ProcessingResultFilter> = {
           message.requestType = reader.string();
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.keys.push(ProcessingItemKey.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1126,6 +1139,7 @@ export const ProcessingResultFilter: MessageFns<ProcessingResultFilter> = {
       namespace: isSet(object.namespace) ? gt.String(object.namespace) : undefined,
       referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : undefined,
       requestType: isSet(object.requestType) ? gt.String(object.requestType) : undefined,
+      keys: gt.Array.isArray(object?.keys) ? object.keys.map((e: any) => ProcessingItemKey.fromJSON(e)) : [],
     };
   },
 
@@ -1140,6 +1154,9 @@ export const ProcessingResultFilter: MessageFns<ProcessingResultFilter> = {
     if (message.requestType !== undefined) {
       obj.requestType = message.requestType;
     }
+    if (message.keys?.length) {
+      obj.keys = message.keys.map((e) => ProcessingItemKey.toJSON(e));
+    }
     return obj;
   },
 
@@ -1151,12 +1168,13 @@ export const ProcessingResultFilter: MessageFns<ProcessingResultFilter> = {
     message.namespace = object.namespace ?? undefined;
     message.referenceId = object.referenceId ?? undefined;
     message.requestType = object.requestType ?? undefined;
+    message.keys = object.keys?.map((e) => ProcessingItemKey.fromPartial(e)) || [];
     return message;
   },
 };
 
 function createBaseProcessingItemsFilter(): ProcessingItemsFilter {
-  return { namespace: undefined, referenceId: undefined, requestType: undefined };
+  return { namespace: undefined, referenceId: undefined, requestType: undefined, keys: [] };
 }
 
 export const ProcessingItemsFilter: MessageFns<ProcessingItemsFilter> = {
@@ -1169,6 +1187,9 @@ export const ProcessingItemsFilter: MessageFns<ProcessingItemsFilter> = {
     }
     if (message.requestType !== undefined) {
       writer.uint32(26).string(message.requestType);
+    }
+    for (const v of message.keys) {
+      ProcessingItemKey.encode(v!, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -1204,6 +1225,14 @@ export const ProcessingItemsFilter: MessageFns<ProcessingItemsFilter> = {
           message.requestType = reader.string();
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.keys.push(ProcessingItemKey.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1218,6 +1247,7 @@ export const ProcessingItemsFilter: MessageFns<ProcessingItemsFilter> = {
       namespace: isSet(object.namespace) ? gt.String(object.namespace) : undefined,
       referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : undefined,
       requestType: isSet(object.requestType) ? gt.String(object.requestType) : undefined,
+      keys: gt.Array.isArray(object?.keys) ? object.keys.map((e: any) => ProcessingItemKey.fromJSON(e)) : [],
     };
   },
 
@@ -1232,6 +1262,9 @@ export const ProcessingItemsFilter: MessageFns<ProcessingItemsFilter> = {
     if (message.requestType !== undefined) {
       obj.requestType = message.requestType;
     }
+    if (message.keys?.length) {
+      obj.keys = message.keys.map((e) => ProcessingItemKey.toJSON(e));
+    }
     return obj;
   },
 
@@ -1243,6 +1276,7 @@ export const ProcessingItemsFilter: MessageFns<ProcessingItemsFilter> = {
     message.namespace = object.namespace ?? undefined;
     message.referenceId = object.referenceId ?? undefined;
     message.requestType = object.requestType ?? undefined;
+    message.keys = object.keys?.map((e) => ProcessingItemKey.fromPartial(e)) || [];
     return message;
   },
 };

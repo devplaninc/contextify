@@ -106,21 +106,25 @@ class ProcessingItemData(_message.Message):
     def __init__(self, reference_id: _Optional[str] = ..., namespace: _Optional[str] = ..., created_by: _Optional[str] = ..., request: _Optional[_Union[ProcessingRequest, _Mapping]] = ..., periodic_aggregation: _Optional[_Union[PeriodicAggregation, _Mapping]] = ...) -> None: ...
 
 class ProcessingResultFilter(_message.Message):
-    __slots__ = ("namespace", "reference_id", "request_type")
+    __slots__ = ("namespace", "reference_id", "request_type", "keys")
     NAMESPACE_FIELD_NUMBER: _ClassVar[int]
     REFERENCE_ID_FIELD_NUMBER: _ClassVar[int]
     REQUEST_TYPE_FIELD_NUMBER: _ClassVar[int]
+    KEYS_FIELD_NUMBER: _ClassVar[int]
     namespace: str
     reference_id: str
     request_type: str
-    def __init__(self, namespace: _Optional[str] = ..., reference_id: _Optional[str] = ..., request_type: _Optional[str] = ...) -> None: ...
+    keys: _containers.RepeatedCompositeFieldContainer[ProcessingItemKey]
+    def __init__(self, namespace: _Optional[str] = ..., reference_id: _Optional[str] = ..., request_type: _Optional[str] = ..., keys: _Optional[_Iterable[_Union[ProcessingItemKey, _Mapping]]] = ...) -> None: ...
 
 class ProcessingItemsFilter(_message.Message):
-    __slots__ = ("namespace", "reference_id", "request_type")
+    __slots__ = ("namespace", "reference_id", "request_type", "keys")
     NAMESPACE_FIELD_NUMBER: _ClassVar[int]
     REFERENCE_ID_FIELD_NUMBER: _ClassVar[int]
     REQUEST_TYPE_FIELD_NUMBER: _ClassVar[int]
+    KEYS_FIELD_NUMBER: _ClassVar[int]
     namespace: str
     reference_id: str
     request_type: str
-    def __init__(self, namespace: _Optional[str] = ..., reference_id: _Optional[str] = ..., request_type: _Optional[str] = ...) -> None: ...
+    keys: _containers.RepeatedCompositeFieldContainer[ProcessingItemKey]
+    def __init__(self, namespace: _Optional[str] = ..., reference_id: _Optional[str] = ..., request_type: _Optional[str] = ..., keys: _Optional[_Iterable[_Union[ProcessingItemKey, _Mapping]]] = ...) -> None: ...

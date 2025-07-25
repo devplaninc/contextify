@@ -27,7 +27,7 @@ export interface ObservationsState {
 
   processingItems: Record<string, ProcessingItem>;
 
-  fetchProcessingItemsByNamespace: (filter: ProcessingItemsFilter) => Promise<string[]>;
+  fetchProcessingItems: (filter: ProcessingItemsFilter) => Promise<string[]>;
 
   processingResults: Record<string, ProcessingItemResult>;
 
@@ -60,7 +60,7 @@ export const createObservationsSlice: StateCreator<
 
 
   processingItems: {},
-  fetchProcessingItemsByNamespace: async filter => fetchWithAuth(processingItemsFilterAPI(), GetProcessingItemsResponse, {
+  fetchProcessingItems: async filter => fetchWithAuth(processingItemsFilterAPI(), GetProcessingItemsResponse, {
     method: "POST",
     body: JSON.stringify(GetProcessingItemsRequest.toJSON({filter}))
   }).then(r => {

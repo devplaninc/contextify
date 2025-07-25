@@ -12,7 +12,6 @@ from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItem
     ProcessingItemResult, ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
 from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
 from dev_observer.api.types.sites_pb2 import WebSite
-from dev_observer.log import s_
 from dev_observer.storage.postgresql.model import GitRepoEntity, ProcessingItemEntity, GlobalConfigEntity, \
     WebsiteEntity, ProcessingItemResultEntity
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
@@ -144,7 +143,7 @@ class PostgresqlStorageProvider(StorageProvider):
             error: Optional[str] = None,
             processing_started_at: Optional[datetime.datetime] = None,
     ):
-        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        key_str = _to_key_str(key)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 existing = await session.get(ProcessingItemEntity, key_str)
@@ -169,7 +168,7 @@ class PostgresqlStorageProvider(StorageProvider):
             data: Optional[ProcessingItemData] = None,
             next_time: Optional[datetime.datetime] = None,
     ):
-        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        key_str = _to_key_str(key)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 is_req = data and data.WhichOneof("type") == "request"
@@ -189,7 +188,7 @@ class PostgresqlStorageProvider(StorageProvider):
             updater: Callable[[ProcessingItem], ProcessingItem],
             next_time: Optional[datetime.datetime],
     ):
-        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        key_str = _to_key_str(key)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 existing = await session.get(ProcessingItemEntity, key_str)
@@ -202,13 +201,13 @@ class PostgresqlStorageProvider(StorageProvider):
                 )
 
     async def delete_processing_item(self, key: ProcessingItemKey):
-        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        key_str = _to_key_str(key)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 await session.execute(delete(ProcessingItemEntity).where(ProcessingItemEntity.key == key_str))
 
     async def add_processing_result(self, item: ProcessingItemResult) -> str:
-        key_str = json_format.MessageToJson(item.key, indent=None, sort_keys=True)
+        key_str = _to_key_str(item.key)
         new_id = item.id
         if new_id is None or len(new_id) == 0:
             new_id = str(uuid.uuid4())
@@ -242,6 +241,8 @@ class PostgresqlStorageProvider(StorageProvider):
                     query = query.where(ProcessingItemResultEntity.reference_id == filter.reference_id)
                 if filter.request_type:
                     query = query.where(ProcessingItemResultEntity.request_type == filter.request_type)
+                if len(filter.keys) > 0:
+                    query = query.where(ProcessingItemResultEntity.key.in_([_to_key_str(k) for k in filter.keys]))
                 result = await session.scalars(
                     query.order_by(ProcessingItemResultEntity.created_at.desc())
                 )
@@ -249,7 +250,7 @@ class PostgresqlStorageProvider(StorageProvider):
                 return [_to_processing_item_result(entity) for entity in entities]
 
     async def set_processing_error(self, key: ProcessingItemKey, error: Optional[str] = None):
-        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        key_str = _to_key_str(key)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 await session.execute(
@@ -279,7 +280,7 @@ class PostgresqlStorageProvider(StorageProvider):
         return await self.get_global_config()
 
     async def get_processing_time(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
-        key_str = json_format.MessageToJson(key, indent=None, sort_keys=True)
+        key_str = _to_key_str(key)
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 existing = await session.get_one(ProcessingItemEntity, key_str)
@@ -301,6 +302,8 @@ class PostgresqlStorageProvider(StorageProvider):
                     query = query.where(ProcessingItemEntity.reference_id == filter.reference_id)
                 if filter.request_type:
                     query = query.where(ProcessingItemEntity.request_type == filter.request_type)
+                if len(filter.keys) > 0:
+                    query = query.where(ProcessingItemEntity.key.in_([_to_key_str(k) for k in filter.keys]))
                 items = await session.scalars(query)
                 return [_to_item(i) for i in items.all()]
 
@@ -360,3 +363,7 @@ def _to_processing_item_result(ent: ProcessingItemResultEntity) -> ProcessingIte
     if ent.error_message:
         data.error_message = ent.error_message
     return data
+
+
+def _to_key_str(key: ProcessingItemKey) -> str:
+    return json_format.MessageToJson(key, indent=None, sort_keys=True)

@@ -83,10 +83,12 @@ message ProcessingResultFilter {
   optional string namespace = 1;
   optional string reference_id = 2;
   optional string request_type = 3;
+  repeated ProcessingItemKey keys = 4;
 }
 
 message ProcessingItemsFilter {
   optional string namespace = 1;
   optional string reference_id = 2;
   optional string request_type = 3;
+  repeated ProcessingItemKey keys = 4;
 }

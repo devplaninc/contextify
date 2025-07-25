@@ -2,6 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { RequestRepoChangesSummaryButton } from "@/components/processing/RequestRepoChangesSummaryButton.tsx";
 import { RequestAggregatedSummaryButton } from "@/components/processing/RequestAggregatedSummaryButton.tsx";
+import {ProcessingItems} from "@/components/processing/ProcessingItems.tsx";
 
 const ProcessingPage: React.FC = () => {
   return (
@@ -63,6 +64,7 @@ const ProcessingPage: React.FC = () => {
           </Card>
         </div>
       </div>
+      <ProcessingItems />
     </div>
   );
 };

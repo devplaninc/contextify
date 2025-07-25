@@ -31,7 +31,7 @@ export interface ProcessingResultsProps {
 }
 
 export function ProcessingResults({referenceId}: ProcessingResultsProps) {
-  const [filter, setFilter] = useState<ProcessingResultFilter>({referenceId});
+  const [filter, setFilter] = useState<ProcessingResultFilter>({referenceId, keys: []});
   const [dates, setDates] = useState({
     from: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
     to: new Date(),

@@ -6,21 +6,21 @@ import {ProcessingItemResult, ProcessingItemsFilter, ProcessingResultFilter} fro
 
 export const processingKeys = {
   all: ['processing'] as const,
-  namespaceItems: (filter: ProcessingItemsFilter) => [
+  filteredItems: (filter: ProcessingItemsFilter) => [
     ...processingKeys.all, 'items', 'filter', JSON.stringify(ProcessingItemsFilter.toJSON(filter)),
   ] as const,
-  namespaceResult: (filter: ProcessingResultFilter, from: Date, to: Date) => [
-    ...processingKeys.all, 'results', 'namespace', JSON.stringify(ProcessingResultFilter.toJSON(filter)), from, to
+  filteredResult: (filter: ProcessingResultFilter, from: Date, to: Date) => [
+    ...processingKeys.all, 'results', 'filter', JSON.stringify(ProcessingResultFilter.toJSON(filter)), from, to
   ] as const,
   result: (id: string) => [...processingKeys.all, 'results', 'detail', id] as const,
 };
 
-export function useProcessingItemsForNamespace(filter: ProcessingItemsFilter) {
-  const {fetchProcessingItemsByNamespace} = useBoundStore();
+export function useProcessingItems(filter: ProcessingItemsFilter) {
+  const {fetchProcessingItems} = useBoundStore();
   const queryFn = useCallback(
-    async () => fetchProcessingItemsByNamespace(filter), [filter, fetchProcessingItemsByNamespace])
+    async () => fetchProcessingItems(filter), [filter, fetchProcessingItems])
   const {data: ids, isFetching, error, refetch} = useQuery({
-    queryKey: processingKeys.namespaceItems(filter),
+    queryKey: processingKeys.filteredItems(filter),
     queryFn
   });
   const items = useBoundStore(useShallow(s => ids?.map(i => s.processingItems[i]).filter(v => v !== undefined)));
@@ -42,7 +42,7 @@ export function useProcessingResultsForNamespace(from: Date, to: Date, filter: P
     toDate: to
   }), [filter, from, to, fetchProcessingItemResults])
   const {data: ids, isFetching, error, refetch} = useQuery({
-    queryKey: processingKeys.namespaceResult(filter, from, to),
+    queryKey: processingKeys.filteredResult(filter, from, to),
     queryFn
   });
   const results = useBoundStore(useShallow(s => ids?.map(i => s.processingResults[i]).filter(v => v !== undefined)));

@@ -62,11 +62,7 @@ class ObservationsService:
     async def get_filtered_processing_tems(self, request: Request):
         req = parse_dict_pb(await request.json(), GetProcessingItemsRequest())
         _log.debug(s_("Fetching processing items", req=req))
-        filter_type = req.WhichOneof("filter")
-        if filter_type == "namespace":
-            items = await self._store.get_processing_items(filter=req.filter)
-        else:
-            raise ValueError(f"Unknown filter type: {filter_type}")
+        items = await self._store.get_processing_items(filter=req.filter)
         return pb_to_dict(GetProcessingItemsResponse(items=items))
 
     async def delete_processing_item(self, request: Request):
