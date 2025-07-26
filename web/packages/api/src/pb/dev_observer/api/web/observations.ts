@@ -74,6 +74,15 @@ export interface GetProcessingItemsResponse {
   items: ProcessingItem[];
 }
 
+export interface UpdateProcessingItemRequest {
+  key: ProcessingItemKey | undefined;
+  data: ProcessingItemData | undefined;
+}
+
+export interface UpdateProcessingItemResponse {
+  item: ProcessingItem | undefined;
+}
+
 function createBaseGetObservationsResponse(): GetObservationsResponse {
   return { keys: [] };
 }
@@ -844,6 +853,146 @@ export const GetProcessingItemsResponse: MessageFns<GetProcessingItemsResponse> 
   fromPartial(object: DeepPartial<GetProcessingItemsResponse>): GetProcessingItemsResponse {
     const message = createBaseGetProcessingItemsResponse();
     message.items = object.items?.map((e) => ProcessingItem.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseUpdateProcessingItemRequest(): UpdateProcessingItemRequest {
+  return { key: undefined, data: undefined };
+}
+
+export const UpdateProcessingItemRequest: MessageFns<UpdateProcessingItemRequest> = {
+  encode(message: UpdateProcessingItemRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.key !== undefined) {
+      ProcessingItemKey.encode(message.key, writer.uint32(10).fork()).join();
+    }
+    if (message.data !== undefined) {
+      ProcessingItemData.encode(message.data, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateProcessingItemRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateProcessingItemRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.key = ProcessingItemKey.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.data = ProcessingItemData.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UpdateProcessingItemRequest {
+    return {
+      key: isSet(object.key) ? ProcessingItemKey.fromJSON(object.key) : undefined,
+      data: isSet(object.data) ? ProcessingItemData.fromJSON(object.data) : undefined,
+    };
+  },
+
+  toJSON(message: UpdateProcessingItemRequest): unknown {
+    const obj: any = {};
+    if (message.key !== undefined) {
+      obj.key = ProcessingItemKey.toJSON(message.key);
+    }
+    if (message.data !== undefined) {
+      obj.data = ProcessingItemData.toJSON(message.data);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<UpdateProcessingItemRequest>): UpdateProcessingItemRequest {
+    return UpdateProcessingItemRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<UpdateProcessingItemRequest>): UpdateProcessingItemRequest {
+    const message = createBaseUpdateProcessingItemRequest();
+    message.key = (object.key !== undefined && object.key !== null)
+      ? ProcessingItemKey.fromPartial(object.key)
+      : undefined;
+    message.data = (object.data !== undefined && object.data !== null)
+      ? ProcessingItemData.fromPartial(object.data)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseUpdateProcessingItemResponse(): UpdateProcessingItemResponse {
+  return { item: undefined };
+}
+
+export const UpdateProcessingItemResponse: MessageFns<UpdateProcessingItemResponse> = {
+  encode(message: UpdateProcessingItemResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.item !== undefined) {
+      ProcessingItem.encode(message.item, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UpdateProcessingItemResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUpdateProcessingItemResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.item = ProcessingItem.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UpdateProcessingItemResponse {
+    return { item: isSet(object.item) ? ProcessingItem.fromJSON(object.item) : undefined };
+  },
+
+  toJSON(message: UpdateProcessingItemResponse): unknown {
+    const obj: any = {};
+    if (message.item !== undefined) {
+      obj.item = ProcessingItem.toJSON(message.item);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<UpdateProcessingItemResponse>): UpdateProcessingItemResponse {
+    return UpdateProcessingItemResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<UpdateProcessingItemResponse>): UpdateProcessingItemResponse {
+    const message = createBaseUpdateProcessingItemResponse();
+    message.item = (object.item !== undefined && object.item !== null)
+      ? ProcessingItem.fromPartial(object.item)
+      : undefined;
     return message;
   },
 };

@@ -6,12 +6,12 @@ from google.protobuf.timestamp import to_datetime
 from starlette.requests import Request
 
 from dev_observer.api.types.observations_pb2 import ObservationKey
-from dev_observer.api.types.processing_pb2 import ProcessingItemKey
+from dev_observer.api.types.processing_pb2 import ProcessingItemKey, ProcessingItem
 from dev_observer.api.web.observations_pb2 import GetObservationResponse, GetObservationsResponse, \
     CreateProcessingItemRequest, CreateProcessingItemResponse, DeleteProcessingItemRequest, \
     DeleteProcessingItemResponse, GetProcessingResultsRequest, GetProcessingResultsResponse, \
     GetProcessingRunStatusResponse, GetProcessingItemsRequest, GetProcessingItemsResponse, \
-    GetProcessingResultResponse
+    GetProcessingResultResponse, UpdateProcessingItemRequest, UpdateProcessingItemResponse
 from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.storage.provider import StorageProvider
@@ -36,8 +36,9 @@ class ObservationsService:
         self.router.add_api_route("/observations/kind/{kind}", self.list_by_kind, methods=["GET"])
         self.router.add_api_route("/observation/{kind}/{name}/{key}", self.get, methods=["GET"])
         self.router.add_api_route("/processing/items", self.add_processing_item, methods=["POST"])
-        self.router.add_api_route("/processing/items/filter", self.get_filtered_processing_tems, methods=["POST"])
         self.router.add_api_route("/processing/items", self.delete_processing_item, methods=["DELETE"])
+        self.router.add_api_route("/processing/items/update", self.add_processing_item, methods=["POST"])
+        self.router.add_api_route("/processing/items/filter", self.get_filtered_processing_tems, methods=["POST"])
         self.router.add_api_route("/processing/results", self.get_processing_results, methods=["POST"])
         self.router.add_api_route("/processing/results/{result_id}", self.get_processing_result, methods=["GET"])
         self.router.add_api_route("/processing/requests/runs/{request_id}",
@@ -58,6 +59,16 @@ class ObservationsService:
         next_process = self._clock.now() if req.process_immediately else None
         await self._store.create_processing_time(req.key, req.data, next_time=next_process)
         return pb_to_dict(CreateProcessingItemResponse())
+
+    async def update_processing_item(self, request: Request):
+        req = parse_dict_pb(await request.json(), UpdateProcessingItemRequest())
+        _log.debug(s_("Adding processing item", req=req))
+        def updater(db_item: ProcessingItem) -> ProcessingItem:
+            db_item.data.CopyFrom(req.data)
+            return db_item
+        await self._store.update_processing_item(req.key, updater)
+        item = await self._store.get_processing_item(req.key)
+        return pb_to_dict(UpdateProcessingItemResponse(item=item))
 
     async def get_filtered_processing_tems(self, request: Request):
         req = parse_dict_pb(await request.json(), GetProcessingItemsRequest())
@@ -87,6 +98,6 @@ class ObservationsService:
         _log.debug(s_("Get processing status", request_id=request_id))
         # validating that request id is UUID
         uuid.UUID(request_id)
-        item = await self._store.get_processing_time(ProcessingItemKey(request_id=request_id))
+        item = await self._store.get_processing_item(ProcessingItemKey(request_id=request_id))
         result = await self._store.get_processing_result(request_id)
         return pb_to_dict(GetProcessingRunStatusResponse(item=item, result=result))

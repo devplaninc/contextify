@@ -43,7 +43,9 @@ export {
   GetProcessingResultsResponse,
   CreateProcessingItemRequest,
   CreateProcessingItemResponse, DeleteProcessingItemRequest, DeleteProcessingItemResponse,
-  GetProcessingRunStatusResponse
+  GetProcessingRunStatusResponse,
+  UpdateProcessingItemResponse,
+  UpdateProcessingItemRequest,
 } from './pb/dev_observer/api/web/observations';
 export {
   GetRepositoryResponse,

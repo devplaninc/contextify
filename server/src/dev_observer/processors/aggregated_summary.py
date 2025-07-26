@@ -1,6 +1,7 @@
 import asyncio
 import dataclasses
 import datetime
+import logging
 import os
 import shutil
 import tempfile
@@ -12,11 +13,13 @@ from dev_observer.api.types.observations_pb2 import ObservationKey, Observation
 from dev_observer.api.types.processing_pb2 import AggregatedSummaryParams
 from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.flatten.flatten import FlattenResult, tokenize_file
+from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.processors.flattening import FlatteningProcessor
 from dev_observer.processors.git.changes import GitChangesHandler, ProcessGitChangesParams
 from dev_observer.prompts.provider import PromptsProvider
 from dev_observer.repository.provider import GitRepositoryProvider
+from dev_observer.storage.provider import StorageProvider
 from dev_observer.tokenizer.provider import TokenizerProvider
 
 
@@ -25,11 +28,14 @@ class AggregatedItem:
     header: str
     keys: List[ObservationKey]
 
+_log = logging.getLogger(__name__)
+
 
 class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
     repository: GitRepositoryProvider
     tokenizer: TokenizerProvider
     git_changes_handler: GitChangesHandler
+    storage: StorageProvider
 
     def __init__(
             self,
@@ -38,18 +44,24 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
             prompts: PromptsProvider,
             observations: ObservationsProvider,
             tokenizer: TokenizerProvider,
-            git_changes_handler: GitChangesHandler
+            git_changes_handler: GitChangesHandler,
+            storage: StorageProvider
     ):
         super().__init__(analysis, prompts, observations)
         self.repository = repository
         self.tokenizer = tokenizer
         self.git_changes_handler=git_changes_handler
+        self.storage = storage
 
     async def get_flatten(self, params: AggregatedSummaryParams, config: GlobalConfig) -> FlattenResult:
         items: List[AggregatedItem] = []
         extra_keys: List[ObservationKey] = []
         end_date = pb_to_datetime(params.end_date)
         for repo_id in params.target.git_repo_ids:
+            repo = await self.storage.get_github_repo(repo_id)
+            if repo is None:
+                _log.warning(s_("Repo not found", repo_id=repo_id))
+                continue
             git_result = await self.git_changes_handler.process_git_changes(ProcessGitChangesParams(
                 repo_id=repo_id,
                 end_date=end_date,

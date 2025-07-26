@@ -58,3 +58,12 @@ message GetProcessingItemsRequest {
 message GetProcessingItemsResponse {
   repeated dev_observer.api.types.processing.ProcessingItem items = 1;
 }
+
+message UpdateProcessingItemRequest {
+  dev_observer.api.types.processing.ProcessingItemKey key = 1;
+  dev_observer.api.types.processing.ProcessingItemData data = 2;
+}
+
+message UpdateProcessingItemResponse {
+  dev_observer.api.types.processing.ProcessingItem item = 1;
+}

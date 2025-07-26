@@ -186,7 +186,7 @@ class PostgresqlStorageProvider(StorageProvider):
             self,
             key: ProcessingItemKey,
             updater: Callable[[ProcessingItem], ProcessingItem],
-            next_time: Optional[datetime.datetime],
+            next_time: Optional[datetime.datetime] = None,
     ):
         key_str = _to_key_str(key)
         async with AsyncSession(self._engine) as session:
@@ -194,10 +194,13 @@ class PostgresqlStorageProvider(StorageProvider):
                 existing = await session.get(ProcessingItemEntity, key_str)
                 item = _to_item(existing)
                 updated = updater(item)
+                values: dict = {"json_data": pb_to_json(updated)}
+                if next_time is not None:
+                    values["next_processing"] = next_time
                 await session.execute(
                     update(ProcessingItemEntity)
                     .where(ProcessingItemEntity.key == key_str)
-                    .values(json_data=pb_to_json(updated), next_processing=next_time)
+                    .values(**values)
                 )
 
     async def delete_processing_item(self, key: ProcessingItemKey):
@@ -279,7 +282,7 @@ class PostgresqlStorageProvider(StorageProvider):
                 )
         return await self.get_global_config()
 
-    async def get_processing_time(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
+    async def get_processing_item(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
         key_str = _to_key_str(key)
         async with AsyncSession(self._engine) as session:
             async with session.begin():

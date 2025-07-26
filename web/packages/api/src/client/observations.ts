@@ -11,7 +11,7 @@ import {
   GetProcessingResultResponse,
   GetProcessingRunStatusResponse,
   GetProcessingItemsRequest,
-  GetProcessingItemsResponse
+  GetProcessingItemsResponse, UpdateProcessingItemRequest, UpdateProcessingItemResponse
 } from '../pb/dev_observer/api/web/observations';
 
 /**
@@ -31,6 +31,11 @@ export class ObservationsClient extends BaseClient {
   async addProcessingItem(request: CreateProcessingItemRequest): Promise<CreateProcessingItemResponse> {
     return this._post(
       `/api/v1/processing/items`, CreateProcessingItemResponse, CreateProcessingItemRequest.toJSON(request));
+  }
+
+  async updateProcessingItem(request: UpdateProcessingItemRequest): Promise<UpdateProcessingItemResponse> {
+    return this._post(
+      `/api/v1/processing/items/update`, UpdateProcessingItemResponse, UpdateProcessingItemRequest.toJSON(request));
   }
 
   async getFilteredProcessingItems(request: GetProcessingItemsRequest): Promise<GetProcessingItemsResponse> {

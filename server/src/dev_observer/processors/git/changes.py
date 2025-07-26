@@ -3,8 +3,6 @@ import datetime
 import logging
 from typing import Optional, List
 
-from google.protobuf import timestamp
-
 from dev_observer.api.types.observations_pb2 import ObservationKey
 from dev_observer.api.types.repo_pb2 import GitHubRepository
 from dev_observer.common.errors import TerminalError

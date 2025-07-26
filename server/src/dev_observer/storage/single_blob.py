@@ -217,15 +217,13 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
             self,
             key: ProcessingItemKey,
             updater: Callable[[ProcessingItem], ProcessingItem],
-            next_time: Optional[datetime.datetime],
+            next_time: Optional[datetime.datetime] = None,
     ):
         def up(d: LocalStorageData):
             for item in d.processing_items:
                 if item.key == key:
                     updater(item)
-                    if next_time is None:
-                        item.ClearField("next_processing")
-                    else:
+                    if next_time:
                         item.next_processing.CopyFrom(timestamp.from_milliseconds(int(next_time.timestamp() * 1000)))
                     return
             raise ValueError(f"Processing item with key {key} not found")
@@ -292,7 +290,7 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
         results.sort(key=lambda r: pb_to_datetime(r.created_at), reverse=True)
         return results
 
-    async def get_processing_time(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
+    async def get_processing_item(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
         for item in self._get().processing_items:
             if item.key == key:
                 return item

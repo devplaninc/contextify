@@ -205,7 +205,7 @@ def detect_server_env(settings: Settings) -> ServerEnv:
     bg_sites_processor = WebsitesProcessor(bg_analysis, bg_web_scraping, prompts, observations, tokenizer)
     bg_git_changes_handler = GitChangesHandler(bg_git_changes_processor, bg_storage, observations)
     bg_agg_summary_processor = AggregatedSummaryProcessor(
-        bg_analysis, bg_repository, prompts, observations, tokenizer, bg_git_changes_handler)
+        bg_analysis, bg_repository, prompts, observations, tokenizer, bg_git_changes_handler, bg_storage)
     users = detect_users_provider(settings)
 
     # Extract API key from settings if available

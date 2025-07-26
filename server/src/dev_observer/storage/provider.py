@@ -65,7 +65,7 @@ class StorageProvider(Protocol):
     async def update_processing_item(self,
                                      key: ProcessingItemKey,
                                      updater: Callable[[ProcessingItem], ProcessingItem],
-                                     next_time: Optional[datetime.datetime]):
+                                     next_time: Optional[datetime.datetime] = None):
         ...
 
     async def delete_processing_item(self, key: ProcessingItemKey):
@@ -77,7 +77,7 @@ class StorageProvider(Protocol):
     ):
         ...
 
-    async def get_processing_time(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
+    async def get_processing_item(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
         ...
 
     async def set_processing_error(self, key: ProcessingItemKey, error: Optional[str] = None):

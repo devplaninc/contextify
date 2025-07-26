@@ -85,3 +85,17 @@ class GetProcessingItemsResponse(_message.Message):
     ITEMS_FIELD_NUMBER: _ClassVar[int]
     items: _containers.RepeatedCompositeFieldContainer[_processing_pb2.ProcessingItem]
     def __init__(self, items: _Optional[_Iterable[_Union[_processing_pb2.ProcessingItem, _Mapping]]] = ...) -> None: ...
+
+class UpdateProcessingItemRequest(_message.Message):
+    __slots__ = ("key", "data")
+    KEY_FIELD_NUMBER: _ClassVar[int]
+    DATA_FIELD_NUMBER: _ClassVar[int]
+    key: _processing_pb2.ProcessingItemKey
+    data: _processing_pb2.ProcessingItemData
+    def __init__(self, key: _Optional[_Union[_processing_pb2.ProcessingItemKey, _Mapping]] = ..., data: _Optional[_Union[_processing_pb2.ProcessingItemData, _Mapping]] = ...) -> None: ...
+
+class UpdateProcessingItemResponse(_message.Message):
+    __slots__ = ("item",)
+    ITEM_FIELD_NUMBER: _ClassVar[int]
+    item: _processing_pb2.ProcessingItem
+    def __init__(self, item: _Optional[_Union[_processing_pb2.ProcessingItem, _Mapping]] = ...) -> None: ...
