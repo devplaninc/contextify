@@ -2,7 +2,6 @@ import logging
 import uuid
 
 from fastapi import APIRouter
-from google.protobuf.timestamp import to_datetime
 from starlette.requests import Request
 
 from dev_observer.api.types.observations_pb2 import ObservationKey
@@ -12,6 +11,7 @@ from dev_observer.api.web.observations_pb2 import GetObservationResponse, GetObs
     DeleteProcessingItemResponse, GetProcessingResultsRequest, GetProcessingResultsResponse, \
     GetProcessingRunStatusResponse, GetProcessingItemsRequest, GetProcessingItemsResponse, \
     GetProcessingResultResponse, UpdateProcessingItemRequest, UpdateProcessingItemResponse
+from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.storage.provider import StorageProvider
@@ -63,9 +63,11 @@ class ObservationsService:
     async def update_processing_item(self, request: Request):
         req = parse_dict_pb(await request.json(), UpdateProcessingItemRequest())
         _log.debug(s_("Adding processing item", req=req))
+
         def updater(db_item: ProcessingItem) -> ProcessingItem:
             db_item.data.CopyFrom(req.data)
             return db_item
+
         await self._store.update_processing_item(req.key, updater)
         item = await self._store.get_processing_item(req.key)
         return pb_to_dict(UpdateProcessingItemResponse(item=item))
@@ -86,7 +88,7 @@ class ObservationsService:
         req = parse_dict_pb(await request.json(), GetProcessingResultsRequest())
         _log.debug(s_("Get processing results", req=req))
         results = await self._store.get_processing_results(
-            to_datetime(req.from_date), to_datetime(req.to_date), req.filter)
+            pb_to_datetime(req.from_date), pb_to_datetime(req.to_date), req.filter)
         return pb_to_dict(GetProcessingResultsResponse(results=results))
 
     async def get_processing_result(self, result_id: str):

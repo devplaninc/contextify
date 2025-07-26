@@ -7,7 +7,7 @@ export function ProcessingResultView({result}: { result: ProcessingItemResult })
     <div className="text-sm font-semibold">
       <ProcessingResultHeader result={result}/>
     </div>
-    <AnalysisContents keys={result.observations}/>
+    <AnalysisContents keys={result.resultData?.observations ?? []}/>
   </div>
 }
 

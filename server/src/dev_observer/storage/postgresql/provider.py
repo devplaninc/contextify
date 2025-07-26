@@ -237,7 +237,9 @@ class PostgresqlStorageProvider(StorageProvider):
     ) -> List[ProcessingItemResult]:
         async with AsyncSession(self._engine) as session:
             async with session.begin():
-                query = select(ProcessingItemResultEntity)
+                query = select(ProcessingItemResultEntity).where(
+                    ProcessingItemResultEntity.created_at.between(from_date, to_date)
+                )
                 if filter.namespace:
                     query = query.where(ProcessingItemResultEntity.namespace == filter.namespace)
                 if filter.reference_id:
