@@ -7,6 +7,7 @@ from typing import TypeVar, Generic, List
 from dev_observer.analysis.provider import AnalysisProvider
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.observations_pb2 import ObservationKey, Observation
+from dev_observer.api.types.processing_pb2 import ProcessingItemResultData
 from dev_observer.flatten.flatten import FlattenResult
 from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
@@ -41,11 +42,11 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
 
     async def process(
             self, entity: E, requests: List[ObservationRequest], config: GlobalConfig, clean: bool = True,
-    ) -> List[ObservationKey]:
+    ) -> ProcessingItemResultData:
         res = await self.get_flatten(entity, config)
         _log.debug(s_("Got flatten result", result=res))
         try:
-            result: List[ObservationKey] = []
+            keys: List[ObservationKey] = []
             for request in requests:
                 try:
                     prompts_prefix = request.prompt_prefix
@@ -54,12 +55,14 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
                                                  prompts=self.prompts)
                     content = await analyzer.analyze_flatten(res)
                     await self.observations.store(Observation(key=key, content=content))
-                    result.append(key)
+                    keys.append(key)
                 except Exception as e:
                     _log.exception(s_("Analysis failed.", request=request), exc_info=e)
-            if res.extra_keys:
-                result.extend(res.extra_keys)
-            return result
+            result_data = res.result_data
+            if result_data is None:
+                result_data = ProcessingItemResultData()
+            result_data.observations.extend(keys)
+            return result_data
         finally:
             if clean:
                 res.clean_up()

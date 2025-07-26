@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from dev_observer.api.types.observations_pb2 import ObservationKey
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingRequest, ProcessGitChangesRequest, \
-    ProcessingItemResult, ProcessingItemKey, PeriodicAggregation
+    ProcessingItemResult, ProcessingItemKey, PeriodicAggregation, ProcessingItemResultData
 from dev_observer.common.errors import TerminalError
 from dev_observer.common.schedule import get_next_date, pb_to_datetime
 from dev_observer.log import s_
@@ -68,7 +68,7 @@ class PeriodicProcessor:
             _log.info(s_("Item processed", item=item))
         except TerminalError as e:
             _log.exception(s_("Failed to process item due to terminal error, deleting", item=item, err=e))
-            await self._finalize_execution(item, [], error=f"Terminal error: {e}")
+            await self._finalize_execution(item, ProcessingItemResultData(), error=f"Terminal error: {e}")
             raise
         except Exception as e:
             await self._finalize_execution(item, None, error=f"{e}")
@@ -80,17 +80,17 @@ class PeriodicProcessor:
     async def _finalize_execution(
             self,
             item: ProcessingItem,
-            result: Optional[List[ObservationKey]],
+            result_data: Optional[ProcessingItemResultData],
             error: Optional[str] = None,
     ):
         ent_type = item.key.WhichOneof("entity")
         try:
-            if result is not None:
+            if result_data is not None:
                 await self._storage.add_processing_result(ProcessingItemResult(
                     id=item.key.request_id,
                     key=item.key,
                     error_message=error,
-                    observations=result,
+                    result_data=result_data,
                     data=item.data,
                 ))
                 if ent_type == "request_id":
@@ -100,7 +100,7 @@ class PeriodicProcessor:
                 else:
                     await self._storage.set_next_processing_time(item.key, None, error)
             else:
-                # If result is none, keep retrying periodically. That means processing is not enabled yet.
+                # If result_data is none, keep retrying periodically. That means processing is not enabled yet.
                 if error:
                     await self._storage.set_processing_error(item.key, error)
         except TerminalError as e:
@@ -123,7 +123,7 @@ class PeriodicProcessor:
 
         await self._storage.update_processing_item(key, updater, next_processing)
 
-    async def _process_item(self, item: ProcessingItem) -> Optional[List[ObservationKey]]:
+    async def _process_item(self, item: ProcessingItem) -> Optional[ProcessingItemResultData]:
         ent_type = item.key.WhichOneof("entity")
         if ent_type == "github_repo_id":
             return await self._process_github_repo(item.key.github_repo_id)
@@ -145,7 +145,7 @@ class PeriodicProcessor:
         else:
             raise ValueError(f"[{ent_type}] is not supported")
 
-    async def _process_github_repo(self, repo_id: str) -> Optional[List[ObservationKey]]:
+    async def _process_github_repo(self, repo_id: str) -> Optional[ProcessingItemResultData]:
         config = await self._storage.get_global_config()
         if config.HasField("repo_analysis") and config.repo_analysis.disabled:
             _log.warning(s_("Repo analysis disabled"))
@@ -168,7 +168,7 @@ class PeriodicProcessor:
             return None
         return await self._repos_processor.process(ObservedRepo(url=repo.url, github_repo=repo), requests, config)
 
-    async def _process_website(self, website_url: str) -> Optional[List[ObservationKey]]:
+    async def _process_website(self, website_url: str) -> Optional[ProcessingItemResultData]:
         _log.debug(s_("Processing website", url=website_url))
         requests: List[ObservationRequest] = []
         config = await self._storage.get_global_config()
@@ -205,7 +205,7 @@ class PeriodicProcessor:
         return res.observation_keys if res else None
 
     async def _process_periodic_aggregation(
-            self, aggregation_id: str, req: PeriodicAggregation) -> Optional[List[ObservationKey]]:
+            self, aggregation_id: str, req: PeriodicAggregation) -> Optional[ProcessingItemResultData]:
         config = await self._storage.get_global_config()
         if not config.analysis.HasField("default_aggregated_summary_analyzer"):
             _log.warning(s_("Aggregated summary disabled"))

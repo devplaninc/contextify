@@ -76,20 +76,34 @@ class ProcessGitChangesRequest(_message.Message):
     def __init__(self, git_repo_id: _Optional[str] = ..., look_back_days: _Optional[int] = ...) -> None: ...
 
 class ProcessingItemResult(_message.Message):
-    __slots__ = ("id", "key", "observations", "error_message", "created_at", "data")
+    __slots__ = ("id", "key", "error_message", "created_at", "data", "result_data")
     ID_FIELD_NUMBER: _ClassVar[int]
     KEY_FIELD_NUMBER: _ClassVar[int]
-    OBSERVATIONS_FIELD_NUMBER: _ClassVar[int]
     ERROR_MESSAGE_FIELD_NUMBER: _ClassVar[int]
     CREATED_AT_FIELD_NUMBER: _ClassVar[int]
     DATA_FIELD_NUMBER: _ClassVar[int]
+    RESULT_DATA_FIELD_NUMBER: _ClassVar[int]
     id: str
     key: ProcessingItemKey
-    observations: _containers.RepeatedCompositeFieldContainer[_observations_pb2.ObservationKey]
     error_message: str
     created_at: _timestamp_pb2.Timestamp
     data: ProcessingItemData
-    def __init__(self, id: _Optional[str] = ..., key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., observations: _Optional[_Iterable[_Union[_observations_pb2.ObservationKey, _Mapping]]] = ..., error_message: _Optional[str] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., data: _Optional[_Union[ProcessingItemData, _Mapping]] = ...) -> None: ...
+    result_data: ProcessingItemResultData
+    def __init__(self, id: _Optional[str] = ..., key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., error_message: _Optional[str] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., data: _Optional[_Union[ProcessingItemData, _Mapping]] = ..., result_data: _Optional[_Union[ProcessingItemResultData, _Mapping]] = ...) -> None: ...
+
+class RepoObservation(_message.Message):
+    __slots__ = ("repo_id", "observations")
+    REPO_ID_FIELD_NUMBER: _ClassVar[int]
+    OBSERVATIONS_FIELD_NUMBER: _ClassVar[int]
+    repo_id: str
+    observations: _containers.RepeatedCompositeFieldContainer[_observations_pb2.ObservationKey]
+    def __init__(self, repo_id: _Optional[str] = ..., observations: _Optional[_Iterable[_Union[_observations_pb2.ObservationKey, _Mapping]]] = ...) -> None: ...
+
+class PeriodicAggregationResult(_message.Message):
+    __slots__ = ("repo_observations",)
+    REPO_OBSERVATIONS_FIELD_NUMBER: _ClassVar[int]
+    repo_observations: _containers.RepeatedCompositeFieldContainer[RepoObservation]
+    def __init__(self, repo_observations: _Optional[_Iterable[_Union[RepoObservation, _Mapping]]] = ...) -> None: ...
 
 class ProcessingItemData(_message.Message):
     __slots__ = ("reference_id", "namespace", "created_by", "request", "periodic_aggregation")
@@ -104,6 +118,14 @@ class ProcessingItemData(_message.Message):
     request: ProcessingRequest
     periodic_aggregation: PeriodicAggregation
     def __init__(self, reference_id: _Optional[str] = ..., namespace: _Optional[str] = ..., created_by: _Optional[str] = ..., request: _Optional[_Union[ProcessingRequest, _Mapping]] = ..., periodic_aggregation: _Optional[_Union[PeriodicAggregation, _Mapping]] = ...) -> None: ...
+
+class ProcessingItemResultData(_message.Message):
+    __slots__ = ("observations", "periodic_aggregation")
+    OBSERVATIONS_FIELD_NUMBER: _ClassVar[int]
+    PERIODIC_AGGREGATION_FIELD_NUMBER: _ClassVar[int]
+    observations: _containers.RepeatedCompositeFieldContainer[_observations_pb2.ObservationKey]
+    periodic_aggregation: PeriodicAggregationResult
+    def __init__(self, observations: _Optional[_Iterable[_Union[_observations_pb2.ObservationKey, _Mapping]]] = ..., periodic_aggregation: _Optional[_Union[PeriodicAggregationResult, _Mapping]] = ...) -> None: ...
 
 class ProcessingResultFilter(_message.Message):
     __slots__ = ("namespace", "reference_id", "request_type", "keys")

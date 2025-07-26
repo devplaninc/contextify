@@ -1,7 +1,7 @@
 import dataclasses
 import datetime
 import logging
-from typing import Optional, List
+from typing import Optional, List, Sequence
 
 from dev_observer.api.types.observations_pb2 import ObservationKey
 from dev_observer.api.types.repo_pb2 import GitHubRepository
@@ -27,7 +27,7 @@ class ProcessGitChangesParams:
 @dataclasses.dataclass
 class GitChangesResult:
     repo: GitHubRepository
-    observation_keys: List[ObservationKey]
+    observation_keys: Sequence[ObservationKey]
 
 
 class GitChangesHandler:
@@ -75,5 +75,5 @@ class GitChangesHandler:
         requests.append(ObservationRequest(prompt_prefix=analyzer.prompt_prefix, key=key))
         observed_repo = ObservedRepo(url=repo.url, github_repo=repo)
         params = ObservedGitChanges(repo=observed_repo, from_date=from_date, to_date=end_date)
-        keys = await self._git_changes_processor.process(params, requests, config)
-        return GitChangesResult(repo=repo, observation_keys=keys)
+        result = await self._git_changes_processor.process(params, requests, config)
+        return GitChangesResult(repo=repo, observation_keys=result.observations)

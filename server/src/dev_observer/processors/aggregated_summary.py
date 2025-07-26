@@ -5,12 +5,13 @@ import logging
 import os
 import shutil
 import tempfile
-from typing import List
+from typing import List, Sequence
 
 from dev_observer.analysis.provider import AnalysisProvider
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.observations_pb2 import ObservationKey, Observation
-from dev_observer.api.types.processing_pb2 import AggregatedSummaryParams
+from dev_observer.api.types.processing_pb2 import AggregatedSummaryParams, ProcessingItemResultData, \
+    PeriodicAggregationResult, RepoObservation
 from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.flatten.flatten import FlattenResult, tokenize_file
 from dev_observer.log import s_
@@ -26,7 +27,7 @@ from dev_observer.tokenizer.provider import TokenizerProvider
 @dataclasses.dataclass
 class AggregatedItem:
     header: str
-    keys: List[ObservationKey]
+    keys: Sequence[ObservationKey]
 
 _log = logging.getLogger(__name__)
 
@@ -55,8 +56,8 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
 
     async def get_flatten(self, params: AggregatedSummaryParams, config: GlobalConfig) -> FlattenResult:
         items: List[AggregatedItem] = []
-        extra_keys: List[ObservationKey] = []
         end_date = pb_to_datetime(params.end_date)
+        result = PeriodicAggregationResult()
         for repo_id in params.target.git_repo_ids:
             repo = await self.storage.get_github_repo(repo_id)
             if repo is None:
@@ -69,8 +70,11 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
             ))
             repo = git_result.repo
             header = f"Changes for repository **{repo.full_name}**"
+            result.repo_observations.append(RepoObservation(
+                repo_id=repo_id,
+                observations=git_result.observation_keys,
+            ))
             items.append(AggregatedItem(header=header, keys=git_result.observation_keys))
-            extra_keys.extend(git_result.observation_keys)
 
         # Download all observations in parallel
         async def process_item(item: AggregatedItem):
@@ -107,7 +111,9 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
             file_paths=tokenize_result.file_paths,
             total_tokens=tokenize_result.total_tokens,
             clean_up=clean_up,
-            extra_keys=extra_keys,
+            result_data=ProcessingItemResultData(
+                periodic_aggregation=result,
+            )
         )
 
 

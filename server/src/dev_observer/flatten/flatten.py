@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from dev_observer.api.types.config_pb2 import GlobalConfig, RepoAnalysisConfig
 from dev_observer.api.types.observations_pb2 import ObservationKey
+from dev_observer.api.types.processing_pb2 import ProcessingItemResultData
 from dev_observer.log import s_
 from dev_observer.repository.cloner import clone_repository
 from dev_observer.repository.provider import GitRepositoryProvider, RepositoryInfo
@@ -37,7 +38,7 @@ class FlattenResult:
     file_paths: List[str]
     total_tokens: int
     clean_up: Callable[[], bool]
-    extra_keys: Optional[List[ObservationKey]] = None
+    result_data: Optional[ProcessingItemResultData] = None
 
 
 class RepomixInput(BaseModel):

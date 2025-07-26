@@ -65,10 +65,19 @@ export interface ProcessingItemResult {
   /** Unique id of the result */
   id: string;
   key: ProcessingItemKey | undefined;
-  observations: ObservationKey[];
   errorMessage?: string | undefined;
   createdAt: Date | undefined;
   data?: ProcessingItemData | undefined;
+  resultData?: ProcessingItemResultData | undefined;
+}
+
+export interface RepoObservation {
+  repoId: string;
+  observations: ObservationKey[];
+}
+
+export interface PeriodicAggregationResult {
+  repoObservations: RepoObservation[];
 }
 
 export interface ProcessingItemData {
@@ -80,6 +89,11 @@ export interface ProcessingItemData {
     | { $case: "request"; value: ProcessingRequest }
     | { $case: "periodicAggregation"; value: PeriodicAggregation }
     | undefined;
+}
+
+export interface ProcessingItemResultData {
+  observations: ObservationKey[];
+  type?: { $case: "periodicAggregation"; value: PeriodicAggregationResult } | undefined;
 }
 
 export interface ProcessingResultFilter {
@@ -780,7 +794,14 @@ export const ProcessGitChangesRequest: MessageFns<ProcessGitChangesRequest> = {
 };
 
 function createBaseProcessingItemResult(): ProcessingItemResult {
-  return { id: "", key: undefined, observations: [], errorMessage: undefined, createdAt: undefined, data: undefined };
+  return {
+    id: "",
+    key: undefined,
+    errorMessage: undefined,
+    createdAt: undefined,
+    data: undefined,
+    resultData: undefined,
+  };
 }
 
 export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
@@ -791,9 +812,6 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     if (message.key !== undefined) {
       ProcessingItemKey.encode(message.key, writer.uint32(18).fork()).join();
     }
-    for (const v of message.observations) {
-      ObservationKey.encode(v!, writer.uint32(26).fork()).join();
-    }
     if (message.errorMessage !== undefined) {
       writer.uint32(34).string(message.errorMessage);
     }
@@ -802,6 +820,9 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     }
     if (message.data !== undefined) {
       ProcessingItemData.encode(message.data, writer.uint32(58).fork()).join();
+    }
+    if (message.resultData !== undefined) {
+      ProcessingItemResultData.encode(message.resultData, writer.uint32(66).fork()).join();
     }
     return writer;
   },
@@ -829,14 +850,6 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
           message.key = ProcessingItemKey.decode(reader, reader.uint32());
           continue;
         }
-        case 3: {
-          if (tag !== 26) {
-            break;
-          }
-
-          message.observations.push(ObservationKey.decode(reader, reader.uint32()));
-          continue;
-        }
         case 4: {
           if (tag !== 34) {
             break;
@@ -861,6 +874,14 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
           message.data = ProcessingItemData.decode(reader, reader.uint32());
           continue;
         }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.resultData = ProcessingItemResultData.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -874,12 +895,10 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     return {
       id: isSet(object.id) ? gt.String(object.id) : "",
       key: isSet(object.key) ? ProcessingItemKey.fromJSON(object.key) : undefined,
-      observations: gt.Array.isArray(object?.observations)
-        ? object.observations.map((e: any) => ObservationKey.fromJSON(e))
-        : [],
       errorMessage: isSet(object.errorMessage) ? gt.String(object.errorMessage) : undefined,
       createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
       data: isSet(object.data) ? ProcessingItemData.fromJSON(object.data) : undefined,
+      resultData: isSet(object.resultData) ? ProcessingItemResultData.fromJSON(object.resultData) : undefined,
     };
   },
 
@@ -891,9 +910,6 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     if (message.key !== undefined) {
       obj.key = ProcessingItemKey.toJSON(message.key);
     }
-    if (message.observations?.length) {
-      obj.observations = message.observations.map((e) => ObservationKey.toJSON(e));
-    }
     if (message.errorMessage !== undefined) {
       obj.errorMessage = message.errorMessage;
     }
@@ -902,6 +918,9 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     }
     if (message.data !== undefined) {
       obj.data = ProcessingItemData.toJSON(message.data);
+    }
+    if (message.resultData !== undefined) {
+      obj.resultData = ProcessingItemResultData.toJSON(message.resultData);
     }
     return obj;
   },
@@ -915,12 +934,154 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
     message.key = (object.key !== undefined && object.key !== null)
       ? ProcessingItemKey.fromPartial(object.key)
       : undefined;
-    message.observations = object.observations?.map((e) => ObservationKey.fromPartial(e)) || [];
     message.errorMessage = object.errorMessage ?? undefined;
     message.createdAt = object.createdAt ?? undefined;
     message.data = (object.data !== undefined && object.data !== null)
       ? ProcessingItemData.fromPartial(object.data)
       : undefined;
+    message.resultData = (object.resultData !== undefined && object.resultData !== null)
+      ? ProcessingItemResultData.fromPartial(object.resultData)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseRepoObservation(): RepoObservation {
+  return { repoId: "", observations: [] };
+}
+
+export const RepoObservation: MessageFns<RepoObservation> = {
+  encode(message: RepoObservation, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.repoId !== "") {
+      writer.uint32(10).string(message.repoId);
+    }
+    for (const v of message.observations) {
+      ObservationKey.encode(v!, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RepoObservation {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRepoObservation();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.repoId = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.observations.push(ObservationKey.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RepoObservation {
+    return {
+      repoId: isSet(object.repoId) ? gt.String(object.repoId) : "",
+      observations: gt.Array.isArray(object?.observations)
+        ? object.observations.map((e: any) => ObservationKey.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: RepoObservation): unknown {
+    const obj: any = {};
+    if (message.repoId !== "") {
+      obj.repoId = message.repoId;
+    }
+    if (message.observations?.length) {
+      obj.observations = message.observations.map((e) => ObservationKey.toJSON(e));
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<RepoObservation>): RepoObservation {
+    return RepoObservation.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<RepoObservation>): RepoObservation {
+    const message = createBaseRepoObservation();
+    message.repoId = object.repoId ?? "";
+    message.observations = object.observations?.map((e) => ObservationKey.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBasePeriodicAggregationResult(): PeriodicAggregationResult {
+  return { repoObservations: [] };
+}
+
+export const PeriodicAggregationResult: MessageFns<PeriodicAggregationResult> = {
+  encode(message: PeriodicAggregationResult, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.repoObservations) {
+      RepoObservation.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PeriodicAggregationResult {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePeriodicAggregationResult();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.repoObservations.push(RepoObservation.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PeriodicAggregationResult {
+    return {
+      repoObservations: gt.Array.isArray(object?.repoObservations)
+        ? object.repoObservations.map((e: any) => RepoObservation.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: PeriodicAggregationResult): unknown {
+    const obj: any = {};
+    if (message.repoObservations?.length) {
+      obj.repoObservations = message.repoObservations.map((e) => RepoObservation.toJSON(e));
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<PeriodicAggregationResult>): PeriodicAggregationResult {
+    return PeriodicAggregationResult.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<PeriodicAggregationResult>): PeriodicAggregationResult {
+    const message = createBasePeriodicAggregationResult();
+    message.repoObservations = object.repoObservations?.map((e) => RepoObservation.fromPartial(e)) || [];
     return message;
   },
 };
@@ -1057,6 +1218,101 @@ export const ProcessingItemData: MessageFns<ProcessingItemData> = {
       case "periodicAggregation": {
         if (object.type?.value !== undefined && object.type?.value !== null) {
           message.type = { $case: "periodicAggregation", value: PeriodicAggregation.fromPartial(object.type.value) };
+        }
+        break;
+      }
+    }
+    return message;
+  },
+};
+
+function createBaseProcessingItemResultData(): ProcessingItemResultData {
+  return { observations: [], type: undefined };
+}
+
+export const ProcessingItemResultData: MessageFns<ProcessingItemResultData> = {
+  encode(message: ProcessingItemResultData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.observations) {
+      ObservationKey.encode(v!, writer.uint32(10).fork()).join();
+    }
+    switch (message.type?.$case) {
+      case "periodicAggregation":
+        PeriodicAggregationResult.encode(message.type.value, writer.uint32(802).fork()).join();
+        break;
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): ProcessingItemResultData {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseProcessingItemResultData();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.observations.push(ObservationKey.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 100: {
+          if (tag !== 802) {
+            break;
+          }
+
+          message.type = {
+            $case: "periodicAggregation",
+            value: PeriodicAggregationResult.decode(reader, reader.uint32()),
+          };
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): ProcessingItemResultData {
+    return {
+      observations: gt.Array.isArray(object?.observations)
+        ? object.observations.map((e: any) => ObservationKey.fromJSON(e))
+        : [],
+      type: isSet(object.periodicAggregation)
+        ? { $case: "periodicAggregation", value: PeriodicAggregationResult.fromJSON(object.periodicAggregation) }
+        : undefined,
+    };
+  },
+
+  toJSON(message: ProcessingItemResultData): unknown {
+    const obj: any = {};
+    if (message.observations?.length) {
+      obj.observations = message.observations.map((e) => ObservationKey.toJSON(e));
+    }
+    if (message.type?.$case === "periodicAggregation") {
+      obj.periodicAggregation = PeriodicAggregationResult.toJSON(message.type.value);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<ProcessingItemResultData>): ProcessingItemResultData {
+    return ProcessingItemResultData.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<ProcessingItemResultData>): ProcessingItemResultData {
+    const message = createBaseProcessingItemResultData();
+    message.observations = object.observations?.map((e) => ObservationKey.fromPartial(e)) || [];
+    switch (object.type?.$case) {
+      case "periodicAggregation": {
+        if (object.type?.value !== undefined && object.type?.value !== null) {
+          message.type = {
+            $case: "periodicAggregation",
+            value: PeriodicAggregationResult.fromPartial(object.type.value),
+          };
         }
         break;
       }

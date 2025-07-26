@@ -18,6 +18,9 @@ export {
   ProcessingItem, ProcessingItemKey, ProcessingItemResult, ProcessingRequest, ProcessGitChangesRequest,
   ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData,
   AggregatedSummaryParams_Target, AggregatedSummaryParams, PeriodicAggregation,
+  ProcessingItemResultData,
+  PeriodicAggregationResult,
+  RepoObservation,
 } from './pb/dev_observer/api/types/processing';
 export {GitHubRepository} from './pb/dev_observer/api/types/repo';
 export {WebSite} from './pb/dev_observer/api/types/sites';
