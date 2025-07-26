@@ -1,6 +1,18 @@
 // Export protobuf types
 export {SystemMessage, UserMessage, ModelConfig, PromptConfig, PromptTemplate} from './pb/dev_observer/api/types/ai';
 export {UserManagementStatus, GlobalConfig, AnalysisConfig} from './pb/dev_observer/api/types/config';
+export {
+  Time,
+  TimeOfDay,
+  DayOfWeek,
+  TimeZone,
+  Frequency,
+  Frequency_Daily,
+  Frequency_Weekly,
+  dayOfWeekToJSON,
+  dayOfWeekFromJSON,
+  Schedule
+} from './pb/dev_observer/api/types/schedule';
 export {Analyzer, Observation, ObservationKey,} from './pb/dev_observer/api/types/observations';
 export {
   ProcessingItem, ProcessingItemKey, ProcessingItemResult, ProcessingRequest, ProcessGitChangesRequest,
