@@ -70,9 +70,9 @@ message ProcessingItemResult {
 
 message ProcessingItemData {
   // Free form indexed reference id that may be useful for connecting request to a specific repo or other entity.
-  string reference_id = 1;
-  string namespace = 2;
-  string created_by = 3;
+  optional string reference_id = 1;
+  optional string namespace = 2;
+  optional string created_by = 3;
   oneof type {
     ProcessingRequest request = 100;
     PeriodicAggregation periodic_aggregation = 101;

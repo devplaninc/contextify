@@ -73,9 +73,9 @@ export interface ProcessingItemResult {
 
 export interface ProcessingItemData {
   /** Free form indexed reference id that may be useful for connecting request to a specific repo or other entity. */
-  referenceId: string;
-  namespace: string;
-  createdBy: string;
+  referenceId?: string | undefined;
+  namespace?: string | undefined;
+  createdBy?: string | undefined;
   type?:
     | { $case: "request"; value: ProcessingRequest }
     | { $case: "periodicAggregation"; value: PeriodicAggregation }
@@ -926,18 +926,18 @@ export const ProcessingItemResult: MessageFns<ProcessingItemResult> = {
 };
 
 function createBaseProcessingItemData(): ProcessingItemData {
-  return { referenceId: "", namespace: "", createdBy: "", type: undefined };
+  return { referenceId: undefined, namespace: undefined, createdBy: undefined, type: undefined };
 }
 
 export const ProcessingItemData: MessageFns<ProcessingItemData> = {
   encode(message: ProcessingItemData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.referenceId !== "") {
+    if (message.referenceId !== undefined) {
       writer.uint32(10).string(message.referenceId);
     }
-    if (message.namespace !== "") {
+    if (message.namespace !== undefined) {
       writer.uint32(18).string(message.namespace);
     }
-    if (message.createdBy !== "") {
+    if (message.createdBy !== undefined) {
       writer.uint32(26).string(message.createdBy);
     }
     switch (message.type?.$case) {
@@ -1009,9 +1009,9 @@ export const ProcessingItemData: MessageFns<ProcessingItemData> = {
 
   fromJSON(object: any): ProcessingItemData {
     return {
-      referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : "",
-      namespace: isSet(object.namespace) ? gt.String(object.namespace) : "",
-      createdBy: isSet(object.createdBy) ? gt.String(object.createdBy) : "",
+      referenceId: isSet(object.referenceId) ? gt.String(object.referenceId) : undefined,
+      namespace: isSet(object.namespace) ? gt.String(object.namespace) : undefined,
+      createdBy: isSet(object.createdBy) ? gt.String(object.createdBy) : undefined,
       type: isSet(object.request)
         ? { $case: "request", value: ProcessingRequest.fromJSON(object.request) }
         : isSet(object.periodicAggregation)
@@ -1022,13 +1022,13 @@ export const ProcessingItemData: MessageFns<ProcessingItemData> = {
 
   toJSON(message: ProcessingItemData): unknown {
     const obj: any = {};
-    if (message.referenceId !== "") {
+    if (message.referenceId !== undefined) {
       obj.referenceId = message.referenceId;
     }
-    if (message.namespace !== "") {
+    if (message.namespace !== undefined) {
       obj.namespace = message.namespace;
     }
-    if (message.createdBy !== "") {
+    if (message.createdBy !== undefined) {
       obj.createdBy = message.createdBy;
     }
     if (message.type?.$case === "request") {
@@ -1044,9 +1044,9 @@ export const ProcessingItemData: MessageFns<ProcessingItemData> = {
   },
   fromPartial(object: DeepPartial<ProcessingItemData>): ProcessingItemData {
     const message = createBaseProcessingItemData();
-    message.referenceId = object.referenceId ?? "";
-    message.namespace = object.namespace ?? "";
-    message.createdBy = object.createdBy ?? "";
+    message.referenceId = object.referenceId ?? undefined;
+    message.namespace = object.namespace ?? undefined;
+    message.createdBy = object.createdBy ?? undefined;
     switch (object.type?.$case) {
       case "request": {
         if (object.type?.value !== undefined && object.type?.value !== null) {
