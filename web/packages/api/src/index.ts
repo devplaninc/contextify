@@ -4,7 +4,8 @@ export {UserManagementStatus, GlobalConfig, AnalysisConfig} from './pb/dev_obser
 export {Analyzer, Observation, ObservationKey,} from './pb/dev_observer/api/types/observations';
 export {
   ProcessingItem, ProcessingItemKey, ProcessingItemResult, ProcessingRequest, ProcessGitChangesRequest,
-  ProcessingResultFilter, ProcessingItemsFilter
+  ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData,
+  AggregatedSummaryParams_Target, AggregatedSummaryParams, PeriodicAggregation,
 } from './pb/dev_observer/api/types/processing';
 export {GitHubRepository} from './pb/dev_observer/api/types/repo';
 export {WebSite} from './pb/dev_observer/api/types/sites';
