@@ -29,19 +29,23 @@ export class ObservationsClient extends BaseClient {
   }
 
   async addProcessingItem(request: CreateProcessingItemRequest): Promise<CreateProcessingItemResponse> {
-    return this._post(`/api/v1/processing/items`, CreateProcessingItemResponse, request);
+    return this._post(
+      `/api/v1/processing/items`, CreateProcessingItemResponse, CreateProcessingItemRequest.toJSON(request));
   }
 
   async getFilteredProcessingItems(request: GetProcessingItemsRequest): Promise<GetProcessingItemsResponse> {
-    return this._post(`/api/v1/processing/items/filter`, GetProcessingItemsResponse, request);
+    return this._post(
+      `/api/v1/processing/items/filter`, GetProcessingItemsResponse, GetProcessingItemsRequest.toJSON(request));
   }
 
   async deleteProcessingItem(request: DeleteProcessingItemRequest): Promise<DeleteProcessingItemResponse> {
-    return this._delete(`/api/v1/processing/items`, DeleteProcessingItemResponse, request);
+    return this._delete(
+      `/api/v1/processing/items`, DeleteProcessingItemResponse, DeleteProcessingItemRequest.toJSON(request));
   }
 
   async getProcessingResults(request: GetProcessingResultsRequest): Promise<GetProcessingResultsResponse> {
-    return this._post(`/api/v1/processing/results`, GetProcessingResultsResponse, request);
+    return this._post(
+      `/api/v1/processing/results`, GetProcessingResultsResponse, GetProcessingResultsRequest.toJSON(request));
   }
 
   async getProcessingResult(resultId: string): Promise<GetProcessingResultResponse> {
