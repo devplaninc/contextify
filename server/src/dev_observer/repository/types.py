@@ -1,13 +1,13 @@
 import dataclasses
 from datetime import datetime
 
-from dev_observer.api.types.repo_pb2 import GitHubRepository
+from dev_observer.api.types.repo_pb2 import GitRepository
 
 
 @dataclasses.dataclass
 class ObservedRepo:
     url: str
-    github_repo: GitHubRepository
+    git_repo: GitRepository
 
 
 @dataclasses.dataclass

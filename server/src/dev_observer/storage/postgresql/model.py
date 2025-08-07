@@ -1,7 +1,7 @@
 import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, func, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -12,8 +12,13 @@ class Base(DeclarativeBase):
 class GitRepoEntity(Base):
     __tablename__ = "git_repo"
 
+    __table_args__ = (
+        UniqueConstraint('full_name', 'provider', name='uq_git_repo_full_name_provider'),
+    )
+
     id: Mapped[str] = mapped_column(primary_key=True)
-    full_name: Mapped[str] = mapped_column(index=True, unique=True)
+    full_name: Mapped[str] = mapped_column(index=True)
+    provider: Mapped[int] = mapped_column(index=True, default=0)
     json_data: Mapped[str]
 
     created_at: Mapped[datetime.datetime] = mapped_column(
@@ -30,6 +35,36 @@ class GitRepoEntity(Base):
 
     def __repr__(self):
         return f"GitRepoEntity(id={self.id}, json_data={self.json_data})"
+
+
+class RepoTokenEntity(Base):
+    __tablename__ = "repo_token"
+
+    id: Mapped[str] = mapped_column(primary_key=True)
+    namespace: Mapped[str] = mapped_column(index=True)
+    provider: Mapped[int] = mapped_column()
+    workspace: Mapped[Optional[str]] = mapped_column(nullable=True, index=True)
+    repo: Mapped[Optional[str]] = mapped_column(nullable=True, index=True)
+    system: Mapped[bool] = mapped_column(default=False)
+    token: Mapped[str] = mapped_column()
+    expires_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False
+    )
+
+    def __repr__(self):
+        return f"RepoTokenEntity(id={self.id}, namespace={self.namespace}, provider={self.provider}, repo={self.repo})"
 
 
 class GlobalConfigEntity(Base):

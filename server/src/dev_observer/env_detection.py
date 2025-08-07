@@ -1,9 +1,11 @@
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 
 from dev_observer.analysis.langgraph_provider import LanggraphAnalysisProvider
 from dev_observer.analysis.provider import AnalysisProvider
 from dev_observer.analysis.stub import StubAnalysisProvider
+from dev_observer.api.types.repo_pb2 import GitProvider
+from dev_observer.common.crypto import Encryptor
 from dev_observer.log import s_
 from dev_observer.observations.local import LocalObservationsProvider
 from dev_observer.observations.provider import ObservationsProvider
@@ -18,13 +20,16 @@ from dev_observer.prompts.langfuse import LangfusePromptsProvider, LangfuseAuthP
 from dev_observer.prompts.local import LocalPromptsProvider, PromptTemplateParser, TomlPromptTemplateParser, \
     JSONPromptTemplateParser
 from dev_observer.prompts.provider import PromptsProvider
+from dev_observer.repository.auth.bitbucket_token import BitBucketTokenAuthProvider
 from dev_observer.repository.auth.github_token import GithubTokenAuthProvider
+from dev_observer.repository.bitbucket import BitBucketProvider
 from dev_observer.repository.copying import CopyingGitRepositoryProvider
 from dev_observer.repository.delegating import DelegatingGitRepositoryProvider
+from dev_observer.repository.federated import FederatedGitProvider
 from dev_observer.repository.github import GithubProvider, GithubAuthProvider
 from dev_observer.repository.provider import GitRepositoryProvider
 from dev_observer.server.env import ServerEnv
-from dev_observer.settings import Settings, LocalPrompts, Github, LangfusePrompts, LanggraphAnalysis
+from dev_observer.settings import Settings, LocalPrompts, Github, LangfusePrompts, LanggraphAnalysis, Git
 from dev_observer.storage.local import LocalStorageProvider
 from dev_observer.storage.memory import MemoryStorageProvider
 from dev_observer.storage.postgresql.provider import PostgresqlStorageProvider
@@ -47,13 +52,26 @@ def detect_git_provider(settings: Settings, storage: StorageProvider) -> GitRepo
         raise ValueError("Git settings are not provided")
     match git_sett.provider:
         case "github":
-            return GithubProvider(detect_github_auth(git_sett.github, storage), storage)
+            return create_github_provider(git_sett.github, storage)
         case "copying":
             return CopyingGitRepositoryProvider()
         case "delegating":
             return DelegatingGitRepositoryProvider()
+        case "federated":
+            return create_federated_git_provider(git_sett, storage)
     raise ValueError(f"Unsupported git provider: {git_sett.provider}")
 
+def create_github_provider(gh_sett: Github, storage: StorageProvider) -> GithubProvider:
+    return GithubProvider(detect_github_auth(gh_sett, storage), storage)
+
+
+def create_federated_git_provider(git_sett: Git, storage: StorageProvider) -> FederatedGitProvider:
+    providers: Dict[GitProvider, GitRepositoryProvider] = {
+        GitProvider.BIT_BUCKET: BitBucketProvider(BitBucketTokenAuthProvider(storage), storage),
+    }
+    if git_sett.github is not None:
+        providers[GitProvider.GITHUB] = create_github_provider(git_sett.github, storage)
+    return FederatedGitProvider(providers)
 
 def detect_github_auth(gh: Optional[Github], storage: StorageProvider) -> GithubAuthProvider:
     if gh is None:
@@ -163,7 +181,7 @@ def detect_storage_provider(settings: Settings) -> StorageProvider:
         case "memory":
             return MemoryStorageProvider()
         case "postgresql":
-            return PostgresqlStorageProvider(s.postgresql.db_url)
+            return PostgresqlStorageProvider(s.postgresql.db_url, Encryptor(settings.crypto.secret))
         case "local":
             return LocalStorageProvider(s.local.dir)
     raise ValueError(f"Unsupported storage provider: {s.provider}")

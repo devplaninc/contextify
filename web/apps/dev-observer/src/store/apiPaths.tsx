@@ -60,6 +60,16 @@ export function processingRequestRunAPI<R extends string>(requestId: R) {
   return `${processingRequestRunsAPI()}/${requestId}` as const;
 }
 
+export function tokensAPI() {
+  return `${baseAPI()}/tokens`;
+}
+export function tokensListAPI() {
+  return `${tokensAPI()}/list`;
+}
+export function tokenAPI<T extends string>(id: T) {
+  return `${tokensAPI()}/token/${id}`
+}
+
 // Encodes as base64
 function enc(v: string): string {
   // TODO: perform safe encoding

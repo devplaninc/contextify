@@ -1,5 +1,5 @@
 import * as React from "react"
-import {ShieldUser, SquareTerminal, Globe, ScanSearch} from "lucide-react"
+import {Globe, IdCard, ScanSearch, ShieldUser, SquareTerminal} from "lucide-react"
 
 import {NavSecondary} from "@/components/nav-secondary.tsx"
 import {
@@ -35,6 +35,11 @@ const data = {
       title: "Websites",
       url: "/websites",
       icon: Globe,
+    },
+    {
+      title: "Repo Tokens",
+      url: "/repo_tokens",
+      icon: IdCard,
     },
     {
       title: "Processing",

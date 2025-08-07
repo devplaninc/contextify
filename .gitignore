@@ -17,3 +17,4 @@ server/.env.*
 !.windsurf/rules/devplan_current_feature*.md
 
 examples/quick-start/app_data/
+/web/packages/api/coverage/

@@ -151,7 +151,7 @@ class PeriodicProcessor:
             _log.warning(s_("Repo analysis disabled"))
             return None
 
-        repo = await self._storage.get_github_repo(repo_id)
+        repo = await self._storage.get_git_repo(repo_id)
         if repo is None:
             _log.error(s_("Github repo not found", repo_id=repo_id))
             raise ValueError(f"Repo with id [{repo_id}] is not found")
@@ -166,7 +166,7 @@ class PeriodicProcessor:
         if len(requests) == 0:
             _log.debug(s_("No analyzers configured, skipping", repo=repo))
             return None
-        return await self._repos_processor.process(ObservedRepo(url=repo.url, github_repo=repo), requests, config)
+        return await self._repos_processor.process(ObservedRepo(url=repo.url, git_repo=repo), requests, config)
 
     async def _process_website(self, website_url: str) -> Optional[ProcessingItemResultData]:
         _log.debug(s_("Processing website", url=website_url))

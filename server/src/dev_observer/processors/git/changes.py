@@ -4,7 +4,7 @@ import logging
 from typing import Optional, List, Sequence
 
 from dev_observer.api.types.observations_pb2 import ObservationKey
-from dev_observer.api.types.repo_pb2 import GitHubRepository
+from dev_observer.api.types.repo_pb2 import GitRepository
 from dev_observer.common.errors import TerminalError
 from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
@@ -26,7 +26,7 @@ class ProcessGitChangesParams:
 
 @dataclasses.dataclass
 class GitChangesResult:
-    repo: GitHubRepository
+    repo: GitRepository
     observation_keys: Sequence[ObservationKey]
 
 
@@ -55,7 +55,7 @@ class GitChangesHandler:
 
         repo_id = params.repo_id
         extra = {"op": "process_git_changes", "repo_id": repo_id}
-        repo = await self._storage.get_github_repo(repo_id)
+        repo = await self._storage.get_git_repo(repo_id)
         if repo is None:
             _log.error(s_("Github repo not found", **extra))
             raise TerminalError(f"Repo with id [{repo_id}] is not found")
@@ -73,7 +73,7 @@ class GitChangesHandler:
         if await self._observations.exists(key):
             return GitChangesResult(repo=repo, observation_keys=[key])
         requests.append(ObservationRequest(prompt_prefix=analyzer.prompt_prefix, key=key))
-        observed_repo = ObservedRepo(url=repo.url, github_repo=repo)
+        observed_repo = ObservedRepo(url=repo.url, git_repo=repo)
         params = ObservedGitChanges(repo=observed_repo, from_date=from_date, to_date=end_date)
         result = await self._git_changes_processor.process(params, requests, config)
         return GitChangesResult(repo=repo, observation_keys=result.observations)

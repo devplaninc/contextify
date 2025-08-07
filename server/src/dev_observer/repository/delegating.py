@@ -1,14 +1,14 @@
 import subprocess
 from typing import Optional
 
-from dev_observer.repository.parser import parse_github_url
+from dev_observer.repository.parser import parse_repository_url
 from dev_observer.repository.provider import GitRepositoryProvider, RepositoryInfo
 from dev_observer.repository.types import ObservedRepo
 
 
 class DelegatingGitRepositoryProvider(GitRepositoryProvider):
     async def get_repo(self, repo: ObservedRepo) -> RepositoryInfo:
-        parsed = parse_github_url(repo.url)
+        parsed = parse_repository_url(repo.url, repo.git_repo.provider)
         return RepositoryInfo(
             owner=parsed.owner,
             name=parsed.name,

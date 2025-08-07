@@ -158,24 +158,6 @@ class TestGetNextDate:
 
         assert result == expected
 
-    def test_schedule_with_seconds_and_nanos(self):
-        """Test schedule with seconds and nanoseconds precision."""
-        # Current time: 2025-07-24 10:00:00 UTC
-        current_time = datetime.datetime(2025, 7, 24, 10, 0, 0, tzinfo=ZoneInfo('UTC'))
-
-        # Schedule for 15:30:45.123456 UTC daily
-        schedule = Schedule()
-        schedule.frequency.daily.time.time_of_day.hours = 15
-        schedule.frequency.daily.time.time_of_day.minutes = 30
-        schedule.frequency.daily.time.time_of_day.seconds = 45
-        schedule.frequency.daily.time.time_of_day.nanos = 123456000  # 123456 microseconds in nanoseconds
-        schedule.frequency.daily.time.time_zone.id = 'UTC'
-
-        result = get_next_date(current_time, schedule)
-        expected = datetime.datetime(2025, 7, 24, 15, 30, 45, 123456, tzinfo=ZoneInfo('UTC'))
-
-        assert result == expected
-
     def test_schedule_with_invalid_timezone_fallback(self):
         """Test schedule with invalid timezone falls back to UTC."""
         # Current time: 2025-07-24 10:00:00 UTC

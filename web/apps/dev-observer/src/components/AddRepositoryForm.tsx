@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { validateGitHubUrl } from "@/utils/repositoryUtils.ts";
+import { validateRepositoryUrl } from "@/utils/repositoryUtils.ts";
 import type { ValidationError } from "@/types/repository.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -16,7 +16,7 @@ const AddRepositoryForm: React.FC = () => {
   const {repositories} = useBoundStore()
 
   const validateInput = (value: string): boolean => {
-    const error = validateGitHubUrl(value, repositories);
+    const error = validateRepositoryUrl(value, repositories);
     setValidationError(error);
     return !error;
   };
@@ -62,10 +62,10 @@ const AddRepositoryForm: React.FC = () => {
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="repository-url">GitHub Repository URL</Label>
+            <Label htmlFor="repository-url">Repository URL</Label>
             <Input
               id="repository-url"
-              placeholder="https://github.com/owner/repo or git@github.com:owner/repo.git"
+              placeholder="https://github.com/owner/repo, https://bitbucket.org/owner/repo, or SSH format"
               value={url}
               onChange={handleInputChange}
               className={validationError ? "border-destructive" : ""}

@@ -59,7 +59,7 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
         end_date = pb_to_datetime(params.end_date)
         result = PeriodicAggregationResult()
         for repo_id in params.target.git_repo_ids:
-            repo = await self.storage.get_github_repo(repo_id)
+            repo = await self.storage.get_git_repo(repo_id)
             if repo is None:
                 _log.warning(s_("Repo not found", repo_id=repo_id))
                 continue

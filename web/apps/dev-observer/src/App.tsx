@@ -18,6 +18,7 @@ import {ClerkProvider} from "@/auth/ClerkProvider.tsx";
 import {ProcessingResultPage} from "@/pages/ProcessingResultPage.tsx";
 import {processingResultPath} from "@/paths.tsx";
 import ProcessingPage from "@/pages/ProcessingPage.tsx";
+import TokensPage from "@/pages/TokensPage.tsx";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -72,6 +73,7 @@ function AppRoutes() {
     <Route path="/websites/:id" element={<WebSiteDetailsPage/>}/>
     <Route path={processingResultPath(":id")} element={<ProcessingResultPage/>}/>
     <Route path="/processing" element={<ProcessingPage/>}/>
+    <Route path="/repo_tokens" element={<TokensPage/>}/>
 
     <Route path="/admin/config-editor" element={<GlobalConfigEditorPage/>}/>
     <Route path="/" element={<Navigate to="/repositories" replace/>}/>

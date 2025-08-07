@@ -19,7 +19,7 @@ const RepositoryListPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold">GitHub Repositories</h1>
+      <h1 className="text-3xl font-bold">Repositories</h1>
 
       <div>
         <AddRepositoryForm/>
@@ -29,7 +29,7 @@ const RepositoryListPage: React.FC = () => {
         <div className="bg-muted p-8 rounded-lg text-center">
           <h3 className="text-xl font-medium mb-2">No repositories found</h3>
           <p className="text-muted-foreground mb-4">
-            Add your first GitHub repository using the form above.
+            Add your first repository using the form above.
           </p>
         </div>
       ) : (

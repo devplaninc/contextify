@@ -1,20 +1,41 @@
 import type {ValidationError} from "@/types/repository.ts";
-import type {GitHubRepository} from "@devplan/contextify-api";
+import type {GitRepository} from "@devplan/contextify-api";
+import {GitProvider} from "@devplan/contextify-api";
 
-// Validate GitHub repository URL
-export const validateGitHubUrl = (url: string, repos: Record<string, GitHubRepository>): ValidationError | null => {
+// Detect Git provider from URL
+export const detectGitProvider = (url: string): GitProvider | null => {
+  if (!url) return null;
+  
+  // GitHub patterns
+  const githubHttpPattern = /^https:\/\/github\.com\/[^\\/]+\/[^\\/]+\/?$/;
+  const githubSshPattern = /^git@github\.com:[^\\/]+\/[^\\/]+\.git$/;
+  if (githubHttpPattern.test(url) || githubSshPattern.test(url)) {
+    return GitProvider.GITHUB;
+  }
+  
+  // BitBucket patterns
+  const bitbucketHttpPattern = /^https:\/\/bitbucket\.org\/[^\\/]+\/[^\\/]+\/?$/;
+  const bitbucketSshPattern = /^git@bitbucket\.org:[^\\/]+\/[^\\/]+\.git$/;
+  if (bitbucketHttpPattern.test(url) || bitbucketSshPattern.test(url)) {
+    return GitProvider.BIT_BUCKET;
+  }
+  
+  return null;
+};
+
+// Validate repository URL for supported Git providers
+export const validateRepositoryUrl = (url: string, repos: Record<string, GitRepository>): ValidationError | null => {
   if (!url) {
     return {field: "url", message: "Repository URL is required"};
   }
 
-  // Check if it's a GitHub URL
-  const githubHttpPattern = /^https:\/\/github\.com\/[^\\/]+\/[^\\/]+\/?$/;
-  const githubSshPattern = /^git@github\.com:[^\\/]+\/[^\\/]+\.git$/;
-
-  if (!githubHttpPattern.test(url) && !githubSshPattern.test(url)) {
+  // Auto-detect the provider from the URL
+  const provider = detectGitProvider(url);
+  
+  if (!provider) {
     return {
       field: "url",
-      message: "URL must be a valid GitHub repository URL",
+      message: "URL must be a valid GitHub or BitBucket repository URL",
     };
   }
 
@@ -30,16 +51,24 @@ export const validateGitHubUrl = (url: string, repos: Record<string, GitHubRepos
   return null;
 };
 
-// Extract repository name from URL
+
+// Extract repository name from URL for supported Git providers
 export const extractRepoName = (url: string): string => {
   try {
+    // GitHub URLs
     if (url.startsWith("https://github.com/")) {
-      // Handle HTTPS URL
       const parts = url.replace("https://github.com/", "").split("/");
       return parts.slice(0, 2).join("/");
     } else if (url.startsWith("git@github.com:")) {
-      // Handle SSH URL
       const parts = url.replace("git@github.com:", "").replace(".git", "").split("/");
+      return parts.join("/");
+    }
+    // BitBucket URLs
+    else if (url.startsWith("https://bitbucket.org/")) {
+      const parts = url.replace("https://bitbucket.org/", "").split("/");
+      return parts.slice(0, 2).join("/");
+    } else if (url.startsWith("git@bitbucket.org:")) {
+      const parts = url.replace("git@bitbucket.org:", "").replace(".git", "").split("/");
       return parts.join("/");
     }
   } catch (error) {
@@ -47,6 +76,3 @@ export const extractRepoName = (url: string): string => {
   }
   return "Unknown Repository";
 };
-
-// Simulate network latency
-export const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

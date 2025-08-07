@@ -1,10 +1,9 @@
 import logging
 import subprocess
 from abc import abstractmethod
-from datetime import datetime
 from typing import Protocol, Optional
 
-from github import Auth
+from github.Auth import Auth
 from github import Github
 
 from dev_observer.api.types.repo_pb2 import GitProperties, GitMeta
@@ -38,10 +37,10 @@ class GithubProvider(GitRepositoryProvider):
         self._clock = clock
 
     async def get_repo(self, repo: ObservedRepo) -> RepositoryInfo:
-        full_name = repo.github_repo.full_name
+        full_name = repo.git_repo.full_name
         parts = full_name.split("/")
         owner = parts[0]
-        meta = get_valid_repo_meta(repo.github_repo)
+        meta = get_valid_repo_meta(repo.git_repo)
         if meta is None:
             auth = await self._auth_provider.get_auth(repo)
             with Github(auth=auth) as gh:
@@ -51,15 +50,15 @@ class GithubProvider(GitRepositoryProvider):
                 size_kb=gh_repo.size,
                 clone_url=gh_repo.clone_url,
             )
-            stored_repo = repo.github_repo
+            stored_repo = repo.git_repo
             if not stored_repo.HasField("properties"):
                 stored_repo.properties.CopyFrom(GitProperties())
             stored_repo.properties.meta.CopyFrom(meta)
-            repo.github_repo = await self._storage.update_repo_properties(stored_repo.id, stored_repo.properties)
+            repo.git_repo = await self._storage.update_repo_properties(stored_repo.id, stored_repo.properties)
 
         return RepositoryInfo(
             owner=owner,
-            name=repo.github_repo.name,
+            name=repo.git_repo.name,
             clone_url=meta.clone_url,
             size_kb=meta.size_kb,
         )

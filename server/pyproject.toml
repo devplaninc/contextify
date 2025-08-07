@@ -41,6 +41,7 @@ dependencies = [
     "beautifulsoup4>=4.13.4",
     "types-aiobotocore[essential]>=2.23.2",
     "aiobotocore>=2.23.2",
+    "cryptography>=44.0.3",
 ]
 
 [build-system]

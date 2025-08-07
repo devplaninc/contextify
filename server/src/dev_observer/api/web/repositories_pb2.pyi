@@ -6,23 +6,25 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class ListGithubRepositoriesResponse(_message.Message):
+class ListRepositoriesResponse(_message.Message):
     __slots__ = ("repos",)
     REPOS_FIELD_NUMBER: _ClassVar[int]
-    repos: _containers.RepeatedCompositeFieldContainer[_repo_pb2.GitHubRepository]
-    def __init__(self, repos: _Optional[_Iterable[_Union[_repo_pb2.GitHubRepository, _Mapping]]] = ...) -> None: ...
+    repos: _containers.RepeatedCompositeFieldContainer[_repo_pb2.GitRepository]
+    def __init__(self, repos: _Optional[_Iterable[_Union[_repo_pb2.GitRepository, _Mapping]]] = ...) -> None: ...
 
-class AddGithubRepositoryRequest(_message.Message):
-    __slots__ = ("url",)
+class AddRepositoryRequest(_message.Message):
+    __slots__ = ("url", "provider")
     URL_FIELD_NUMBER: _ClassVar[int]
+    PROVIDER_FIELD_NUMBER: _ClassVar[int]
     url: str
-    def __init__(self, url: _Optional[str] = ...) -> None: ...
+    provider: _repo_pb2.GitProvider
+    def __init__(self, url: _Optional[str] = ..., provider: _Optional[_Union[_repo_pb2.GitProvider, str]] = ...) -> None: ...
 
-class AddGithubRepositoryResponse(_message.Message):
+class AddRepositoryResponse(_message.Message):
     __slots__ = ("repo",)
     REPO_FIELD_NUMBER: _ClassVar[int]
-    repo: _repo_pb2.GitHubRepository
-    def __init__(self, repo: _Optional[_Union[_repo_pb2.GitHubRepository, _Mapping]] = ...) -> None: ...
+    repo: _repo_pb2.GitRepository
+    def __init__(self, repo: _Optional[_Union[_repo_pb2.GitRepository, _Mapping]] = ...) -> None: ...
 
 class RescanRepositoryResponse(_message.Message):
     __slots__ = ()
@@ -31,11 +33,11 @@ class RescanRepositoryResponse(_message.Message):
 class GetRepositoryResponse(_message.Message):
     __slots__ = ("repo",)
     REPO_FIELD_NUMBER: _ClassVar[int]
-    repo: _repo_pb2.GitHubRepository
-    def __init__(self, repo: _Optional[_Union[_repo_pb2.GitHubRepository, _Mapping]] = ...) -> None: ...
+    repo: _repo_pb2.GitRepository
+    def __init__(self, repo: _Optional[_Union[_repo_pb2.GitRepository, _Mapping]] = ...) -> None: ...
 
 class DeleteRepositoryResponse(_message.Message):
     __slots__ = ("repos",)
     REPOS_FIELD_NUMBER: _ClassVar[int]
-    repos: _containers.RepeatedCompositeFieldContainer[_repo_pb2.GitHubRepository]
-    def __init__(self, repos: _Optional[_Iterable[_Union[_repo_pb2.GitHubRepository, _Mapping]]] = ...) -> None: ...
+    repos: _containers.RepeatedCompositeFieldContainer[_repo_pb2.GitRepository]
+    def __init__(self, repos: _Optional[_Iterable[_Union[_repo_pb2.GitRepository, _Mapping]]] = ...) -> None: ...

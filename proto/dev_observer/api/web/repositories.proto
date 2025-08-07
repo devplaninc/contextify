@@ -4,24 +4,25 @@ package dev_observer.api.web.repositories;
 
 import "dev_observer/api/types/repo.proto";
 
-message ListGithubRepositoriesResponse {
-  repeated dev_observer.api.types.repo.GitHubRepository repos = 1;
+message ListRepositoriesResponse {
+  repeated dev_observer.api.types.repo.GitRepository repos = 1;
 }
 
-message AddGithubRepositoryRequest {
+message AddRepositoryRequest {
   string url = 1;
+  dev_observer.api.types.repo.GitProvider provider = 2;
 }
 
-message AddGithubRepositoryResponse {
-  dev_observer.api.types.repo.GitHubRepository repo = 1;
+message AddRepositoryResponse {
+  dev_observer.api.types.repo.GitRepository repo = 1;
 }
 
 message RescanRepositoryResponse{}
 
 message GetRepositoryResponse{
-  dev_observer.api.types.repo.GitHubRepository repo = 1;
+  dev_observer.api.types.repo.GitRepository repo = 1;
 }
 
 message DeleteRepositoryResponse{
-  repeated dev_observer.api.types.repo.GitHubRepository repos = 1;
+  repeated dev_observer.api.types.repo.GitRepository repos = 1;
 }
