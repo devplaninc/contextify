@@ -10,6 +10,7 @@ import {
 } from "@devplan/contextify-api";
 import type {GitRepository} from "@devplan/contextify-api";
 import {fetchWithAuth, VoidParser} from "@/store/api.tsx";
+import {detectGitProvider} from "@/utils/repositoryUtils.ts";
 
 export interface RepositoryState {
   repositories: Record<string, GitRepository>;
@@ -44,16 +45,19 @@ export const createRepositoriesSlice: StateCreator<
       }
     }),
 
-  addRepository: async url => fetchWithAuth(
-    reposAPI(),
-    AddRepositoryResponse,
-    {method: "POST", body: JSON.stringify(AddRepositoryRequest.toJSON({url, provider: GitProvider.GITHUB}))},
-  ).then(r => {
-    const {repo} = r
-    if (repo) {
-      set(s => ({...s, repositories: {...s.repositories, [repo.id]: repo}}))
-    }
-  }),
+  addRepository: async url => {
+    const provider = detectGitProvider(url) ?? GitProvider.GITHUB;
+    return fetchWithAuth(
+      reposAPI(),
+      AddRepositoryResponse,
+      {method: "POST", body: JSON.stringify(AddRepositoryRequest.toJSON({url, provider}))},
+    ).then(r => {
+      const {repo} = r
+      if (repo) {
+        set(s => ({...s, repositories: {...s.repositories, [repo.id]: repo}}))
+      }
+    });
+  },
   deleteRepository: async id => fetchWithAuth(repoAPI(id), DeleteRepositoryResponse, {method: "DELETE"})
     .then(r => {
       const {repos} = r

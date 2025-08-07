@@ -14,7 +14,7 @@ GITHUB: GitProvider
 BIT_BUCKET: GitProvider
 
 class GitRepository(_message.Message):
-    __slots__ = ("id", "name", "full_name", "url", "description", "provider", "properties", "integration_info")
+    __slots__ = ("id", "name", "full_name", "url", "description", "provider", "properties")
     ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
     FULL_NAME_FIELD_NUMBER: _ClassVar[int]
@@ -22,7 +22,6 @@ class GitRepository(_message.Message):
     DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     PROVIDER_FIELD_NUMBER: _ClassVar[int]
     PROPERTIES_FIELD_NUMBER: _ClassVar[int]
-    INTEGRATION_INFO_FIELD_NUMBER: _ClassVar[int]
     id: str
     name: str
     full_name: str
@@ -30,8 +29,7 @@ class GitRepository(_message.Message):
     description: str
     provider: GitProvider
     properties: GitProperties
-    integration_info: GitIntegrationInfo
-    def __init__(self, id: _Optional[str] = ..., name: _Optional[str] = ..., full_name: _Optional[str] = ..., url: _Optional[str] = ..., description: _Optional[str] = ..., provider: _Optional[_Union[GitProvider, str]] = ..., properties: _Optional[_Union[GitProperties, _Mapping]] = ..., integration_info: _Optional[_Union[GitIntegrationInfo, _Mapping]] = ...) -> None: ...
+    def __init__(self, id: _Optional[str] = ..., name: _Optional[str] = ..., full_name: _Optional[str] = ..., url: _Optional[str] = ..., description: _Optional[str] = ..., provider: _Optional[_Union[GitProvider, str]] = ..., properties: _Optional[_Union[GitProperties, _Mapping]] = ...) -> None: ...
 
 class GitProperties(_message.Message):
     __slots__ = ("app_info", "meta")
@@ -59,32 +57,15 @@ class GitAppInfo(_message.Message):
     installation_id: int
     def __init__(self, last_refresh: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., installation_id: _Optional[int] = ...) -> None: ...
 
-class GitIntegrationInfo(_message.Message):
-    __slots__ = ("github", "bitbucket")
-    GITHUB_FIELD_NUMBER: _ClassVar[int]
-    BITBUCKET_FIELD_NUMBER: _ClassVar[int]
-    github: GitHubIntegrationInfo
-    bitbucket: BitBucketIntegrationInfo
-    def __init__(self, github: _Optional[_Union[GitHubIntegrationInfo, _Mapping]] = ..., bitbucket: _Optional[_Union[BitBucketIntegrationInfo, _Mapping]] = ...) -> None: ...
-
-class GitHubIntegrationInfo(_message.Message):
-    __slots__ = ()
-    def __init__(self) -> None: ...
-
-class BitBucketIntegrationInfo(_message.Message):
-    __slots__ = ("token_id",)
-    TOKEN_ID_FIELD_NUMBER: _ClassVar[int]
-    token_id: str
-    def __init__(self, token_id: _Optional[str] = ...) -> None: ...
-
 class RepoToken(_message.Message):
-    __slots__ = ("id", "namespace", "provider", "workspace", "repo", "system", "expires_at", "created_at", "updated_at")
+    __slots__ = ("id", "namespace", "provider", "workspace", "repo", "system", "token", "expires_at", "created_at", "updated_at")
     ID_FIELD_NUMBER: _ClassVar[int]
     NAMESPACE_FIELD_NUMBER: _ClassVar[int]
     PROVIDER_FIELD_NUMBER: _ClassVar[int]
     WORKSPACE_FIELD_NUMBER: _ClassVar[int]
     REPO_FIELD_NUMBER: _ClassVar[int]
     SYSTEM_FIELD_NUMBER: _ClassVar[int]
+    TOKEN_FIELD_NUMBER: _ClassVar[int]
     EXPIRES_AT_FIELD_NUMBER: _ClassVar[int]
     CREATED_AT_FIELD_NUMBER: _ClassVar[int]
     UPDATED_AT_FIELD_NUMBER: _ClassVar[int]
@@ -94,7 +75,8 @@ class RepoToken(_message.Message):
     workspace: str
     repo: str
     system: bool
+    token: str
     expires_at: _timestamp_pb2.Timestamp
     created_at: _timestamp_pb2.Timestamp
     updated_at: _timestamp_pb2.Timestamp
-    def __init__(self, id: _Optional[str] = ..., namespace: _Optional[str] = ..., provider: _Optional[_Union[GitProvider, str]] = ..., workspace: _Optional[str] = ..., repo: _Optional[str] = ..., system: bool = ..., expires_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    def __init__(self, id: _Optional[str] = ..., namespace: _Optional[str] = ..., provider: _Optional[_Union[GitProvider, str]] = ..., workspace: _Optional[str] = ..., repo: _Optional[str] = ..., system: bool = ..., token: _Optional[str] = ..., expires_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...

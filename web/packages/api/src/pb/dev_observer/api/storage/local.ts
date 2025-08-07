@@ -8,7 +8,7 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { GlobalConfig } from "../types/config";
 import { ProcessingItem, ProcessingItemResult } from "../types/processing";
-import { GitRepository } from "../types/repo";
+import { GitRepository, RepoToken } from "../types/repo";
 import { WebSite } from "../types/sites";
 
 export const protobufPackage = "dev_observer.api.storage.local";
@@ -19,10 +19,18 @@ export interface LocalStorageData {
   globalConfig: GlobalConfig | undefined;
   webSites: WebSite[];
   processingResults: ProcessingItemResult[];
+  tokens: RepoToken[];
 }
 
 function createBaseLocalStorageData(): LocalStorageData {
-  return { gitRepos: [], processingItems: [], globalConfig: undefined, webSites: [], processingResults: [] };
+  return {
+    gitRepos: [],
+    processingItems: [],
+    globalConfig: undefined,
+    webSites: [],
+    processingResults: [],
+    tokens: [],
+  };
 }
 
 export const LocalStorageData: MessageFns<LocalStorageData> = {
@@ -41,6 +49,9 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
     }
     for (const v of message.processingResults) {
       ProcessingItemResult.encode(v!, writer.uint32(42).fork()).join();
+    }
+    for (const v of message.tokens) {
+      RepoToken.encode(v!, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -92,6 +103,14 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
           message.processingResults.push(ProcessingItemResult.decode(reader, reader.uint32()));
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.tokens.push(RepoToken.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -112,6 +131,7 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
       processingResults: gt.Array.isArray(object?.processingResults)
         ? object.processingResults.map((e: any) => ProcessingItemResult.fromJSON(e))
         : [],
+      tokens: gt.Array.isArray(object?.tokens) ? object.tokens.map((e: any) => RepoToken.fromJSON(e)) : [],
     };
   },
 
@@ -132,6 +152,9 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
     if (message.processingResults?.length) {
       obj.processingResults = message.processingResults.map((e) => ProcessingItemResult.toJSON(e));
     }
+    if (message.tokens?.length) {
+      obj.tokens = message.tokens.map((e) => RepoToken.toJSON(e));
+    }
     return obj;
   },
 
@@ -147,6 +170,7 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
       : undefined;
     message.webSites = object.webSites?.map((e) => WebSite.fromPartial(e)) || [];
     message.processingResults = object.processingResults?.map((e) => ProcessingItemResult.fromPartial(e)) || [];
+    message.tokens = object.tokens?.map((e) => RepoToken.fromPartial(e)) || [];
     return message;
   },
 };

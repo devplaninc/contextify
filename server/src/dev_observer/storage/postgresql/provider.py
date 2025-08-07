@@ -1,7 +1,7 @@
 import datetime
 import logging
 import uuid
-from typing import Optional, MutableSequence, List, Sequence, Callable
+from typing import Optional, MutableSequence, List, Sequence, Callable, cast
 
 from google.protobuf import json_format
 from sqlalchemy import select, delete, update
@@ -10,10 +10,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSessio
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, \
     ProcessingItemResult, ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, RepoToken, GitProvider
 from dev_observer.api.types.sites_pb2 import WebSite
+from dev_observer.common.crypto import Encryptor
 from dev_observer.storage.postgresql.model import GitRepoEntity, ProcessingItemEntity, GlobalConfigEntity, \
-    WebsiteEntity, ProcessingItemResultEntity
+    WebsiteEntity, ProcessingItemResultEntity, RepoTokenEntity
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
 from dev_observer.util import parse_json_pb, pb_to_json, Clock, RealClock
 
@@ -22,10 +23,12 @@ _log = logging.getLogger(__name__)
 
 class PostgresqlStorageProvider(StorageProvider):
     _engine: AsyncEngine
+    _encryptor: Encryptor
     _clock: Clock
 
-    def __init__(self, url: str, echo: bool = False, clock: Clock = RealClock()):
+    def __init__(self, url: str, encryptor: Encryptor, echo: bool = False, clock: Clock = RealClock()):
         self._engine = create_async_engine(url, echo=echo)
+        self._encryptor = encryptor
         self._clock = clock
 
     async def get_git_repos(self) -> MutableSequence[GitRepository]:
@@ -307,6 +310,108 @@ class PostgresqlStorageProvider(StorageProvider):
                     query = query.where(ProcessingItemEntity.key.in_([_to_key_str(k) for k in filter.keys]))
                 items = await session.scalars(query)
                 return [_to_item(i) for i in items.all()]
+
+    # Token CRUD operations
+    async def create_token(self, token: RepoToken) -> RepoToken:
+        token_id = token.id
+        if not token_id or len(token_id) == 0:
+            token_id = f"{uuid.uuid4()}"
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                t = RepoTokenEntity(
+                    id=token_id,
+                    namespace=token.namespace,
+                    provider=token.provider,
+                    workspace=token.workspace if token.HasField("workspace") else None,
+                    repo=token.repo if token.HasField("repo") else None,
+                    system=token.system,
+                    token=self._encryptor.encrypt(token.token, token_id),
+                    expires_at=token.expires_at.ToDatetime() if token.HasField("expires_at") else None,
+                )
+                session.add(t)
+                return self._to_token(await session.get(RepoTokenEntity, token_id))
+
+    async def get_token(self, token_id: str) -> Optional[RepoToken]:
+        async with AsyncSession(self._engine) as session:
+            ent = await session.get(RepoTokenEntity, token_id)
+            return self._to_optional_token(ent)
+
+    async def update_token(self, token_id: str, token: str) -> Optional[RepoToken]:
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                await session.execute(
+                    update(RepoTokenEntity)
+                    .where(RepoTokenEntity.id == token_id)
+                    .values(
+                        token=self._encryptor.encrypt(token, token_id),
+                    )
+                )
+        return await self.get_token(token_id)
+
+    async def delete_token(self, token_id: str):
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                await session.execute(delete(RepoTokenEntity).where(RepoTokenEntity.id == token_id))
+
+    async def find_tokens(self, provider: int, workspace: Optional[str] = None, repo: Optional[str] = None) -> List[
+        RepoToken]:
+        """Find tokens by provider, workspace, and repo. Returns tokens in priority order: workspace, system, repo."""
+        async with AsyncSession(self._engine) as session:
+            query = select(RepoTokenEntity).where(RepoTokenEntity.provider == provider)
+
+            # Build conditions for different token types
+            conditions = []
+
+            # Workspace token condition
+            if workspace:
+                conditions.append(
+                    (RepoTokenEntity.workspace == workspace) &
+                    (RepoTokenEntity.repo.is_(None)) &
+                    (RepoTokenEntity.system == False)
+                )
+
+            # System token condition
+            conditions.append(RepoTokenEntity.system == True)
+
+            # Repo token condition
+            if repo:
+                conditions.append(
+                    (RepoTokenEntity.repo == repo) &
+                    (RepoTokenEntity.system == False)
+                )
+
+            if conditions:
+                from sqlalchemy import or_
+                query = query.where(or_(*conditions))
+
+            entities = await session.scalars(query)
+            return [self._to_token(ent) for ent in entities.all()]
+
+    def _to_optional_token(self, ent: Optional[RepoTokenEntity]) -> Optional[RepoToken]:
+        return None if ent is None else self._to_token(ent)
+
+    def _to_token(self, ent: RepoTokenEntity) -> RepoToken:
+        token = RepoToken(
+            id=ent.id,
+            namespace=ent.namespace,
+            provider=cast(GitProvider, ent.provider),
+            system=ent.system,
+            token=self._encryptor.decrypt(ent.token, ent.id),
+        )
+
+        # Set optional fields
+        if ent.workspace:
+            token.workspace = ent.workspace
+        if ent.repo:
+            token.repo = ent.repo
+        if ent.expires_at:
+            token.expires_at.FromDatetime(ent.expires_at)
+
+        # Set timestamps
+        token.created_at.FromDatetime(ent.created_at)
+        token.updated_at.FromDatetime(ent.updated_at)
+
+        return token
 
 
 def _to_optional_repo(ent: Optional[GitRepoEntity]) -> Optional[GitRepository]:

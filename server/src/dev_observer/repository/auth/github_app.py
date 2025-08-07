@@ -38,11 +38,11 @@ class GithubAppAuthProvider(GithubAuthProvider):
             return f"x-access-token:{token}"
 
     async def _get_installation_id(self, auth: Auth.AppAuth, repo: ObservedRepo) -> int:
-        full_name = repo.github_repo.full_name
+        full_name = repo.git_repo.full_name
         parts = full_name.split("/")
         if len(parts) != 2:
             raise ValueError(f"Invalid repository name [{full_name}]")
-        app_info = get_valid_repo_app_info(repo.github_repo)
+        app_info = get_valid_repo_app_info(repo.git_repo)
         if app_info is not None:
             return app_info.installation_id
 
@@ -52,9 +52,9 @@ class GithubAppAuthProvider(GithubAuthProvider):
                 last_refresh=self._clock.now(),
                 installation_id=installation_id
             )
-        stored_repo = repo.github_repo
+        stored_repo = repo.git_repo
         if not stored_repo.HasField("properties"):
             stored_repo.properties.CopyFrom(GitProperties())
         stored_repo.properties.app_info.CopyFrom(app_info)
-        repo.github_repo = await self._storage.update_repo_properties(stored_repo.id, stored_repo.properties)
+        repo.git_repo = await self._storage.update_repo_properties(stored_repo.id, stored_repo.properties)
         return app_info.installation_id

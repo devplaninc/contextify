@@ -16,7 +16,7 @@ class Github(BaseModel):
 
 
 class Git(BaseModel):
-    provider: Literal["github", "copying", "delegating"] = "github"
+    provider: Literal["github", "copying", "delegating", "federated"] = "github"
 
     github: Optional[Github] = None
 
@@ -116,6 +116,9 @@ class UserManagement(BaseModel):
 class WebScraping(BaseModel):
     provider: Literal["scrapy"] = "scrapy"
 
+class Crypto(BaseModel):
+    secret: str
+
 
 class Settings(BaseSettings):
     props: ClassVar[SettingsProps] = SettingsProps()
@@ -129,6 +132,7 @@ class Settings(BaseSettings):
     users_management: Optional[UserManagement] = None
     api_keys: Optional[ApiKeys] = None
     web_scraping: Optional[WebScraping] = WebScraping()
+    crypto: Optional[Crypto] = None
 
     def __init__(self) -> None:
         toml_file = Settings.model_config.get("toml_file", None)

@@ -6,7 +6,7 @@ from typing import Protocol, Optional, MutableSequence, List, Sequence
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
     ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, RepoToken
 from dev_observer.api.types.sites_pb2 import WebSite
 
 
@@ -94,4 +94,17 @@ class StorageProvider(Protocol):
         ...
 
     async def get_processing_result(self, result_id: str) -> Optional[ProcessingItemResult]:
+        ...
+
+    async def find_tokens(
+            self, provider: int, workspace: Optional[str] = None, repo: Optional[str] = None) -> List[RepoToken]:
+        ...
+
+    async def delete_token(self, token_id: str):
+        ...
+
+    async def update_token(self, token_id: str, token: str) -> Optional[RepoToken]:
+        ...
+
+    async def get_token(self, token_id: str) -> Optional[RepoToken]:
         ...

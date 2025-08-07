@@ -12,7 +12,7 @@ from dev_observer.api.storage.local_pb2 import LocalStorageData
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
     ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, RepoToken
 from dev_observer.api.types.sites_pb2 import WebSite
 from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
@@ -284,16 +284,49 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
         results.sort(key=lambda r: pb_to_datetime(r.created_at), reverse=True)
         return results
 
-    async def get_processing_item(self, key: ProcessingItemKey) -> Optional[ProcessingItem]:
-        for item in self._get().processing_items:
-            if item.key == key:
-                return item
-        return None
-
     async def get_processing_result(self, result_id: str) -> Optional[ProcessingItemResult]:
         for result in self._get().processing_results:
             if result.id == result_id:
                 return result
+        return None
+
+    async def find_tokens(
+            self, provider: int, workspace: Optional[str] = None, repo: Optional[str] = None) -> List[RepoToken]:
+        tokens = []
+        for token in self._get().tokens:
+            if token.provider != provider:
+                continue
+            if workspace is not None and token.workspace != workspace:
+                continue
+            if repo is not None and token.repo != repo:
+                continue
+            tokens.append(token)
+        return tokens
+
+    async def delete_token(self, token_id: str):
+        def up(d: LocalStorageData):
+            new_tokens = [token for token in d.tokens if token.id != token_id]
+            d.ClearField("tokens")
+            d.tokens.extend(new_tokens)
+
+        await self._update(up)
+
+    async def update_token(self, token_id: str, token: str) -> Optional[RepoToken]:
+        def up(d: LocalStorageData):
+            for t in d.tokens:
+                if t.id == token_id:
+                    t.token = token
+                    t.updated_at.CopyFrom(timestamp.from_milliseconds(int(self._clock.now().timestamp() * 1000)))
+                    return
+            raise ValueError(f"Token with id {token_id} not found")
+
+        await self._update(up)
+        return await self.get_token(token_id)
+
+    async def get_token(self, token_id: str) -> Optional[RepoToken]:
+        for token in self._get().tokens:
+            if token.id == token_id:
+                return token
         return None
 
     @abstractmethod

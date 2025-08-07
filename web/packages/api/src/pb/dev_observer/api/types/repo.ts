@@ -47,7 +47,6 @@ export interface GitRepository {
   description: string;
   provider: GitProvider;
   properties?: GitProperties | undefined;
-  integrationInfo?: GitIntegrationInfo | undefined;
 }
 
 export interface GitProperties {
@@ -66,20 +65,6 @@ export interface GitAppInfo {
   installationId?: number | undefined;
 }
 
-export interface GitIntegrationInfo {
-  providerInfo?: { $case: "github"; value: GitHubIntegrationInfo } | {
-    $case: "bitbucket";
-    value: BitBucketIntegrationInfo;
-  } | undefined;
-}
-
-export interface GitHubIntegrationInfo {
-}
-
-export interface BitBucketIntegrationInfo {
-  tokenId: string;
-}
-
 export interface RepoToken {
   id: string;
   namespace: string;
@@ -94,22 +79,14 @@ export interface RepoToken {
     | undefined;
   /** True if this is a system auto-provisioned token (e.g. provided by Forge for BitBucket) */
   system: boolean;
+  token: string;
   expiresAt?: Date | undefined;
   createdAt: Date | undefined;
   updatedAt: Date | undefined;
 }
 
 function createBaseGitRepository(): GitRepository {
-  return {
-    id: "",
-    name: "",
-    fullName: "",
-    url: "",
-    description: "",
-    provider: 0,
-    properties: undefined,
-    integrationInfo: undefined,
-  };
+  return { id: "", name: "", fullName: "", url: "", description: "", provider: 0, properties: undefined };
 }
 
 export const GitRepository: MessageFns<GitRepository> = {
@@ -134,9 +111,6 @@ export const GitRepository: MessageFns<GitRepository> = {
     }
     if (message.properties !== undefined) {
       GitProperties.encode(message.properties, writer.uint32(58).fork()).join();
-    }
-    if (message.integrationInfo !== undefined) {
-      GitIntegrationInfo.encode(message.integrationInfo, writer.uint32(66).fork()).join();
     }
     return writer;
   },
@@ -204,14 +178,6 @@ export const GitRepository: MessageFns<GitRepository> = {
           message.properties = GitProperties.decode(reader, reader.uint32());
           continue;
         }
-        case 8: {
-          if (tag !== 66) {
-            break;
-          }
-
-          message.integrationInfo = GitIntegrationInfo.decode(reader, reader.uint32());
-          continue;
-        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -230,7 +196,6 @@ export const GitRepository: MessageFns<GitRepository> = {
       description: isSet(object.description) ? gt.String(object.description) : "",
       provider: isSet(object.provider) ? gitProviderFromJSON(object.provider) : 0,
       properties: isSet(object.properties) ? GitProperties.fromJSON(object.properties) : undefined,
-      integrationInfo: isSet(object.integrationInfo) ? GitIntegrationInfo.fromJSON(object.integrationInfo) : undefined,
     };
   },
 
@@ -257,9 +222,6 @@ export const GitRepository: MessageFns<GitRepository> = {
     if (message.properties !== undefined) {
       obj.properties = GitProperties.toJSON(message.properties);
     }
-    if (message.integrationInfo !== undefined) {
-      obj.integrationInfo = GitIntegrationInfo.toJSON(message.integrationInfo);
-    }
     return obj;
   },
 
@@ -276,9 +238,6 @@ export const GitRepository: MessageFns<GitRepository> = {
     message.provider = object.provider ?? 0;
     message.properties = (object.properties !== undefined && object.properties !== null)
       ? GitProperties.fromPartial(object.properties)
-      : undefined;
-    message.integrationInfo = (object.integrationInfo !== undefined && object.integrationInfo !== null)
-      ? GitIntegrationInfo.fromPartial(object.integrationInfo)
       : undefined;
     return message;
   },
@@ -530,208 +489,6 @@ export const GitAppInfo: MessageFns<GitAppInfo> = {
   },
 };
 
-function createBaseGitIntegrationInfo(): GitIntegrationInfo {
-  return { providerInfo: undefined };
-}
-
-export const GitIntegrationInfo: MessageFns<GitIntegrationInfo> = {
-  encode(message: GitIntegrationInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    switch (message.providerInfo?.$case) {
-      case "github":
-        GitHubIntegrationInfo.encode(message.providerInfo.value, writer.uint32(10).fork()).join();
-        break;
-      case "bitbucket":
-        BitBucketIntegrationInfo.encode(message.providerInfo.value, writer.uint32(18).fork()).join();
-        break;
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): GitIntegrationInfo {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseGitIntegrationInfo();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.providerInfo = { $case: "github", value: GitHubIntegrationInfo.decode(reader, reader.uint32()) };
-          continue;
-        }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.providerInfo = {
-            $case: "bitbucket",
-            value: BitBucketIntegrationInfo.decode(reader, reader.uint32()),
-          };
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): GitIntegrationInfo {
-    return {
-      providerInfo: isSet(object.github)
-        ? { $case: "github", value: GitHubIntegrationInfo.fromJSON(object.github) }
-        : isSet(object.bitbucket)
-        ? { $case: "bitbucket", value: BitBucketIntegrationInfo.fromJSON(object.bitbucket) }
-        : undefined,
-    };
-  },
-
-  toJSON(message: GitIntegrationInfo): unknown {
-    const obj: any = {};
-    if (message.providerInfo?.$case === "github") {
-      obj.github = GitHubIntegrationInfo.toJSON(message.providerInfo.value);
-    } else if (message.providerInfo?.$case === "bitbucket") {
-      obj.bitbucket = BitBucketIntegrationInfo.toJSON(message.providerInfo.value);
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<GitIntegrationInfo>): GitIntegrationInfo {
-    return GitIntegrationInfo.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<GitIntegrationInfo>): GitIntegrationInfo {
-    const message = createBaseGitIntegrationInfo();
-    switch (object.providerInfo?.$case) {
-      case "github": {
-        if (object.providerInfo?.value !== undefined && object.providerInfo?.value !== null) {
-          message.providerInfo = {
-            $case: "github",
-            value: GitHubIntegrationInfo.fromPartial(object.providerInfo.value),
-          };
-        }
-        break;
-      }
-      case "bitbucket": {
-        if (object.providerInfo?.value !== undefined && object.providerInfo?.value !== null) {
-          message.providerInfo = {
-            $case: "bitbucket",
-            value: BitBucketIntegrationInfo.fromPartial(object.providerInfo.value),
-          };
-        }
-        break;
-      }
-    }
-    return message;
-  },
-};
-
-function createBaseGitHubIntegrationInfo(): GitHubIntegrationInfo {
-  return {};
-}
-
-export const GitHubIntegrationInfo: MessageFns<GitHubIntegrationInfo> = {
-  encode(_: GitHubIntegrationInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): GitHubIntegrationInfo {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseGitHubIntegrationInfo();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(_: any): GitHubIntegrationInfo {
-    return {};
-  },
-
-  toJSON(_: GitHubIntegrationInfo): unknown {
-    const obj: any = {};
-    return obj;
-  },
-
-  create(base?: DeepPartial<GitHubIntegrationInfo>): GitHubIntegrationInfo {
-    return GitHubIntegrationInfo.fromPartial(base ?? {});
-  },
-  fromPartial(_: DeepPartial<GitHubIntegrationInfo>): GitHubIntegrationInfo {
-    const message = createBaseGitHubIntegrationInfo();
-    return message;
-  },
-};
-
-function createBaseBitBucketIntegrationInfo(): BitBucketIntegrationInfo {
-  return { tokenId: "" };
-}
-
-export const BitBucketIntegrationInfo: MessageFns<BitBucketIntegrationInfo> = {
-  encode(message: BitBucketIntegrationInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.tokenId !== "") {
-      writer.uint32(10).string(message.tokenId);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): BitBucketIntegrationInfo {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseBitBucketIntegrationInfo();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.tokenId = reader.string();
-          continue;
-        }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
-
-  fromJSON(object: any): BitBucketIntegrationInfo {
-    return { tokenId: isSet(object.tokenId) ? gt.String(object.tokenId) : "" };
-  },
-
-  toJSON(message: BitBucketIntegrationInfo): unknown {
-    const obj: any = {};
-    if (message.tokenId !== "") {
-      obj.tokenId = message.tokenId;
-    }
-    return obj;
-  },
-
-  create(base?: DeepPartial<BitBucketIntegrationInfo>): BitBucketIntegrationInfo {
-    return BitBucketIntegrationInfo.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<BitBucketIntegrationInfo>): BitBucketIntegrationInfo {
-    const message = createBaseBitBucketIntegrationInfo();
-    message.tokenId = object.tokenId ?? "";
-    return message;
-  },
-};
-
 function createBaseRepoToken(): RepoToken {
   return {
     id: "",
@@ -740,6 +497,7 @@ function createBaseRepoToken(): RepoToken {
     workspace: undefined,
     repo: undefined,
     system: false,
+    token: "",
     expiresAt: undefined,
     createdAt: undefined,
     updatedAt: undefined,
@@ -766,14 +524,17 @@ export const RepoToken: MessageFns<RepoToken> = {
     if (message.system !== false) {
       writer.uint32(48).bool(message.system);
     }
+    if (message.token !== "") {
+      writer.uint32(58).string(message.token);
+    }
     if (message.expiresAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.expiresAt), writer.uint32(58).fork()).join();
+      Timestamp.encode(toTimestamp(message.expiresAt), writer.uint32(66).fork()).join();
     }
     if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(66).fork()).join();
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(74).fork()).join();
     }
     if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(74).fork()).join();
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(82).fork()).join();
     }
     return writer;
   },
@@ -838,7 +599,7 @@ export const RepoToken: MessageFns<RepoToken> = {
             break;
           }
 
-          message.expiresAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.token = reader.string();
           continue;
         }
         case 8: {
@@ -846,11 +607,19 @@ export const RepoToken: MessageFns<RepoToken> = {
             break;
           }
 
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.expiresAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           continue;
         }
         case 9: {
           if (tag !== 74) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 10: {
+          if (tag !== 82) {
             break;
           }
 
@@ -874,6 +643,7 @@ export const RepoToken: MessageFns<RepoToken> = {
       workspace: isSet(object.workspace) ? gt.String(object.workspace) : undefined,
       repo: isSet(object.repo) ? gt.String(object.repo) : undefined,
       system: isSet(object.system) ? gt.Boolean(object.system) : false,
+      token: isSet(object.token) ? gt.String(object.token) : "",
       expiresAt: isSet(object.expiresAt) ? fromJsonTimestamp(object.expiresAt) : undefined,
       createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
       updatedAt: isSet(object.updatedAt) ? fromJsonTimestamp(object.updatedAt) : undefined,
@@ -900,6 +670,9 @@ export const RepoToken: MessageFns<RepoToken> = {
     if (message.system !== false) {
       obj.system = message.system;
     }
+    if (message.token !== "") {
+      obj.token = message.token;
+    }
     if (message.expiresAt !== undefined) {
       obj.expiresAt = message.expiresAt.toISOString();
     }
@@ -923,6 +696,7 @@ export const RepoToken: MessageFns<RepoToken> = {
     message.workspace = object.workspace ?? undefined;
     message.repo = object.repo ?? undefined;
     message.system = object.system ?? false;
+    message.token = object.token ?? "";
     message.expiresAt = object.expiresAt ?? undefined;
     message.createdAt = object.createdAt ?? undefined;
     message.updatedAt = object.updatedAt ?? undefined;
