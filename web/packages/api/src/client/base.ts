@@ -62,6 +62,16 @@ export class BaseClient {
     return response.fromJSON(resp.data)
   }
 
+  protected async _put<T>(
+    url: string,
+    response: ParseableMessage<T>,
+    data?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    const resp = await this.client.put<T>(url, data, config);
+    return response.fromJSON(resp.data);
+  }
+
   protected async _delete<T>(
     url: string,
     response: ParseableMessage<T>,

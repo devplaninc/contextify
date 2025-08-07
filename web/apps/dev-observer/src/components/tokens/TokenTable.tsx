@@ -89,7 +89,7 @@ const TokenTable: React.FC<TokenTableProps> = ({ tokens, onRefresh }) => {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {formatDate(token.createdAt as { seconds: number; nanos: number })}
+                        {formatDate(token.createdAt)}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
