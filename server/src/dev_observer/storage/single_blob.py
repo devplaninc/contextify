@@ -290,6 +290,14 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
                 return result
         return None
 
+    async def list_tokens(self, namespace: Optional[str] = None) -> List[RepoToken]:
+        tokens = []
+        for token in self._get().tokens:
+            if namespace and token.namespace != namespace:
+                continue
+            tokens.append(token)
+        return tokens
+
     async def find_tokens(
             self, provider: int, workspace: Optional[str] = None, repo: Optional[str] = None) -> List[RepoToken]:
         tokens = []
@@ -328,6 +336,19 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
             if token.id == token_id:
                 return token
         return None
+
+    async def add_token(self, token: RepoToken) -> RepoToken:
+        def up(d: LocalStorageData):
+            # Set timestamps if not already set
+            if not token.HasField("created_at"):
+                token.created_at.CopyFrom(timestamp.from_milliseconds(int(self._clock.now().timestamp() * 1000)))
+            if not token.HasField("updated_at"):
+                token.updated_at.CopyFrom(timestamp.from_milliseconds(int(self._clock.now().timestamp() * 1000)))
+            
+            d.tokens.append(token)
+
+        await self._update(up)
+        return token
 
     @abstractmethod
     def _get(self) -> LocalStorageData:

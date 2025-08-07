@@ -312,7 +312,7 @@ class PostgresqlStorageProvider(StorageProvider):
                 return [_to_item(i) for i in items.all()]
 
     # Token CRUD operations
-    async def create_token(self, token: RepoToken) -> RepoToken:
+    async def add_token(self, token: RepoToken) -> RepoToken:
         token_id = token.id
         if not token_id or len(token_id) == 0:
             token_id = f"{uuid.uuid4()}"
@@ -352,6 +352,14 @@ class PostgresqlStorageProvider(StorageProvider):
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 await session.execute(delete(RepoTokenEntity).where(RepoTokenEntity.id == token_id))
+
+    async def list_tokens(self, namespace: Optional[str] = None) -> List[RepoToken]:
+        async with AsyncSession(self._engine) as session:
+            query = select(RepoTokenEntity)
+            if namespace:
+                query = query.where(RepoTokenEntity.namespace == namespace)
+            entities = await session.scalars(query)
+            return [self._to_token(ent) for ent in entities.all()]
 
     async def find_tokens(self, provider: int, workspace: Optional[str] = None, repo: Optional[str] = None) -> List[
         RepoToken]:

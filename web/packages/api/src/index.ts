@@ -22,7 +22,7 @@ export {
   PeriodicAggregationResult,
   RepoObservation,
 } from './pb/dev_observer/api/types/processing';
-export {GitRepository, GitProvider} from './pb/dev_observer/api/types/repo';
+export {GitRepository, GitProvider, RepoToken} from './pb/dev_observer/api/types/repo';
 export {WebSite} from './pb/dev_observer/api/types/sites';
 export {
   ListWebSitesResponse,
@@ -58,6 +58,16 @@ export {
   ListRepositoriesResponse,
   RescanRepositoryResponse
 } from './pb/dev_observer/api/web/repositories';
+export {
+  ListTokensRequest,
+  ListTokensResponse,
+  AddTokenRequest,
+  AddTokenResponse,
+  GetTokenResponse,
+  UpdateTokenRequest,
+  UpdateTokenResponse,
+  DeleteTokenResponse
+} from './pb/dev_observer/api/web/tokens';
 
 export {LocalStorageData} from './pb/dev_observer/api/storage/local';
 

@@ -41,10 +41,10 @@ local-server: start-local-pg
 build-web-packages: web/packages/api/package.json
 	@cd web/packages/api && npm run build
 
-build-web-app: web/apps/dev-observer/package.json
+build-web-app: build-web-packages web/apps/dev-observer/package.json
 	@cd web/apps/dev-observer && npm run build
 
-dev-web: npm-install build-web-packages
+dev-web: build-web-packages npm-install
 	@scripts/dev-web.sh
 
 local-compose:

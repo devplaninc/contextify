@@ -14,6 +14,7 @@ from dev_observer.server.services.config import ConfigService
 from dev_observer.server.services.observations import ObservationsService
 from dev_observer.server.services.repositories import RepositoriesService
 from dev_observer.server.services.sites import WebSitesService
+from dev_observer.server.services.tokens import TokensService
 
 _log = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ config_service = ConfigService(env.storage, env.users)
 repos_service = RepositoriesService(env.storage)
 observations_service = ObservationsService(env.observations, env.storage)
 websites_service = WebSitesService(env.storage)
+tokens_service = TokensService(env.storage)
 
 # Include routers with authentication
 app.include_router(
@@ -62,6 +64,11 @@ app.include_router(
 )
 app.include_router(
     websites_service.router,
+    prefix="/api/v1",
+    dependencies=[Depends(auth_middleware.verify_token)]
+)
+app.include_router(
+    tokens_service.router,
     prefix="/api/v1",
     dependencies=[Depends(auth_middleware.verify_token)]
 )

@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Optional, List
 
 from dev_observer.api.types.repo_pb2 import RepoToken
+from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.repository.bitbucket import BitBucketAuthProvider
 from dev_observer.repository.types import ObservedRepo
 from dev_observer.storage.provider import StorageProvider
@@ -71,7 +72,7 @@ class BitBucketTokenAuthProvider(BitBucketAuthProvider):
         now = self._clock.now()
         result: List[RepoToken] = []
         for token in tokens:
-            if token.expires_at is not None and token.expires_at < now:
+            if token.HasField("expires_at") and pb_to_datetime(token.expires_at) < now:
                 continue
             result.append(token)
         return result

@@ -58,18 +58,7 @@ class BitBucketProvider(GitRepositoryProvider):
                 
                 # Extract repository information
                 size_kb = repo_data.get('size', 0) // 1024  # Convert bytes to KB
-                clone_url = None
-                
-                # Get clone URLs from links
-                if 'links' in repo_data and 'clone' in repo_data['links']:
-                    for clone_link in repo_data['links']['clone']:
-                        if clone_link.get('name') == 'https':
-                            clone_url = clone_link.get('href')
-                            break
-                
-                if not clone_url:
-                    # Fallback to standard BitBucket HTTPS URL format
-                    clone_url = f"https://bitbucket.org/{full_name}.git"
+                clone_url = f"https://bitbucket.org/{full_name}.git"
                 
                 meta = GitMeta(
                     last_refresh=self._clock.now(),
