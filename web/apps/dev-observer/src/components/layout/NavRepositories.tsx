@@ -8,9 +8,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar.tsx"
 import {Link} from "react-router";
-import type {GitHubRepository} from "@devplan/contextify-api";
+import type {GitRepository} from "@devplan/contextify-api";
 
-export function NavRepositories({repositories}: { repositories: GitHubRepository[] }) {
+export function NavRepositories({repositories}: { repositories: GitRepository[] }) {
   // const { isMobile } = useSidebar()
   const toShowCnt = 4
   const [showAll, setShowAll] = useState(repositories.length <= toShowCnt)

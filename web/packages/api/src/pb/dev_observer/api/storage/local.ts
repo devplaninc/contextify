@@ -8,13 +8,13 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { GlobalConfig } from "../types/config";
 import { ProcessingItem, ProcessingItemResult } from "../types/processing";
-import { GitHubRepository } from "../types/repo";
+import { GitRepository } from "../types/repo";
 import { WebSite } from "../types/sites";
 
 export const protobufPackage = "dev_observer.api.storage.local";
 
 export interface LocalStorageData {
-  githubRepos: GitHubRepository[];
+  gitRepos: GitRepository[];
   processingItems: ProcessingItem[];
   globalConfig: GlobalConfig | undefined;
   webSites: WebSite[];
@@ -22,13 +22,13 @@ export interface LocalStorageData {
 }
 
 function createBaseLocalStorageData(): LocalStorageData {
-  return { githubRepos: [], processingItems: [], globalConfig: undefined, webSites: [], processingResults: [] };
+  return { gitRepos: [], processingItems: [], globalConfig: undefined, webSites: [], processingResults: [] };
 }
 
 export const LocalStorageData: MessageFns<LocalStorageData> = {
   encode(message: LocalStorageData, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    for (const v of message.githubRepos) {
-      GitHubRepository.encode(v!, writer.uint32(10).fork()).join();
+    for (const v of message.gitRepos) {
+      GitRepository.encode(v!, writer.uint32(10).fork()).join();
     }
     for (const v of message.processingItems) {
       ProcessingItem.encode(v!, writer.uint32(18).fork()).join();
@@ -57,7 +57,7 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
             break;
           }
 
-          message.githubRepos.push(GitHubRepository.decode(reader, reader.uint32()));
+          message.gitRepos.push(GitRepository.decode(reader, reader.uint32()));
           continue;
         }
         case 2: {
@@ -103,9 +103,7 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
 
   fromJSON(object: any): LocalStorageData {
     return {
-      githubRepos: gt.Array.isArray(object?.githubRepos)
-        ? object.githubRepos.map((e: any) => GitHubRepository.fromJSON(e))
-        : [],
+      gitRepos: gt.Array.isArray(object?.gitRepos) ? object.gitRepos.map((e: any) => GitRepository.fromJSON(e)) : [],
       processingItems: gt.Array.isArray(object?.processingItems)
         ? object.processingItems.map((e: any) => ProcessingItem.fromJSON(e))
         : [],
@@ -119,8 +117,8 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
 
   toJSON(message: LocalStorageData): unknown {
     const obj: any = {};
-    if (message.githubRepos?.length) {
-      obj.githubRepos = message.githubRepos.map((e) => GitHubRepository.toJSON(e));
+    if (message.gitRepos?.length) {
+      obj.gitRepos = message.gitRepos.map((e) => GitRepository.toJSON(e));
     }
     if (message.processingItems?.length) {
       obj.processingItems = message.processingItems.map((e) => ProcessingItem.toJSON(e));
@@ -142,7 +140,7 @@ export const LocalStorageData: MessageFns<LocalStorageData> = {
   },
   fromPartial(object: DeepPartial<LocalStorageData>): LocalStorageData {
     const message = createBaseLocalStorageData();
-    message.githubRepos = object.githubRepos?.map((e) => GitHubRepository.fromPartial(e)) || [];
+    message.gitRepos = object.gitRepos?.map((e) => GitRepository.fromPartial(e)) || [];
     message.processingItems = object.processingItems?.map((e) => ProcessingItem.fromPartial(e)) || [];
     message.globalConfig = (object.globalConfig !== undefined && object.globalConfig !== null)
       ? GlobalConfig.fromPartial(object.globalConfig)

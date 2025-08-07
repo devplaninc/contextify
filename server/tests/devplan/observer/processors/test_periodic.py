@@ -5,8 +5,10 @@ from dev_observer.analysis.stub import StubAnalysisProvider
 from dev_observer.api.types.config_pb2 import GlobalConfig, AnalysisConfig
 from dev_observer.api.types.observations_pb2 import Analyzer, ObservationKey
 from dev_observer.api.types.processing_pb2 import ProcessingItemsFilter, ProcessingItemKey
-from dev_observer.api.types.repo_pb2 import GitHubRepository
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProvider
 from dev_observer.observations.memory import MemoryObservationsProvider
+from dev_observer.processors.aggregated_summary import AggregatedSummaryProcessor
+from dev_observer.processors.git.changes import GitChangesHandler
 from dev_observer.processors.git_changes import GitChangesProcessor
 from dev_observer.processors.periodic import PeriodicProcessor
 from dev_observer.processors.repos import ReposProcessor
@@ -42,15 +44,31 @@ class TestPeriodicProcessor(unittest.IsolatedAsyncioTestCase):
             observations=observations,
             tokenizer=StubTokenizerProvider(),
         )
+        git_changes_handler = GitChangesHandler(
+            git_changes_processor=changes_processor,
+            storage=storage,
+            observations=observations,
+            clock=clock,
+        )
+        aggregated_summary_processor = AggregatedSummaryProcessor(
+            analysis=analysis,
+            repository=repos,
+            prompts=prompts,
+            observations=observations,
+            tokenizer=StubTokenizerProvider(),
+            git_changes_handler=git_changes_handler,
+            storage=storage,
+        )
         p = PeriodicProcessor(
             storage=storage,
             repos_processor=repos_processor,
-            git_changes_processor=changes_processor,
+            aggregated_summary_processor=aggregated_summary_processor,
+            git_changes_handler=git_changes_handler,
             clock=clock,
         )
         self.assertIsNone(await p.process_next())
-        await storage.add_github_repo(GitHubRepository(
-            name="test1", id="r1", full_name="devplan/test1", url="https://github.com/devplan/test1",
+        await storage.add_git_repo(GitRepository(
+            name="test1", id="r1", full_name="devplan/test1", url="https://github.com/devplan/test1", provider=GitProvider.GITHUB,
         ))
         await storage.set_next_processing_time(ProcessingItemKey(github_repo_id="r1"), clock.now())
         filter = ProcessingItemsFilter()
@@ -58,8 +76,8 @@ class TestPeriodicProcessor(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(1, len(items))
         item1_key = items[0].key
         self.assertEqual("r1", items[0].key.github_repo_id)
-        await storage.add_github_repo(GitHubRepository(
-            name="test2", id="r2", full_name="devplan/test2", url="https://github.com/devplan/test2",
+        await storage.add_git_repo(GitRepository(
+            name="test2", id="r2", full_name="devplan/test2", url="https://github.com/devplan/test2", provider=GitProvider.GITHUB,
         ))
         await storage.set_next_processing_time(ProcessingItemKey(github_repo_id="r2"), clock.now())
         items = await storage.get_processing_items(filter)

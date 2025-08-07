@@ -1,10 +1,10 @@
 import {BaseClient} from './base';
 import {
-  AddGithubRepositoryRequest,
-  AddGithubRepositoryResponse,
+  AddRepositoryRequest,
+  AddRepositoryResponse,
   DeleteRepositoryResponse,
   GetRepositoryResponse,
-  ListGithubRepositoriesResponse,
+  ListRepositoriesResponse,
   RescanRepositoryResponse
 } from '../pb/dev_observer/api/web/repositories';
 
@@ -13,24 +13,24 @@ import {
  */
 export class RepositoriesClient extends BaseClient {
   /**
-   * Add a GitHub repository
+   * Add a repository
    * @param request - The add repository request
    * @returns The add repository response
    */
-  async add(request: AddGithubRepositoryRequest): Promise<AddGithubRepositoryResponse> {
-    return this._post('/api/v1/repositories', AddGithubRepositoryResponse,  AddGithubRepositoryRequest.toJSON(request));
+  async add(request: AddRepositoryRequest): Promise<AddRepositoryResponse> {
+    return this._post('/api/v1/repositories', AddRepositoryResponse,  AddRepositoryRequest.toJSON(request));
   }
 
   /**
-   * List all GitHub repositories
+   * List all repositories
    * @returns The list repositories response
    */
-  async list(): Promise<ListGithubRepositoriesResponse> {
-    return this._get('/api/v1/repositories', ListGithubRepositoriesResponse);
+  async list(): Promise<ListRepositoriesResponse> {
+    return this._get('/api/v1/repositories', ListRepositoriesResponse);
   }
 
   /**
-   * Get a specific GitHub repository
+   * Get a specific repository
    * @param repoId - The repository ID
    * @returns The get repository response
    */
@@ -39,7 +39,7 @@ export class RepositoriesClient extends BaseClient {
   }
 
   /**
-   * Delete a specific GitHub repository
+   * Delete a specific repository
    * @param repoId - The repository ID
    * @returns The delete repository response
    */
@@ -48,7 +48,7 @@ export class RepositoriesClient extends BaseClient {
   }
 
   /**
-   * Trigger a rescan of a specific GitHub repository
+   * Trigger a rescan of a specific repository
    * @param repoId - The repository ID
    * @returns The rescan repository response
    */

@@ -51,12 +51,16 @@ class Frequency(_message.Message):
     def __init__(self, daily: _Optional[_Union[Frequency.Daily, _Mapping]] = ..., weekly: _Optional[_Union[Frequency.Weekly, _Mapping]] = ...) -> None: ...
 
 class TimeOfDay(_message.Message):
-    __slots__ = ("hours", "minutes")
+    __slots__ = ("hours", "minutes", "seconds", "nanos")
     HOURS_FIELD_NUMBER: _ClassVar[int]
     MINUTES_FIELD_NUMBER: _ClassVar[int]
+    SECONDS_FIELD_NUMBER: _ClassVar[int]
+    NANOS_FIELD_NUMBER: _ClassVar[int]
     hours: int
     minutes: int
-    def __init__(self, hours: _Optional[int] = ..., minutes: _Optional[int] = ...) -> None: ...
+    seconds: int
+    nanos: int
+    def __init__(self, hours: _Optional[int] = ..., minutes: _Optional[int] = ..., seconds: _Optional[int] = ..., nanos: _Optional[int] = ...) -> None: ...
 
 class Time(_message.Message):
     __slots__ = ("time_of_day", "time_zone")

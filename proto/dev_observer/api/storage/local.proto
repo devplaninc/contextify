@@ -8,7 +8,7 @@ import "dev_observer/api/types/config.proto";
 import "dev_observer/api/types/sites.proto";
 
 message LocalStorageData {
-  repeated dev_observer.api.types.repo.GitHubRepository github_repos = 1;
+  repeated dev_observer.api.types.repo.GitRepository git_repos = 1;
   repeated dev_observer.api.types.processing.ProcessingItem processing_items = 2;
   dev_observer.api.types.config.GlobalConfig global_config = 3;
   repeated dev_observer.api.types.sites.WebSite web_sites = 4;

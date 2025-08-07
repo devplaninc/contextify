@@ -12,7 +12,7 @@ from dev_observer.api.storage.local_pb2 import LocalStorageData
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
     ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties
 from dev_observer.api.types.sites_pb2 import WebSite
 from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
@@ -29,51 +29,45 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
     def __init__(self, clock: Clock = RealClock()):
         self._clock = clock
 
-    async def get_github_repos(self) -> MutableSequence[GitHubRepository]:
-        return self._get().github_repos
+    async def get_git_repos(self) -> MutableSequence[GitRepository]:
+        return self._get().git_repos
 
-    async def get_github_repo(self, repo_id: str) -> Optional[GitHubRepository]:
-        for r in self._get().github_repos:
+    async def get_git_repo(self, repo_id: str) -> Optional[GitRepository]:
+        for r in self._get().git_repos:
             if r.id == repo_id:
                 return r
         return None
 
-    async def get_github_repo_by_full_name(self, full_name: str) -> Optional[GitHubRepository]:
-        for r in self._get().github_repos:
-            if r.full_name == full_name:
-                return r
-        return None
-
-    async def delete_github_repo(self, repo_id: str):
+    async def delete_git_repo(self, repo_id: str):
         def up(d: LocalStorageData):
-            new_repos = [r for r in d.github_repos if r.id != repo_id]
-            d.ClearField("github_repos")
-            d.github_repos.extend(new_repos)
+            new_repos = [r for r in d.git_repos if r.id != repo_id]
+            d.ClearField("git_repos")
+            d.git_repos.extend(new_repos)
 
         await self._update(up)
 
-    async def add_github_repo(self, repo: GitHubRepository) -> GitHubRepository:
+    async def add_git_repo(self, repo: GitRepository) -> GitRepository:
         if not repo.id or len(repo.id) == 0:
             repo.id = f"{uuid.uuid4()}"
 
         def up(d: LocalStorageData):
-            if repo.id in [r.id for r in self._get().github_repos]:
+            if repo.id in [r.id for r in self._get().git_repos]:
                 return
-            d.github_repos.append(repo)
+            d.git_repos.append(repo)
 
         await self._update(up)
         return repo
 
-    async def update_repo_properties(self, id: str, properties: GitProperties) -> GitHubRepository:
+    async def update_repo_properties(self, id: str, properties: GitProperties) -> GitRepository:
         def up(d: LocalStorageData):
-            for r in d.github_repos:
+            for r in d.git_repos:
                 if r.id == id:
                     r.properties.CopyFrom(properties)
                     return
             raise ValueError(f"Repository with id {id} not found")
 
         await self._update(up)
-        return await self.get_github_repo(id)
+        return await self.get_git_repo(id)
 
     async def get_web_sites(self) -> MutableSequence[WebSite]:
         return self._get().web_sites

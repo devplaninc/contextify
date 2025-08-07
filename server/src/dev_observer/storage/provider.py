@@ -6,8 +6,7 @@ from typing import Protocol, Optional, MutableSequence, List, Sequence
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
     ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
-from dev_observer.api.types.schedule_pb2 import Schedule
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties
 from dev_observer.api.types.sites_pb2 import WebSite
 
 
@@ -18,22 +17,19 @@ class AddWebSiteData:
 
 
 class StorageProvider(Protocol):
-    async def get_github_repos(self) -> MutableSequence[GitHubRepository]:
+    async def get_git_repos(self) -> MutableSequence[GitRepository]:
         ...
 
-    async def get_github_repo(self, repo_id: str) -> Optional[GitHubRepository]:
+    async def get_git_repo(self, repo_id: str) -> Optional[GitRepository]:
         ...
 
-    async def get_github_repo_by_full_name(self, full_name: str) -> Optional[GitHubRepository]:
+    async def delete_git_repo(self, repo_id: str):
         ...
 
-    async def delete_github_repo(self, repo_id: str):
+    async def add_git_repo(self, repo: GitRepository) -> GitRepository:
         ...
 
-    async def add_github_repo(self, repo: GitHubRepository) -> GitHubRepository:
-        ...
-
-    async def update_repo_properties(self, id: str, properties: GitProperties) -> GitHubRepository:
+    async def update_repo_properties(self, id: str, properties: GitProperties) -> GitRepository:
         ...
 
     async def get_web_sites(self) -> MutableSequence[WebSite]:

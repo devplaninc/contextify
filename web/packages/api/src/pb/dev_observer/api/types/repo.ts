@@ -10,13 +10,44 @@ import { Timestamp } from "../../../google/protobuf/timestamp";
 
 export const protobufPackage = "dev_observer.api.types.repo";
 
-export interface GitHubRepository {
+export enum GitProvider {
+  GITHUB = 0,
+  BIT_BUCKET = 1,
+}
+
+export function gitProviderFromJSON(object: any): GitProvider {
+  switch (object) {
+    case 0:
+    case "GITHUB":
+      return GitProvider.GITHUB;
+    case 1:
+    case "BIT_BUCKET":
+      return GitProvider.BIT_BUCKET;
+    default:
+      throw new gt.Error("Unrecognized enum value " + object + " for enum GitProvider");
+  }
+}
+
+export function gitProviderToJSON(object: GitProvider): string {
+  switch (object) {
+    case GitProvider.GITHUB:
+      return "GITHUB";
+    case GitProvider.BIT_BUCKET:
+      return "BIT_BUCKET";
+    default:
+      throw new gt.Error("Unrecognized enum value " + object + " for enum GitProvider");
+  }
+}
+
+export interface GitRepository {
   id: string;
   name: string;
   fullName: string;
   url: string;
   description: string;
+  provider: GitProvider;
   properties?: GitProperties | undefined;
+  integrationInfo?: GitIntegrationInfo | undefined;
 }
 
 export interface GitProperties {
@@ -35,12 +66,54 @@ export interface GitAppInfo {
   installationId?: number | undefined;
 }
 
-function createBaseGitHubRepository(): GitHubRepository {
-  return { id: "", name: "", fullName: "", url: "", description: "", properties: undefined };
+export interface GitIntegrationInfo {
+  providerInfo?: { $case: "github"; value: GitHubIntegrationInfo } | {
+    $case: "bitbucket";
+    value: BitBucketIntegrationInfo;
+  } | undefined;
 }
 
-export const GitHubRepository: MessageFns<GitHubRepository> = {
-  encode(message: GitHubRepository, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+export interface GitHubIntegrationInfo {
+}
+
+export interface BitBucketIntegrationInfo {
+  tokenId: string;
+}
+
+export interface RepoToken {
+  id: string;
+  namespace: string;
+  provider: GitProvider;
+  /** Name of the workspace if this is a workspace token. */
+  workspace?:
+    | string
+    | undefined;
+  /** Full name of the repo if this is a repo token. */
+  repo?:
+    | string
+    | undefined;
+  /** True if this is a system auto-provisioned token (e.g. provided by Forge for BitBucket) */
+  system: boolean;
+  expiresAt?: Date | undefined;
+  createdAt: Date | undefined;
+  updatedAt: Date | undefined;
+}
+
+function createBaseGitRepository(): GitRepository {
+  return {
+    id: "",
+    name: "",
+    fullName: "",
+    url: "",
+    description: "",
+    provider: 0,
+    properties: undefined,
+    integrationInfo: undefined,
+  };
+}
+
+export const GitRepository: MessageFns<GitRepository> = {
+  encode(message: GitRepository, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.id !== "") {
       writer.uint32(10).string(message.id);
     }
@@ -56,16 +129,22 @@ export const GitHubRepository: MessageFns<GitHubRepository> = {
     if (message.description !== "") {
       writer.uint32(42).string(message.description);
     }
+    if (message.provider !== 0) {
+      writer.uint32(48).int32(message.provider);
+    }
     if (message.properties !== undefined) {
-      GitProperties.encode(message.properties, writer.uint32(50).fork()).join();
+      GitProperties.encode(message.properties, writer.uint32(58).fork()).join();
+    }
+    if (message.integrationInfo !== undefined) {
+      GitIntegrationInfo.encode(message.integrationInfo, writer.uint32(66).fork()).join();
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): GitHubRepository {
+  decode(input: BinaryReader | Uint8Array, length?: number): GitRepository {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseGitHubRepository();
+    const message = createBaseGitRepository();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -110,11 +189,27 @@ export const GitHubRepository: MessageFns<GitHubRepository> = {
           continue;
         }
         case 6: {
-          if (tag !== 50) {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.provider = reader.int32() as any;
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
             break;
           }
 
           message.properties = GitProperties.decode(reader, reader.uint32());
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.integrationInfo = GitIntegrationInfo.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -126,18 +221,20 @@ export const GitHubRepository: MessageFns<GitHubRepository> = {
     return message;
   },
 
-  fromJSON(object: any): GitHubRepository {
+  fromJSON(object: any): GitRepository {
     return {
       id: isSet(object.id) ? gt.String(object.id) : "",
       name: isSet(object.name) ? gt.String(object.name) : "",
       fullName: isSet(object.fullName) ? gt.String(object.fullName) : "",
       url: isSet(object.url) ? gt.String(object.url) : "",
       description: isSet(object.description) ? gt.String(object.description) : "",
+      provider: isSet(object.provider) ? gitProviderFromJSON(object.provider) : 0,
       properties: isSet(object.properties) ? GitProperties.fromJSON(object.properties) : undefined,
+      integrationInfo: isSet(object.integrationInfo) ? GitIntegrationInfo.fromJSON(object.integrationInfo) : undefined,
     };
   },
 
-  toJSON(message: GitHubRepository): unknown {
+  toJSON(message: GitRepository): unknown {
     const obj: any = {};
     if (message.id !== "") {
       obj.id = message.id;
@@ -154,24 +251,34 @@ export const GitHubRepository: MessageFns<GitHubRepository> = {
     if (message.description !== "") {
       obj.description = message.description;
     }
+    if (message.provider !== 0) {
+      obj.provider = gitProviderToJSON(message.provider);
+    }
     if (message.properties !== undefined) {
       obj.properties = GitProperties.toJSON(message.properties);
+    }
+    if (message.integrationInfo !== undefined) {
+      obj.integrationInfo = GitIntegrationInfo.toJSON(message.integrationInfo);
     }
     return obj;
   },
 
-  create(base?: DeepPartial<GitHubRepository>): GitHubRepository {
-    return GitHubRepository.fromPartial(base ?? {});
+  create(base?: DeepPartial<GitRepository>): GitRepository {
+    return GitRepository.fromPartial(base ?? {});
   },
-  fromPartial(object: DeepPartial<GitHubRepository>): GitHubRepository {
-    const message = createBaseGitHubRepository();
+  fromPartial(object: DeepPartial<GitRepository>): GitRepository {
+    const message = createBaseGitRepository();
     message.id = object.id ?? "";
     message.name = object.name ?? "";
     message.fullName = object.fullName ?? "";
     message.url = object.url ?? "";
     message.description = object.description ?? "";
+    message.provider = object.provider ?? 0;
     message.properties = (object.properties !== undefined && object.properties !== null)
       ? GitProperties.fromPartial(object.properties)
+      : undefined;
+    message.integrationInfo = (object.integrationInfo !== undefined && object.integrationInfo !== null)
+      ? GitIntegrationInfo.fromPartial(object.integrationInfo)
       : undefined;
     return message;
   },
@@ -419,6 +526,406 @@ export const GitAppInfo: MessageFns<GitAppInfo> = {
     const message = createBaseGitAppInfo();
     message.lastRefresh = object.lastRefresh ?? undefined;
     message.installationId = object.installationId ?? undefined;
+    return message;
+  },
+};
+
+function createBaseGitIntegrationInfo(): GitIntegrationInfo {
+  return { providerInfo: undefined };
+}
+
+export const GitIntegrationInfo: MessageFns<GitIntegrationInfo> = {
+  encode(message: GitIntegrationInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    switch (message.providerInfo?.$case) {
+      case "github":
+        GitHubIntegrationInfo.encode(message.providerInfo.value, writer.uint32(10).fork()).join();
+        break;
+      case "bitbucket":
+        BitBucketIntegrationInfo.encode(message.providerInfo.value, writer.uint32(18).fork()).join();
+        break;
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GitIntegrationInfo {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGitIntegrationInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.providerInfo = { $case: "github", value: GitHubIntegrationInfo.decode(reader, reader.uint32()) };
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.providerInfo = {
+            $case: "bitbucket",
+            value: BitBucketIntegrationInfo.decode(reader, reader.uint32()),
+          };
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GitIntegrationInfo {
+    return {
+      providerInfo: isSet(object.github)
+        ? { $case: "github", value: GitHubIntegrationInfo.fromJSON(object.github) }
+        : isSet(object.bitbucket)
+        ? { $case: "bitbucket", value: BitBucketIntegrationInfo.fromJSON(object.bitbucket) }
+        : undefined,
+    };
+  },
+
+  toJSON(message: GitIntegrationInfo): unknown {
+    const obj: any = {};
+    if (message.providerInfo?.$case === "github") {
+      obj.github = GitHubIntegrationInfo.toJSON(message.providerInfo.value);
+    } else if (message.providerInfo?.$case === "bitbucket") {
+      obj.bitbucket = BitBucketIntegrationInfo.toJSON(message.providerInfo.value);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GitIntegrationInfo>): GitIntegrationInfo {
+    return GitIntegrationInfo.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GitIntegrationInfo>): GitIntegrationInfo {
+    const message = createBaseGitIntegrationInfo();
+    switch (object.providerInfo?.$case) {
+      case "github": {
+        if (object.providerInfo?.value !== undefined && object.providerInfo?.value !== null) {
+          message.providerInfo = {
+            $case: "github",
+            value: GitHubIntegrationInfo.fromPartial(object.providerInfo.value),
+          };
+        }
+        break;
+      }
+      case "bitbucket": {
+        if (object.providerInfo?.value !== undefined && object.providerInfo?.value !== null) {
+          message.providerInfo = {
+            $case: "bitbucket",
+            value: BitBucketIntegrationInfo.fromPartial(object.providerInfo.value),
+          };
+        }
+        break;
+      }
+    }
+    return message;
+  },
+};
+
+function createBaseGitHubIntegrationInfo(): GitHubIntegrationInfo {
+  return {};
+}
+
+export const GitHubIntegrationInfo: MessageFns<GitHubIntegrationInfo> = {
+  encode(_: GitHubIntegrationInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GitHubIntegrationInfo {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGitHubIntegrationInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): GitHubIntegrationInfo {
+    return {};
+  },
+
+  toJSON(_: GitHubIntegrationInfo): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create(base?: DeepPartial<GitHubIntegrationInfo>): GitHubIntegrationInfo {
+    return GitHubIntegrationInfo.fromPartial(base ?? {});
+  },
+  fromPartial(_: DeepPartial<GitHubIntegrationInfo>): GitHubIntegrationInfo {
+    const message = createBaseGitHubIntegrationInfo();
+    return message;
+  },
+};
+
+function createBaseBitBucketIntegrationInfo(): BitBucketIntegrationInfo {
+  return { tokenId: "" };
+}
+
+export const BitBucketIntegrationInfo: MessageFns<BitBucketIntegrationInfo> = {
+  encode(message: BitBucketIntegrationInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.tokenId !== "") {
+      writer.uint32(10).string(message.tokenId);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): BitBucketIntegrationInfo {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBitBucketIntegrationInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.tokenId = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): BitBucketIntegrationInfo {
+    return { tokenId: isSet(object.tokenId) ? gt.String(object.tokenId) : "" };
+  },
+
+  toJSON(message: BitBucketIntegrationInfo): unknown {
+    const obj: any = {};
+    if (message.tokenId !== "") {
+      obj.tokenId = message.tokenId;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<BitBucketIntegrationInfo>): BitBucketIntegrationInfo {
+    return BitBucketIntegrationInfo.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<BitBucketIntegrationInfo>): BitBucketIntegrationInfo {
+    const message = createBaseBitBucketIntegrationInfo();
+    message.tokenId = object.tokenId ?? "";
+    return message;
+  },
+};
+
+function createBaseRepoToken(): RepoToken {
+  return {
+    id: "",
+    namespace: "",
+    provider: 0,
+    workspace: undefined,
+    repo: undefined,
+    system: false,
+    expiresAt: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+  };
+}
+
+export const RepoToken: MessageFns<RepoToken> = {
+  encode(message: RepoToken, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== "") {
+      writer.uint32(10).string(message.id);
+    }
+    if (message.namespace !== "") {
+      writer.uint32(18).string(message.namespace);
+    }
+    if (message.provider !== 0) {
+      writer.uint32(24).int32(message.provider);
+    }
+    if (message.workspace !== undefined) {
+      writer.uint32(34).string(message.workspace);
+    }
+    if (message.repo !== undefined) {
+      writer.uint32(42).string(message.repo);
+    }
+    if (message.system !== false) {
+      writer.uint32(48).bool(message.system);
+    }
+    if (message.expiresAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.expiresAt), writer.uint32(58).fork()).join();
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(66).fork()).join();
+    }
+    if (message.updatedAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(74).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RepoToken {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRepoToken();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.namespace = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.provider = reader.int32() as any;
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.workspace = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.repo = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.system = reader.bool();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.expiresAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 8: {
+          if (tag !== 66) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RepoToken {
+    return {
+      id: isSet(object.id) ? gt.String(object.id) : "",
+      namespace: isSet(object.namespace) ? gt.String(object.namespace) : "",
+      provider: isSet(object.provider) ? gitProviderFromJSON(object.provider) : 0,
+      workspace: isSet(object.workspace) ? gt.String(object.workspace) : undefined,
+      repo: isSet(object.repo) ? gt.String(object.repo) : undefined,
+      system: isSet(object.system) ? gt.Boolean(object.system) : false,
+      expiresAt: isSet(object.expiresAt) ? fromJsonTimestamp(object.expiresAt) : undefined,
+      createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
+      updatedAt: isSet(object.updatedAt) ? fromJsonTimestamp(object.updatedAt) : undefined,
+    };
+  },
+
+  toJSON(message: RepoToken): unknown {
+    const obj: any = {};
+    if (message.id !== "") {
+      obj.id = message.id;
+    }
+    if (message.namespace !== "") {
+      obj.namespace = message.namespace;
+    }
+    if (message.provider !== 0) {
+      obj.provider = gitProviderToJSON(message.provider);
+    }
+    if (message.workspace !== undefined) {
+      obj.workspace = message.workspace;
+    }
+    if (message.repo !== undefined) {
+      obj.repo = message.repo;
+    }
+    if (message.system !== false) {
+      obj.system = message.system;
+    }
+    if (message.expiresAt !== undefined) {
+      obj.expiresAt = message.expiresAt.toISOString();
+    }
+    if (message.createdAt !== undefined) {
+      obj.createdAt = message.createdAt.toISOString();
+    }
+    if (message.updatedAt !== undefined) {
+      obj.updatedAt = message.updatedAt.toISOString();
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<RepoToken>): RepoToken {
+    return RepoToken.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<RepoToken>): RepoToken {
+    const message = createBaseRepoToken();
+    message.id = object.id ?? "";
+    message.namespace = object.namespace ?? "";
+    message.provider = object.provider ?? 0;
+    message.workspace = object.workspace ?? undefined;
+    message.repo = object.repo ?? undefined;
+    message.system = object.system ?? false;
+    message.expiresAt = object.expiresAt ?? undefined;
+    message.createdAt = object.createdAt ?? undefined;
+    message.updatedAt = object.updatedAt ?? undefined;
     return message;
   },
 };

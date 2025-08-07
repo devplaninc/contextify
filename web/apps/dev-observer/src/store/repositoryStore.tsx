@@ -1,17 +1,18 @@
 import type {StateCreator} from "zustand";
 import {repoAPI, repoRescanAPI, reposAPI} from "@/store/apiPaths.tsx";
 import {
-  AddGithubRepositoryRequest,
-  AddGithubRepositoryResponse,
+  AddRepositoryRequest,
+  AddRepositoryResponse,
   DeleteRepositoryResponse,
   GetRepositoryResponse,
-  ListGithubRepositoriesResponse
+  ListRepositoriesResponse,
+  GitProvider
 } from "@devplan/contextify-api";
-import type {GitHubRepository} from "@devplan/contextify-api";
+import type {GitRepository} from "@devplan/contextify-api";
 import {fetchWithAuth, VoidParser} from "@/store/api.tsx";
 
 export interface RepositoryState {
-  repositories: Record<string, GitHubRepository>;
+  repositories: Record<string, GitRepository>;
 
   fetchRepositories: () => Promise<void>;
   fetchRepositoryById: (id: string) => Promise<void>;
@@ -28,10 +29,10 @@ export const createRepositoriesSlice: StateCreator<
 > = ((set) => ({
   repositories: {},
 
-  fetchRepositories: async () => fetchWithAuth(reposAPI(), ListGithubRepositoriesResponse)
+  fetchRepositories: async () => fetchWithAuth(reposAPI(), ListRepositoriesResponse)
     .then(res => {
       const {repos} = res
-      const repositories = repos.reduce((a, r) => ({...a, [r.id]: r}), {} as Record<string, GitHubRepository>)
+      const repositories = repos.reduce((a, r) => ({...a, [r.id]: r}), {} as Record<string, GitRepository>)
       set(s => ({...s, repositories}))
     }),
 
@@ -45,8 +46,8 @@ export const createRepositoriesSlice: StateCreator<
 
   addRepository: async url => fetchWithAuth(
     reposAPI(),
-    AddGithubRepositoryResponse,
-    {method: "POST", body: JSON.stringify(AddGithubRepositoryRequest.toJSON({url}))},
+    AddRepositoryResponse,
+    {method: "POST", body: JSON.stringify(AddRepositoryRequest.toJSON({url, provider: GitProvider.GITHUB}))},
   ).then(r => {
     const {repo} = r
     if (repo) {
@@ -56,7 +57,7 @@ export const createRepositoriesSlice: StateCreator<
   deleteRepository: async id => fetchWithAuth(repoAPI(id), DeleteRepositoryResponse, {method: "DELETE"})
     .then(r => {
       const {repos} = r
-      const repositories = repos.reduce((a, r) => ({...a, [r.id]: r}), {} as Record<string, GitHubRepository>)
+      const repositories = repos.reduce((a, r) => ({...a, [r.id]: r}), {} as Record<string, GitRepository>)
       set(s => ({...s, repositories}))
     }),
   rescanRepository: async id => fetchWithAuth(repoRescanAPI(id), new VoidParser(), {method: "POST"}),

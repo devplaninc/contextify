@@ -85,14 +85,17 @@ def _create_target_datetime(target_date: datetime.date, time_config: Time) -> da
         tz = ZoneInfo('UTC')
 
     # Create the target datetime
+    seconds = time_of_day.seconds if hasattr(time_of_day, 'seconds') else 0
+    microseconds = time_of_day.nanos // 1000 if hasattr(time_of_day, 'nanos') else 0
+    
     target_datetime = datetime.datetime(
         year=target_date.year,
         month=target_date.month,
         day=target_date.day,
         hour=time_of_day.hours,
         minute=time_of_day.minutes,
-        second=0,
-        microsecond=0,
+        second=seconds,
+        microsecond=microseconds,
         tzinfo=tz
     )
     target_datetime_utc = target_datetime.astimezone(datetime.timezone.utc)

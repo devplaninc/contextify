@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSessio
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, \
     ProcessingItemResult, ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitHubRepository, GitProperties
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties
 from dev_observer.api.types.sites_pb2 import WebSite
 from dev_observer.storage.postgresql.model import GitRepoEntity, ProcessingItemEntity, GlobalConfigEntity, \
     WebsiteEntity, ProcessingItemResultEntity
@@ -28,34 +28,29 @@ class PostgresqlStorageProvider(StorageProvider):
         self._engine = create_async_engine(url, echo=echo)
         self._clock = clock
 
-    async def get_github_repos(self) -> MutableSequence[GitHubRepository]:
+    async def get_git_repos(self) -> MutableSequence[GitRepository]:
         async with AsyncSession(self._engine) as session:
             entities = await session.execute(select(GitRepoEntity))
             return [_to_repo(e[0]) for e in entities.all()]
 
-    async def get_github_repo(self, repo_id: str) -> Optional[GitHubRepository]:
+    async def get_git_repo(self, repo_id: str) -> Optional[GitRepository]:
         async with AsyncSession(self._engine) as session:
             return _to_optional_repo(await session.get(GitRepoEntity, repo_id))
 
-    async def get_github_repo_by_full_name(self, full_name: str) -> Optional[GitHubRepository]:
-        async with AsyncSession(self._engine) as session:
-            res = await session.execute(select(GitRepoEntity).where(GitRepoEntity.full_name == full_name))
-            ent = res.first()
-            return _to_optional_repo(ent[0] if ent is not None else None)
-
-    async def delete_github_repo(self, repo_id: str):
+    async def delete_git_repo(self, repo_id: str):
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 await session.execute(delete(GitRepoEntity).where(GitRepoEntity.id == repo_id))
 
-    async def add_github_repo(self, repo: GitHubRepository) -> GitHubRepository:
+    async def add_git_repo(self, repo: GitRepository) -> GitRepository:
         repo_id = repo.id
         if not repo_id or len(repo_id) == 0:
             repo_id = f"{uuid.uuid4()}"
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 existing = await session.execute(
-                    select(GitRepoEntity).where(GitRepoEntity.full_name == repo.full_name)
+                    select(GitRepoEntity)
+                    .where(GitRepoEntity.full_name == repo.full_name and GitRepoEntity.provider == repo.provider)
                 )
                 ent = existing.first()
                 if ent is not None:
@@ -64,11 +59,12 @@ class PostgresqlStorageProvider(StorageProvider):
                     id=repo_id,
                     full_name=repo.full_name,
                     json_data=pb_to_json(repo),
+                    provider=repo.provider,
                 )
                 session.add(r)
                 return _to_optional_repo(await session.get(GitRepoEntity, repo_id))
 
-    async def update_repo_properties(self, repo_id: str, properties: GitProperties) -> GitHubRepository:
+    async def update_repo_properties(self, repo_id: str, properties: GitProperties) -> GitRepository:
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 existing = await session.execute(
@@ -84,7 +80,7 @@ class PostgresqlStorageProvider(StorageProvider):
                     .where(GitRepoEntity.id == repo_id)
                     .values(json_data=pb_to_json(updated))
                 )
-        return await self.get_github_repo(repo_id)
+        return await self.get_git_repo(repo_id)
 
     async def get_web_sites(self) -> MutableSequence[WebSite]:
         async with AsyncSession(self._engine) as session:
@@ -313,12 +309,12 @@ class PostgresqlStorageProvider(StorageProvider):
                 return [_to_item(i) for i in items.all()]
 
 
-def _to_optional_repo(ent: Optional[GitRepoEntity]) -> Optional[GitHubRepository]:
+def _to_optional_repo(ent: Optional[GitRepoEntity]) -> Optional[GitRepository]:
     return None if ent is None else _to_repo(ent)
 
 
-def _to_repo(ent: GitRepoEntity) -> GitHubRepository:
-    data = parse_json_pb(ent.json_data, GitHubRepository())
+def _to_repo(ent: GitRepoEntity) -> GitRepository:
+    data = parse_json_pb(ent.json_data, GitRepository())
     data.id = ent.id
     return data
 

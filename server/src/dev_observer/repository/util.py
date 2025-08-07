@@ -1,12 +1,12 @@
 import datetime
 from typing import Optional
 
-from dev_observer.api.types.repo_pb2 import GitHubRepository, GitMeta, GitAppInfo
+from dev_observer.api.types.repo_pb2 import GitRepository, GitMeta, GitAppInfo
 from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.util import RealClock, Clock
 
 
-def get_valid_repo_meta(repo: GitHubRepository, clock: Clock = RealClock()) -> Optional[GitMeta]:
+def get_valid_repo_meta(repo: GitRepository, clock: Clock = RealClock()) -> Optional[GitMeta]:
     if repo.properties is None:
         return None
     if repo.properties.meta is None:
@@ -18,7 +18,7 @@ def get_valid_repo_meta(repo: GitHubRepository, clock: Clock = RealClock()) -> O
     return repo.properties.meta if ts + datetime.timedelta(hours=3) > clock.now() else None
 
 
-def get_valid_repo_app_info(repo: GitHubRepository, clock: Clock = RealClock()) -> Optional[GitAppInfo]:
+def get_valid_repo_app_info(repo: GitRepository, clock: Clock = RealClock()) -> Optional[GitAppInfo]:
     if repo.properties is None:
         return None
     if repo.properties.app_info is None:

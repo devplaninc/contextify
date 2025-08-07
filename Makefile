@@ -41,6 +41,9 @@ local-server: start-local-pg
 build-web-packages: web/packages/api/package.json
 	@cd web/packages/api && npm run build
 
+build-web-app: web/apps/dev-observer/package.json
+	@cd web/apps/dev-observer && npm run build
+
 dev-web: npm-install build-web-packages
 	@scripts/dev-web.sh
 
@@ -55,5 +58,8 @@ test-ts: test-ts-api
 
 test: test-ts test-py
 	# all tests executed
+
+build: build-web-app
+ # web is built
 
 
