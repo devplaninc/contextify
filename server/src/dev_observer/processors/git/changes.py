@@ -10,6 +10,7 @@ from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.processors.flattening import ObservationRequest
 from dev_observer.processors.git_changes import GitChangesProcessor
+from dev_observer.processors.observations import get_repo_key_pref
 from dev_observer.repository.types import ObservedRepo, ObservedGitChanges
 from dev_observer.storage.provider import StorageProvider
 from dev_observer.util import Clock, RealClock
@@ -68,7 +69,7 @@ class GitChangesHandler:
         key = ObservationKey(
             kind="git_changes",
             name=analyzer.file_name,
-            key=f"{repo.full_name}/{period_str}/{analyzer.file_name}",
+            key=f"{get_repo_key_pref(repo)}/{period_str}/{analyzer.file_name}",
         )
         if await self._observations.exists(key):
             return GitChangesResult(repo=repo, observation_keys=[key])

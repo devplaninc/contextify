@@ -1,4 +1,4 @@
-import { GitProvider } from '../pb/dev_observer/api/types/repo';
+import {GitProvider, gitProviderToJSON} from '../pb/dev_observer/api/types/repo';
 
 // Detect Git provider from URL
 export const detectGitProvider = (url: string): GitProvider | null => {
@@ -20,3 +20,23 @@ export const detectGitProvider = (url: string): GitProvider | null => {
   
   return null;
 };
+
+export function getRepoKeyPrefix(provider: GitProvider, fullName: string): string {
+  switch (provider) {
+    case GitProvider.GITHUB:
+      return fullName;
+    default:
+      return `__${getProviderName(provider)}/${fullName}`;
+  }
+}
+
+export function getProviderName(provider: GitProvider) {
+  switch (provider) {
+    case GitProvider.GITHUB:
+      return "github";
+    case GitProvider.BIT_BUCKET:
+      return 'bit_bucket';
+    default:
+      return gitProviderToJSON(provider).toLowerCase();
+  }
+}

@@ -12,6 +12,7 @@ from dev_observer.log import s_
 from dev_observer.processors.aggregated_summary import AggregatedSummaryProcessor
 from dev_observer.processors.flattening import ObservationRequest
 from dev_observer.processors.git.changes import GitChangesHandler, ProcessGitChangesParams
+from dev_observer.processors.observations import get_repo_key_pref
 from dev_observer.processors.repos import ReposProcessor
 from dev_observer.processors.websites import WebsitesProcessor, ObservedWebsite
 from dev_observer.repository.types import ObservedRepo
@@ -158,7 +159,7 @@ class PeriodicProcessor:
         _log.debug(s_("Processing github repo", repo=repo))
         requests: List[ObservationRequest] = []
         for analyzer in config.analysis.repo_analyzers:
-            key = f"{repo.full_name}/{analyzer.file_name}"
+            key = f"{get_repo_key_pref(repo)}/{analyzer.file_name}"
             requests.append(ObservationRequest(
                 prompt_prefix=analyzer.prompt_prefix,
                 key=ObservationKey(kind="repos", name=analyzer.file_name, key=key),
