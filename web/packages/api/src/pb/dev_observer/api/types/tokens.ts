@@ -68,6 +68,7 @@ export interface AuthToken {
 export interface TokensFilter {
   namespace?: string | undefined;
   workspace?: string | undefined;
+  provider?: AuthTokenProvider | undefined;
 }
 
 function createBaseAuthToken(): AuthToken {
@@ -286,7 +287,7 @@ export const AuthToken: MessageFns<AuthToken> = {
 };
 
 function createBaseTokensFilter(): TokensFilter {
-  return { namespace: undefined, workspace: undefined };
+  return { namespace: undefined, workspace: undefined, provider: undefined };
 }
 
 export const TokensFilter: MessageFns<TokensFilter> = {
@@ -296,6 +297,9 @@ export const TokensFilter: MessageFns<TokensFilter> = {
     }
     if (message.workspace !== undefined) {
       writer.uint32(18).string(message.workspace);
+    }
+    if (message.provider !== undefined) {
+      writer.uint32(24).int32(message.provider);
     }
     return writer;
   },
@@ -323,6 +327,14 @@ export const TokensFilter: MessageFns<TokensFilter> = {
           message.workspace = reader.string();
           continue;
         }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.provider = reader.int32() as any;
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -336,6 +348,7 @@ export const TokensFilter: MessageFns<TokensFilter> = {
     return {
       namespace: isSet(object.namespace) ? gt.String(object.namespace) : undefined,
       workspace: isSet(object.workspace) ? gt.String(object.workspace) : undefined,
+      provider: isSet(object.provider) ? authTokenProviderFromJSON(object.provider) : undefined,
     };
   },
 
@@ -347,6 +360,9 @@ export const TokensFilter: MessageFns<TokensFilter> = {
     if (message.workspace !== undefined) {
       obj.workspace = message.workspace;
     }
+    if (message.provider !== undefined) {
+      obj.provider = authTokenProviderToJSON(message.provider);
+    }
     return obj;
   },
 
@@ -357,6 +373,7 @@ export const TokensFilter: MessageFns<TokensFilter> = {
     const message = createBaseTokensFilter();
     message.namespace = object.namespace ?? undefined;
     message.workspace = object.workspace ?? undefined;
+    message.provider = object.provider ?? undefined;
     return message;
   },
 };

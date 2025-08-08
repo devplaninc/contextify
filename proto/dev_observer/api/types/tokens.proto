@@ -29,4 +29,5 @@ message AuthToken {
 message TokensFilter {
   optional string namespace = 1;
   optional string workspace = 2;
+  optional AuthTokenProvider provider = 3;
 }

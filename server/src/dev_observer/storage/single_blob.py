@@ -318,6 +318,8 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
                 continue
             if filter.HasField("workspace") and filter.workspace and token.workspace != filter.workspace:
                 continue
+            if filter.HasField("provider") and filter.provider and token.provider != filter.provider:
+                continue
             tokens.append(token)
         return tokens
 

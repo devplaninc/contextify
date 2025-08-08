@@ -1,6 +1,6 @@
 {
   "name": "@devplan/contextify-api",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "API for dev-observer",
   "type": "module",
   "main": "dist/index.cjs",

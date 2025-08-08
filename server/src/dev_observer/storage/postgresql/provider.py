@@ -379,6 +379,8 @@ class PostgresqlStorageProvider(StorageProvider):
                     query = query.where(AuthTokenEntity.namespace == filter.namespace)
                 if filter.HasField("workspace") and filter.workspace:
                     query = query.where(AuthTokenEntity.workspace == filter.workspace)
+                if filter.HasField("provider") and filter.provider != AuthTokenProvider.UNKNOWN:
+                    query = query.where(AuthTokenEntity.provider == filter.provider)
             entities = await session.scalars(query)
             return [self._to_token(ent) for ent in entities.all()]
 

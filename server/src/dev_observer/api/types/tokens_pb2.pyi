@@ -40,9 +40,11 @@ class AuthToken(_message.Message):
     def __init__(self, id: _Optional[str] = ..., namespace: _Optional[str] = ..., provider: _Optional[_Union[AuthTokenProvider, str]] = ..., workspace: _Optional[str] = ..., repo: _Optional[str] = ..., system: bool = ..., token: _Optional[str] = ..., expires_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., updated_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
 class TokensFilter(_message.Message):
-    __slots__ = ("namespace", "workspace")
+    __slots__ = ("namespace", "workspace", "provider")
     NAMESPACE_FIELD_NUMBER: _ClassVar[int]
     WORKSPACE_FIELD_NUMBER: _ClassVar[int]
+    PROVIDER_FIELD_NUMBER: _ClassVar[int]
     namespace: str
     workspace: str
-    def __init__(self, namespace: _Optional[str] = ..., workspace: _Optional[str] = ...) -> None: ...
+    provider: AuthTokenProvider
+    def __init__(self, namespace: _Optional[str] = ..., workspace: _Optional[str] = ..., provider: _Optional[_Union[AuthTokenProvider, str]] = ...) -> None: ...
