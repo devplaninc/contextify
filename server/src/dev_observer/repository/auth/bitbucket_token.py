@@ -3,6 +3,7 @@ from typing import Dict, Optional, List
 
 from dev_observer.api.types.repo_pb2 import RepoToken
 from dev_observer.common.schedule import pb_to_datetime
+from dev_observer.log import s_
 from dev_observer.repository.bitbucket import BitBucketAuthProvider
 from dev_observer.repository.types import ObservedRepo
 from dev_observer.storage.provider import StorageProvider
@@ -55,6 +56,7 @@ class BitBucketTokenAuthProvider(BitBucketAuthProvider):
             workspace=workspace,
             repo=repo_name
         )
+        _log.debug(s_("Found tokens", workspace=workspace, provider=provider, repo=repo_name, cnt=len(tokens)))
         tokens = self._get_valid_tokens(tokens)
         token = _best_token(tokens)
 

@@ -372,25 +372,16 @@ class PostgresqlStorageProvider(StorageProvider):
 
             # Workspace token condition
             if workspace:
-                conditions.append(
-                    (RepoTokenEntity.workspace == workspace) &
-                    (RepoTokenEntity.repo.is_(None)) &
-                    (RepoTokenEntity.system == False)
-                )
-
-            # System token condition
-            conditions.append(RepoTokenEntity.system == True)
+                conditions.append(RepoTokenEntity.workspace == workspace)
 
             # Repo token condition
             if repo:
-                conditions.append(
-                    (RepoTokenEntity.repo == repo) &
-                    (RepoTokenEntity.system == False)
-                )
-
+                conditions.append(RepoTokenEntity.repo == repo)
             if conditions:
                 from sqlalchemy import or_
                 query = query.where(or_(*conditions))
+            else:
+                return []
 
             entities = await session.scalars(query)
             return [self._to_token(ent) for ent in entities.all()]
