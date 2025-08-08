@@ -6,8 +6,9 @@ from typing import Protocol, Optional, MutableSequence, List, Sequence
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
     ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, RepoToken
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, ReposFilter
 from dev_observer.api.types.sites_pb2 import WebSite
+from dev_observer.api.types.tokens_pb2 import AuthToken, AuthTokenProvider, TokensFilter
 
 
 @dataclasses.dataclass
@@ -18,6 +19,9 @@ class AddWebSiteData:
 
 class StorageProvider(Protocol):
     async def get_git_repos(self) -> MutableSequence[GitRepository]:
+        ...
+
+    async def filter_git_repos(self, filter: ReposFilter) -> MutableSequence[GitRepository]:
         ...
 
     async def get_git_repo(self, repo_id: str) -> Optional[GitRepository]:
@@ -97,20 +101,21 @@ class StorageProvider(Protocol):
         ...
 
     async def find_tokens(
-            self, provider: int, workspace: Optional[str] = None, repo: Optional[str] = None) -> List[RepoToken]:
+            self, provider: AuthTokenProvider, workspace: Optional[str] = None, repo: Optional[str] = None,
+    ) -> List[AuthToken]:
         ...
 
-    async def list_tokens(self, namespace: Optional[str] = None) -> List[RepoToken]:
+    async def list_tokens(self, filter: Optional[TokensFilter] = None) -> List[AuthToken]:
         ...
 
     async def delete_token(self, token_id: str):
         ...
 
-    async def update_token(self, token_id: str, token: str) -> Optional[RepoToken]:
+    async def update_token(self, token_id: str, token: str) -> Optional[AuthToken]:
         ...
 
-    async def get_token(self, token_id: str) -> Optional[RepoToken]:
+    async def get_token(self, token_id: str) -> Optional[AuthToken]:
         ...
 
-    async def add_token(self, token: RepoToken) -> RepoToken:
+    async def add_token(self, token: AuthToken, old_token_id: Optional[str] = None) -> AuthToken:
         ...

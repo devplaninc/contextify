@@ -22,6 +22,11 @@ message GitRepository {
 message GitProperties {
   optional GitAppInfo app_info = 1;
   optional GitMeta meta = 2;
+  optional BitBucketInfo bit_bucket_info = 3;
+}
+
+message BitBucketInfo {
+  string workspace_uuid = 1;
 }
 
 message GitMeta {
@@ -35,18 +40,7 @@ message GitAppInfo {
   optional int32 installation_id = 2;
 }
 
-message RepoToken {
-  string id = 1;
-  string namespace = 2;
-  GitProvider provider = 3;
-  // Name of the workspace if this is a workspace token.
-  optional string workspace = 4;
-  // Full name of the repo if this is a repo token.
-  optional string repo = 5;
-  // True if this is a system auto-provisioned token (e.g. provided by Forge for BitBucket)
-  bool system = 6;
-  string token = 7;
-  optional google.protobuf.Timestamp expires_at = 8;
-  google.protobuf.Timestamp created_at = 9;
-  google.protobuf.Timestamp updated_at = 10;
+message ReposFilter {
+  optional GitProvider provider = 1;
+  optional string owner = 2;
 }

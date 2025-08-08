@@ -2,7 +2,7 @@ import {BaseClient} from './base';
 import {
   AddRepositoryRequest,
   AddRepositoryResponse,
-  DeleteRepositoryResponse,
+  DeleteRepositoryResponse, FilterRepositoriesRequest, FilterRepositoriesResponse,
   GetRepositoryResponse,
   ListRepositoriesResponse,
   RescanRepositoryResponse
@@ -27,6 +27,11 @@ export class RepositoriesClient extends BaseClient {
    */
   async list(): Promise<ListRepositoriesResponse> {
     return this._get('/api/v1/repositories', ListRepositoriesResponse);
+  }
+
+  async filter(request: FilterRepositoriesRequest): Promise<FilterRepositoriesResponse> {
+    return this._post(
+      '/api/v1/repositories/filter', FilterRepositoriesResponse, FilterRepositoriesRequest.toJSON(request));
   }
 
   /**

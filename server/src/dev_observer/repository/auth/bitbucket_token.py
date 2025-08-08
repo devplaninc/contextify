@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Optional, List
 
-from dev_observer.api.types.repo_pb2 import RepoToken
+from dev_observer.api.types.tokens_pb2 import AuthToken, AuthTokenProvider
 from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.log import s_
 from dev_observer.repository.bitbucket import BitBucketAuthProvider
@@ -40,7 +40,6 @@ class BitBucketTokenAuthProvider(BitBucketAuthProvider):
 
     async def _get_best_token(self, repo: ObservedRepo) -> Optional[str]:
         full_name = repo.git_repo.full_name
-        provider = repo.git_repo.provider
 
         # Extract workspace and repo info from full_name
         parts = full_name.split('/')
@@ -52,37 +51,37 @@ class BitBucketTokenAuthProvider(BitBucketAuthProvider):
 
         # Get valid tokens in priority order
         tokens = await self._storage.find_tokens(
-            provider=provider,
+            provider=AuthTokenProvider.BIT_BUCKET,
             workspace=workspace,
             repo=repo_name
         )
-        _log.debug(s_("Found tokens", workspace=workspace, provider=provider, repo=repo_name, cnt=len(tokens)))
+        _log.debug(s_("Found bitbucket tokens", workspace=workspace, repo=repo_name, cnt=len(tokens)))
         tokens = self._get_valid_tokens(tokens)
         token = _best_token(tokens)
 
         if not token:
-            _log.warning(f"No valid tokens found for {full_name} (provider: {provider})")
+            _log.warning(s_("No valid tokens found", full_name=full_name))
             return None
 
         return token.token
 
 
-    def _get_valid_tokens(self, tokens: List[RepoToken]) -> List[RepoToken]:
+    def _get_valid_tokens(self, tokens: List[AuthToken]) -> List[AuthToken]:
         if not tokens:
             return []
 
         now = self._clock.now()
-        result: List[RepoToken] = []
+        result: List[AuthToken] = []
         for token in tokens:
             if token.HasField("expires_at") and pb_to_datetime(token.expires_at) < now:
                 continue
             result.append(token)
         return result
 
-def _best_token(tokens: List[RepoToken]) -> Optional[RepoToken]:
+def _best_token(tokens: List[AuthToken]) -> Optional[AuthToken]:
     if not tokens:
         return None
-    def sort_key(token: RepoToken) -> int:
+    def sort_key(token: AuthToken) -> int:
         if token.system:
             return 0
         elif token.workspace:

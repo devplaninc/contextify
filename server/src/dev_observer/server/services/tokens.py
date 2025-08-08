@@ -3,10 +3,10 @@ import logging
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
-from dev_observer.api.types.repo_pb2 import RepoToken
+from dev_observer.api.types.tokens_pb2 import AuthToken
 from dev_observer.api.web.tokens_pb2 import (
     AddTokenRequest, AddTokenResponse, ListTokensResponse,
-    GetTokenResponse, UpdateTokenRequest, UpdateTokenResponse, DeleteTokenResponse, ListTokensRequest
+    GetTokenResponse, UpdateTokenRequest, UpdateTokenResponse, DeleteTokenResponse, ListTokensRequest,
 )
 from dev_observer.log import s_
 from dev_observer.storage.provider import StorageProvider
@@ -36,8 +36,7 @@ class TokensService:
         request = parse_dict_pb(await req.json(), AddTokenRequest())
         _log.debug(s_("Adding token", request=request))
 
-        # Create RepoToken from request
-        token = RepoToken(
+        token = AuthToken(
             namespace=request.token.namespace,
             provider=request.token.provider,
             system=request.token.system,
@@ -48,14 +47,14 @@ class TokensService:
         if request.token.HasField("expires_at"):
             token.expires_at.FromDatetime(request.token.expires_at)
 
-        saved_token = await self._store.add_token(token)
+        saved_token = await self._store.add_token(token, request.instead_of_id)
         return pb_to_dict(AddTokenResponse(token=saved_token))
 
     async def list_tokens(self, req: Request):
         request = parse_dict_pb(await req.json(), ListTokensRequest())
         _log.debug(s_("Listing tokens", request=request))
 
-        tokens = await self._store.list_tokens(namespace=request.namespace)
+        tokens = await self._store.list_tokens(request.filter)
         return pb_to_dict(ListTokensResponse(tokens=tokens))
 
     async def get_token(self, token_id: str):

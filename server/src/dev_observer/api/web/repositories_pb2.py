@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from dev_observer.api.types import repo_pb2 as dev__observer_dot_api_dot_types_dot_repo__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'dev_observer/api/web/repositories.proto\x12!dev_observer.api.web.repositories\x1a!dev_observer/api/types/repo.proto\"U\n\x18ListRepositoriesResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"_\n\x14\x41\x64\x64RepositoryRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12:\n\x08provider\x18\x02 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\"Q\n\x15\x41\x64\x64RepositoryResponse\x12\x38\n\x04repo\x18\x01 \x01(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"\x1a\n\x18RescanRepositoryResponse\"Q\n\x15GetRepositoryResponse\x12\x38\n\x04repo\x18\x01 \x01(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"U\n\x18\x44\x65leteRepositoryResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepositoryb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'dev_observer/api/web/repositories.proto\x12!dev_observer.api.web.repositories\x1a!dev_observer/api/types/repo.proto\"U\n\x18ListRepositoriesResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"_\n\x14\x41\x64\x64RepositoryRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12:\n\x08provider\x18\x02 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\"Q\n\x15\x41\x64\x64RepositoryResponse\x12\x38\n\x04repo\x18\x01 \x01(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"\x1a\n\x18RescanRepositoryResponse\"Q\n\x15GetRepositoryResponse\x12\x38\n\x04repo\x18\x01 \x01(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"U\n\x18\x44\x65leteRepositoryResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"U\n\x19\x46ilterRepositoriesRequest\x12\x38\n\x06\x66ilter\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.repo.ReposFilter\"W\n\x1a\x46ilterRepositoriesResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepositoryb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -44,4 +44,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETREPOSITORYRESPONSE']._serialized_end=489
   _globals['_DELETEREPOSITORYRESPONSE']._serialized_start=491
   _globals['_DELETEREPOSITORYRESPONSE']._serialized_end=576
+  _globals['_FILTERREPOSITORIESREQUEST']._serialized_start=578
+  _globals['_FILTERREPOSITORIESREQUEST']._serialized_end=663
+  _globals['_FILTERREPOSITORIESRESPONSE']._serialized_start=665
+  _globals['_FILTERREPOSITORIESRESPONSE']._serialized_end=752
 # @@protoc_insertion_point(module_scope)

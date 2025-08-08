@@ -12,8 +12,9 @@ from dev_observer.api.storage.local_pb2 import LocalStorageData
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
     ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, RepoToken
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, ReposFilter
 from dev_observer.api.types.sites_pb2 import WebSite
+from dev_observer.api.types.tokens_pb2 import AuthToken, AuthTokenProvider, TokensFilter
 from dev_observer.common.schedule import pb_to_datetime
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
 from dev_observer.util import Clock, RealClock
@@ -31,6 +32,26 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
 
     async def get_git_repos(self) -> MutableSequence[GitRepository]:
         return self._get().git_repos
+
+    async def filter_git_repos(self, filter: ReposFilter) -> MutableSequence[GitRepository]:
+        repos = []
+        for repo in self._get().git_repos:
+            # Filter by provider if specified
+            if filter.HasField("provider") and repo.provider != filter.provider:
+                continue
+            
+            # Filter by owner if specified
+            if filter.HasField("owner"):
+                # Extract owner from full_name (e.g., "owner/repo" -> "owner")
+                parts = repo.full_name.split("/")
+                if len(parts) == 0:
+                    continue
+                if parts[0].lower() != filter.owner.lower():
+                    continue
+            
+            repos.append(repo)
+        
+        return repos
 
     async def get_git_repo(self, repo_id: str) -> Optional[GitRepository]:
         for r in self._get().git_repos:
@@ -290,16 +311,19 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
                 return result
         return None
 
-    async def list_tokens(self, namespace: Optional[str] = None) -> List[RepoToken]:
+    async def list_tokens(self, filter: Optional[TokensFilter] = None) -> List[AuthToken]:
         tokens = []
         for token in self._get().tokens:
-            if namespace and token.namespace != namespace:
+            if filter.HasField("namespace") and filter.namespace and token.namespace != filter.namespace:
+                continue
+            if filter.HasField("workspace") and filter.workspace and token.workspace != filter.workspace:
                 continue
             tokens.append(token)
         return tokens
 
     async def find_tokens(
-            self, provider: int, workspace: Optional[str] = None, repo: Optional[str] = None) -> List[RepoToken]:
+            self, provider: AuthTokenProvider, workspace: Optional[str] = None, repo: Optional[str] = None,
+    ) -> List[AuthToken]:
         tokens = []
         for token in self._get().tokens:
             if token.provider != provider:
@@ -319,7 +343,7 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
 
         await self._update(up)
 
-    async def update_token(self, token_id: str, token: str) -> Optional[RepoToken]:
+    async def update_token(self, token_id: str, token: str) -> Optional[AuthToken]:
         def up(d: LocalStorageData):
             for t in d.tokens:
                 if t.id == token_id:
@@ -331,13 +355,13 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
         await self._update(up)
         return await self.get_token(token_id)
 
-    async def get_token(self, token_id: str) -> Optional[RepoToken]:
+    async def get_token(self, token_id: str) -> Optional[AuthToken]:
         for token in self._get().tokens:
             if token.id == token_id:
                 return token
         return None
 
-    async def add_token(self, token: RepoToken) -> RepoToken:
+    async def add_token(self, token: AuthToken) -> AuthToken:
         def up(d: LocalStorageData):
             # Set timestamps if not already set
             if not token.HasField("created_at"):

@@ -22,30 +22,30 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from dev_observer.api.types import repo_pb2 as dev__observer_dot_api_dot_types_dot_repo__pb2
+from dev_observer.api.types import tokens_pb2 as dev__observer_dot_api_dot_types_dot_tokens__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/web/tokens.proto\x12\x1b\x64\x65v_observer.api.web.tokens\x1a!dev_observer/api/types/repo.proto\"9\n\x11ListTokensRequest\x12\x16\n\tnamespace\x18\x01 \x01(\tH\x00\x88\x01\x01\x42\x0c\n\n_namespace\"L\n\x12ListTokensResponse\x12\x36\n\x06tokens\x18\x01 \x03(\x0b\x32&.dev_observer.api.types.repo.RepoToken\"H\n\x0f\x41\x64\x64TokenRequest\x12\x35\n\x05token\x18\x01 \x01(\x0b\x32&.dev_observer.api.types.repo.RepoToken\"I\n\x10\x41\x64\x64TokenResponse\x12\x35\n\x05token\x18\x01 \x01(\x0b\x32&.dev_observer.api.types.repo.RepoToken\"I\n\x10GetTokenResponse\x12\x35\n\x05token\x18\x01 \x01(\x0b\x32&.dev_observer.api.types.repo.RepoToken\"#\n\x12UpdateTokenRequest\x12\r\n\x05token\x18\x01 \x01(\t\"L\n\x13UpdateTokenResponse\x12\x35\n\x05token\x18\x01 \x01(\x0b\x32&.dev_observer.api.types.repo.RepoToken\"\x15\n\x13\x44\x65leteTokenResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/web/tokens.proto\x12\x1b\x64\x65v_observer.api.web.tokens\x1a#dev_observer/api/types/tokens.proto\"`\n\x11ListTokensRequest\x12@\n\x06\x66ilter\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.tokens.TokensFilterH\x00\x88\x01\x01\x42\t\n\x07_filter\"N\n\x12ListTokensResponse\x12\x38\n\x06tokens\x18\x01 \x03(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"x\n\x0f\x41\x64\x64TokenRequest\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\x12\x1a\n\rinstead_of_id\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x10\n\x0e_instead_of_id\"K\n\x10\x41\x64\x64TokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"K\n\x10GetTokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"#\n\x12UpdateTokenRequest\x12\r\n\x05token\x18\x01 \x01(\t\"N\n\x13UpdateTokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"\x15\n\x13\x44\x65leteTokenResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.web.tokens_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_LISTTOKENSREQUEST']._serialized_start=101
-  _globals['_LISTTOKENSREQUEST']._serialized_end=158
-  _globals['_LISTTOKENSRESPONSE']._serialized_start=160
-  _globals['_LISTTOKENSRESPONSE']._serialized_end=236
-  _globals['_ADDTOKENREQUEST']._serialized_start=238
-  _globals['_ADDTOKENREQUEST']._serialized_end=310
-  _globals['_ADDTOKENRESPONSE']._serialized_start=312
-  _globals['_ADDTOKENRESPONSE']._serialized_end=385
-  _globals['_GETTOKENRESPONSE']._serialized_start=387
-  _globals['_GETTOKENRESPONSE']._serialized_end=460
-  _globals['_UPDATETOKENREQUEST']._serialized_start=462
-  _globals['_UPDATETOKENREQUEST']._serialized_end=497
-  _globals['_UPDATETOKENRESPONSE']._serialized_start=499
-  _globals['_UPDATETOKENRESPONSE']._serialized_end=575
-  _globals['_DELETETOKENRESPONSE']._serialized_start=577
-  _globals['_DELETETOKENRESPONSE']._serialized_end=598
+  _globals['_LISTTOKENSREQUEST']._serialized_start=103
+  _globals['_LISTTOKENSREQUEST']._serialized_end=199
+  _globals['_LISTTOKENSRESPONSE']._serialized_start=201
+  _globals['_LISTTOKENSRESPONSE']._serialized_end=279
+  _globals['_ADDTOKENREQUEST']._serialized_start=281
+  _globals['_ADDTOKENREQUEST']._serialized_end=401
+  _globals['_ADDTOKENRESPONSE']._serialized_start=403
+  _globals['_ADDTOKENRESPONSE']._serialized_end=478
+  _globals['_GETTOKENRESPONSE']._serialized_start=480
+  _globals['_GETTOKENRESPONSE']._serialized_end=555
+  _globals['_UPDATETOKENREQUEST']._serialized_start=557
+  _globals['_UPDATETOKENREQUEST']._serialized_end=592
+  _globals['_UPDATETOKENRESPONSE']._serialized_start=594
+  _globals['_UPDATETOKENRESPONSE']._serialized_end=672
+  _globals['_DELETETOKENRESPONSE']._serialized_start=674
+  _globals['_DELETETOKENRESPONSE']._serialized_end=695
 # @@protoc_insertion_point(module_scope)

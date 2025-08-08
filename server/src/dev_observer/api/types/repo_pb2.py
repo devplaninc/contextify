@@ -25,23 +25,25 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/types/repo.proto\x12\x1b\x64\x65v_observer.api.types.repo\x1a\x1fgoogle/protobuf/timestamp.proto\"\xee\x01\n\rGitRepository\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\x12:\n\x08provider\x18\x06 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\x12\x43\n\nproperties\x18\x07 \x01(\x0b\x32*.dev_observer.api.types.repo.GitPropertiesH\x00\x88\x01\x01\x42\r\n\x0b_properties\"\x9e\x01\n\rGitProperties\x12>\n\x08\x61pp_info\x18\x01 \x01(\x0b\x32\'.dev_observer.api.types.repo.GitAppInfoH\x00\x88\x01\x01\x12\x37\n\x04meta\x18\x02 \x01(\x0b\x32$.dev_observer.api.types.repo.GitMetaH\x01\x88\x01\x01\x42\x0b\n\t_app_infoB\x07\n\x05_meta\"\x83\x01\n\x07GitMeta\x12\x30\n\x0clast_refresh\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x16\n\tclone_url\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x14\n\x07size_kb\x18\x03 \x01(\x05H\x01\x88\x01\x01\x42\x0c\n\n_clone_urlB\n\n\x08_size_kb\"p\n\nGitAppInfo\x12\x30\n\x0clast_refresh\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x1c\n\x0finstallation_id\x18\x02 \x01(\x05H\x00\x88\x01\x01\x42\x12\n\x10_installation_id\"\xeb\x02\n\tRepoToken\x12\n\n\x02id\x18\x01 \x01(\t\x12\x11\n\tnamespace\x18\x02 \x01(\t\x12:\n\x08provider\x18\x03 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\x12\x16\n\tworkspace\x18\x04 \x01(\tH\x00\x88\x01\x01\x12\x11\n\x04repo\x18\x05 \x01(\tH\x01\x88\x01\x01\x12\x0e\n\x06system\x18\x06 \x01(\x08\x12\r\n\x05token\x18\x07 \x01(\t\x12\x33\n\nexpires_at\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.TimestampH\x02\x88\x01\x01\x12.\n\ncreated_at\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12.\n\nupdated_at\x18\n \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x0c\n\n_workspaceB\x07\n\x05_repoB\r\n\x0b_expires_at*)\n\x0bGitProvider\x12\n\n\x06GITHUB\x10\x00\x12\x0e\n\nBIT_BUCKET\x10\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/types/repo.proto\x12\x1b\x64\x65v_observer.api.types.repo\x1a\x1fgoogle/protobuf/timestamp.proto\"\xee\x01\n\rGitRepository\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\x12:\n\x08provider\x18\x06 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\x12\x43\n\nproperties\x18\x07 \x01(\x0b\x32*.dev_observer.api.types.repo.GitPropertiesH\x00\x88\x01\x01\x42\r\n\x0b_properties\"\xfc\x01\n\rGitProperties\x12>\n\x08\x61pp_info\x18\x01 \x01(\x0b\x32\'.dev_observer.api.types.repo.GitAppInfoH\x00\x88\x01\x01\x12\x37\n\x04meta\x18\x02 \x01(\x0b\x32$.dev_observer.api.types.repo.GitMetaH\x01\x88\x01\x01\x12H\n\x0f\x62it_bucket_info\x18\x03 \x01(\x0b\x32*.dev_observer.api.types.repo.BitBucketInfoH\x02\x88\x01\x01\x42\x0b\n\t_app_infoB\x07\n\x05_metaB\x12\n\x10_bit_bucket_info\"\'\n\rBitBucketInfo\x12\x16\n\x0eworkspace_uuid\x18\x01 \x01(\t\"\x83\x01\n\x07GitMeta\x12\x30\n\x0clast_refresh\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x16\n\tclone_url\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x14\n\x07size_kb\x18\x03 \x01(\x05H\x01\x88\x01\x01\x42\x0c\n\n_clone_urlB\n\n\x08_size_kb\"p\n\nGitAppInfo\x12\x30\n\x0clast_refresh\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x1c\n\x0finstallation_id\x18\x02 \x01(\x05H\x00\x88\x01\x01\x42\x12\n\x10_installation_id\"y\n\x0bReposFilter\x12?\n\x08provider\x18\x01 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProviderH\x00\x88\x01\x01\x12\x12\n\x05owner\x18\x02 \x01(\tH\x01\x88\x01\x01\x42\x0b\n\t_providerB\x08\n\x06_owner*)\n\x0bGitProvider\x12\n\n\x06GITHUB\x10\x00\x12\x0e\n\nBIT_BUCKET\x10\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.types.repo_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_GITPROVIDER']._serialized_start=1115
-  _globals['_GITPROVIDER']._serialized_end=1156
+  _globals['_GITPROVIDER']._serialized_start=1007
+  _globals['_GITPROVIDER']._serialized_end=1048
   _globals['_GITREPOSITORY']._serialized_start=100
   _globals['_GITREPOSITORY']._serialized_end=338
   _globals['_GITPROPERTIES']._serialized_start=341
-  _globals['_GITPROPERTIES']._serialized_end=499
-  _globals['_GITMETA']._serialized_start=502
-  _globals['_GITMETA']._serialized_end=633
-  _globals['_GITAPPINFO']._serialized_start=635
-  _globals['_GITAPPINFO']._serialized_end=747
-  _globals['_REPOTOKEN']._serialized_start=750
-  _globals['_REPOTOKEN']._serialized_end=1113
+  _globals['_GITPROPERTIES']._serialized_end=593
+  _globals['_BITBUCKETINFO']._serialized_start=595
+  _globals['_BITBUCKETINFO']._serialized_end=634
+  _globals['_GITMETA']._serialized_start=637
+  _globals['_GITMETA']._serialized_end=768
+  _globals['_GITAPPINFO']._serialized_start=770
+  _globals['_GITAPPINFO']._serialized_end=882
+  _globals['_REPOSFILTER']._serialized_start=884
+  _globals['_REPOSFILTER']._serialized_end=1005
 # @@protoc_insertion_point(module_scope)

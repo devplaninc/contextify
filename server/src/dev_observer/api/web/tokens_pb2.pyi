@@ -1,4 +1,4 @@
-from dev_observer.api.types import repo_pb2 as _repo_pb2
+from dev_observer.api.types import tokens_pb2 as _tokens_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -7,34 +7,36 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class ListTokensRequest(_message.Message):
-    __slots__ = ("namespace",)
-    NAMESPACE_FIELD_NUMBER: _ClassVar[int]
-    namespace: str
-    def __init__(self, namespace: _Optional[str] = ...) -> None: ...
+    __slots__ = ("filter",)
+    FILTER_FIELD_NUMBER: _ClassVar[int]
+    filter: _tokens_pb2.TokensFilter
+    def __init__(self, filter: _Optional[_Union[_tokens_pb2.TokensFilter, _Mapping]] = ...) -> None: ...
 
 class ListTokensResponse(_message.Message):
     __slots__ = ("tokens",)
     TOKENS_FIELD_NUMBER: _ClassVar[int]
-    tokens: _containers.RepeatedCompositeFieldContainer[_repo_pb2.RepoToken]
-    def __init__(self, tokens: _Optional[_Iterable[_Union[_repo_pb2.RepoToken, _Mapping]]] = ...) -> None: ...
+    tokens: _containers.RepeatedCompositeFieldContainer[_tokens_pb2.AuthToken]
+    def __init__(self, tokens: _Optional[_Iterable[_Union[_tokens_pb2.AuthToken, _Mapping]]] = ...) -> None: ...
 
 class AddTokenRequest(_message.Message):
-    __slots__ = ("token",)
+    __slots__ = ("token", "instead_of_id")
     TOKEN_FIELD_NUMBER: _ClassVar[int]
-    token: _repo_pb2.RepoToken
-    def __init__(self, token: _Optional[_Union[_repo_pb2.RepoToken, _Mapping]] = ...) -> None: ...
+    INSTEAD_OF_ID_FIELD_NUMBER: _ClassVar[int]
+    token: _tokens_pb2.AuthToken
+    instead_of_id: str
+    def __init__(self, token: _Optional[_Union[_tokens_pb2.AuthToken, _Mapping]] = ..., instead_of_id: _Optional[str] = ...) -> None: ...
 
 class AddTokenResponse(_message.Message):
     __slots__ = ("token",)
     TOKEN_FIELD_NUMBER: _ClassVar[int]
-    token: _repo_pb2.RepoToken
-    def __init__(self, token: _Optional[_Union[_repo_pb2.RepoToken, _Mapping]] = ...) -> None: ...
+    token: _tokens_pb2.AuthToken
+    def __init__(self, token: _Optional[_Union[_tokens_pb2.AuthToken, _Mapping]] = ...) -> None: ...
 
 class GetTokenResponse(_message.Message):
     __slots__ = ("token",)
     TOKEN_FIELD_NUMBER: _ClassVar[int]
-    token: _repo_pb2.RepoToken
-    def __init__(self, token: _Optional[_Union[_repo_pb2.RepoToken, _Mapping]] = ...) -> None: ...
+    token: _tokens_pb2.AuthToken
+    def __init__(self, token: _Optional[_Union[_tokens_pb2.AuthToken, _Mapping]] = ...) -> None: ...
 
 class UpdateTokenRequest(_message.Message):
     __slots__ = ("token",)
@@ -45,8 +47,8 @@ class UpdateTokenRequest(_message.Message):
 class UpdateTokenResponse(_message.Message):
     __slots__ = ("token",)
     TOKEN_FIELD_NUMBER: _ClassVar[int]
-    token: _repo_pb2.RepoToken
-    def __init__(self, token: _Optional[_Union[_repo_pb2.RepoToken, _Mapping]] = ...) -> None: ...
+    token: _tokens_pb2.AuthToken
+    def __init__(self, token: _Optional[_Union[_tokens_pb2.AuthToken, _Mapping]] = ...) -> None: ...
 
 class DeleteTokenResponse(_message.Message):
     __slots__ = ()

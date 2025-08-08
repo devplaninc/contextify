@@ -41,3 +41,15 @@ class DeleteRepositoryResponse(_message.Message):
     REPOS_FIELD_NUMBER: _ClassVar[int]
     repos: _containers.RepeatedCompositeFieldContainer[_repo_pb2.GitRepository]
     def __init__(self, repos: _Optional[_Iterable[_Union[_repo_pb2.GitRepository, _Mapping]]] = ...) -> None: ...
+
+class FilterRepositoriesRequest(_message.Message):
+    __slots__ = ("filter",)
+    FILTER_FIELD_NUMBER: _ClassVar[int]
+    filter: _repo_pb2.ReposFilter
+    def __init__(self, filter: _Optional[_Union[_repo_pb2.ReposFilter, _Mapping]] = ...) -> None: ...
+
+class FilterRepositoriesResponse(_message.Message):
+    __slots__ = ("repos",)
+    REPOS_FIELD_NUMBER: _ClassVar[int]
+    repos: _containers.RepeatedCompositeFieldContainer[_repo_pb2.GitRepository]
+    def __init__(self, repos: _Optional[_Iterable[_Union[_repo_pb2.GitRepository, _Mapping]]] = ...) -> None: ...

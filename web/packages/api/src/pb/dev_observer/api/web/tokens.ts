@@ -6,29 +6,29 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import { RepoToken } from "../types/repo";
+import { AuthToken, TokensFilter } from "../types/tokens";
 
 export const protobufPackage = "dev_observer.api.web.tokens";
 
 export interface ListTokensRequest {
-  /** Optional namespace filter */
-  namespace?: string | undefined;
+  filter?: TokensFilter | undefined;
 }
 
 export interface ListTokensResponse {
-  tokens: RepoToken[];
+  tokens: AuthToken[];
 }
 
 export interface AddTokenRequest {
-  token: RepoToken | undefined;
+  token: AuthToken | undefined;
+  insteadOfId?: string | undefined;
 }
 
 export interface AddTokenResponse {
-  token: RepoToken | undefined;
+  token: AuthToken | undefined;
 }
 
 export interface GetTokenResponse {
-  token: RepoToken | undefined;
+  token: AuthToken | undefined;
 }
 
 export interface UpdateTokenRequest {
@@ -36,20 +36,20 @@ export interface UpdateTokenRequest {
 }
 
 export interface UpdateTokenResponse {
-  token: RepoToken | undefined;
+  token: AuthToken | undefined;
 }
 
 export interface DeleteTokenResponse {
 }
 
 function createBaseListTokensRequest(): ListTokensRequest {
-  return { namespace: undefined };
+  return { filter: undefined };
 }
 
 export const ListTokensRequest: MessageFns<ListTokensRequest> = {
   encode(message: ListTokensRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.namespace !== undefined) {
-      writer.uint32(10).string(message.namespace);
+    if (message.filter !== undefined) {
+      TokensFilter.encode(message.filter, writer.uint32(10).fork()).join();
     }
     return writer;
   },
@@ -66,7 +66,7 @@ export const ListTokensRequest: MessageFns<ListTokensRequest> = {
             break;
           }
 
-          message.namespace = reader.string();
+          message.filter = TokensFilter.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -79,13 +79,13 @@ export const ListTokensRequest: MessageFns<ListTokensRequest> = {
   },
 
   fromJSON(object: any): ListTokensRequest {
-    return { namespace: isSet(object.namespace) ? gt.String(object.namespace) : undefined };
+    return { filter: isSet(object.filter) ? TokensFilter.fromJSON(object.filter) : undefined };
   },
 
   toJSON(message: ListTokensRequest): unknown {
     const obj: any = {};
-    if (message.namespace !== undefined) {
-      obj.namespace = message.namespace;
+    if (message.filter !== undefined) {
+      obj.filter = TokensFilter.toJSON(message.filter);
     }
     return obj;
   },
@@ -95,7 +95,9 @@ export const ListTokensRequest: MessageFns<ListTokensRequest> = {
   },
   fromPartial(object: DeepPartial<ListTokensRequest>): ListTokensRequest {
     const message = createBaseListTokensRequest();
-    message.namespace = object.namespace ?? undefined;
+    message.filter = (object.filter !== undefined && object.filter !== null)
+      ? TokensFilter.fromPartial(object.filter)
+      : undefined;
     return message;
   },
 };
@@ -107,7 +109,7 @@ function createBaseListTokensResponse(): ListTokensResponse {
 export const ListTokensResponse: MessageFns<ListTokensResponse> = {
   encode(message: ListTokensResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     for (const v of message.tokens) {
-      RepoToken.encode(v!, writer.uint32(10).fork()).join();
+      AuthToken.encode(v!, writer.uint32(10).fork()).join();
     }
     return writer;
   },
@@ -124,7 +126,7 @@ export const ListTokensResponse: MessageFns<ListTokensResponse> = {
             break;
           }
 
-          message.tokens.push(RepoToken.decode(reader, reader.uint32()));
+          message.tokens.push(AuthToken.decode(reader, reader.uint32()));
           continue;
         }
       }
@@ -137,13 +139,13 @@ export const ListTokensResponse: MessageFns<ListTokensResponse> = {
   },
 
   fromJSON(object: any): ListTokensResponse {
-    return { tokens: gt.Array.isArray(object?.tokens) ? object.tokens.map((e: any) => RepoToken.fromJSON(e)) : [] };
+    return { tokens: gt.Array.isArray(object?.tokens) ? object.tokens.map((e: any) => AuthToken.fromJSON(e)) : [] };
   },
 
   toJSON(message: ListTokensResponse): unknown {
     const obj: any = {};
     if (message.tokens?.length) {
-      obj.tokens = message.tokens.map((e) => RepoToken.toJSON(e));
+      obj.tokens = message.tokens.map((e) => AuthToken.toJSON(e));
     }
     return obj;
   },
@@ -153,19 +155,22 @@ export const ListTokensResponse: MessageFns<ListTokensResponse> = {
   },
   fromPartial(object: DeepPartial<ListTokensResponse>): ListTokensResponse {
     const message = createBaseListTokensResponse();
-    message.tokens = object.tokens?.map((e) => RepoToken.fromPartial(e)) || [];
+    message.tokens = object.tokens?.map((e) => AuthToken.fromPartial(e)) || [];
     return message;
   },
 };
 
 function createBaseAddTokenRequest(): AddTokenRequest {
-  return { token: undefined };
+  return { token: undefined, insteadOfId: undefined };
 }
 
 export const AddTokenRequest: MessageFns<AddTokenRequest> = {
   encode(message: AddTokenRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.token !== undefined) {
-      RepoToken.encode(message.token, writer.uint32(10).fork()).join();
+      AuthToken.encode(message.token, writer.uint32(10).fork()).join();
+    }
+    if (message.insteadOfId !== undefined) {
+      writer.uint32(18).string(message.insteadOfId);
     }
     return writer;
   },
@@ -182,7 +187,15 @@ export const AddTokenRequest: MessageFns<AddTokenRequest> = {
             break;
           }
 
-          message.token = RepoToken.decode(reader, reader.uint32());
+          message.token = AuthToken.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.insteadOfId = reader.string();
           continue;
         }
       }
@@ -195,13 +208,19 @@ export const AddTokenRequest: MessageFns<AddTokenRequest> = {
   },
 
   fromJSON(object: any): AddTokenRequest {
-    return { token: isSet(object.token) ? RepoToken.fromJSON(object.token) : undefined };
+    return {
+      token: isSet(object.token) ? AuthToken.fromJSON(object.token) : undefined,
+      insteadOfId: isSet(object.insteadOfId) ? gt.String(object.insteadOfId) : undefined,
+    };
   },
 
   toJSON(message: AddTokenRequest): unknown {
     const obj: any = {};
     if (message.token !== undefined) {
-      obj.token = RepoToken.toJSON(message.token);
+      obj.token = AuthToken.toJSON(message.token);
+    }
+    if (message.insteadOfId !== undefined) {
+      obj.insteadOfId = message.insteadOfId;
     }
     return obj;
   },
@@ -212,8 +231,9 @@ export const AddTokenRequest: MessageFns<AddTokenRequest> = {
   fromPartial(object: DeepPartial<AddTokenRequest>): AddTokenRequest {
     const message = createBaseAddTokenRequest();
     message.token = (object.token !== undefined && object.token !== null)
-      ? RepoToken.fromPartial(object.token)
+      ? AuthToken.fromPartial(object.token)
       : undefined;
+    message.insteadOfId = object.insteadOfId ?? undefined;
     return message;
   },
 };
@@ -225,7 +245,7 @@ function createBaseAddTokenResponse(): AddTokenResponse {
 export const AddTokenResponse: MessageFns<AddTokenResponse> = {
   encode(message: AddTokenResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.token !== undefined) {
-      RepoToken.encode(message.token, writer.uint32(10).fork()).join();
+      AuthToken.encode(message.token, writer.uint32(10).fork()).join();
     }
     return writer;
   },
@@ -242,7 +262,7 @@ export const AddTokenResponse: MessageFns<AddTokenResponse> = {
             break;
           }
 
-          message.token = RepoToken.decode(reader, reader.uint32());
+          message.token = AuthToken.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -255,13 +275,13 @@ export const AddTokenResponse: MessageFns<AddTokenResponse> = {
   },
 
   fromJSON(object: any): AddTokenResponse {
-    return { token: isSet(object.token) ? RepoToken.fromJSON(object.token) : undefined };
+    return { token: isSet(object.token) ? AuthToken.fromJSON(object.token) : undefined };
   },
 
   toJSON(message: AddTokenResponse): unknown {
     const obj: any = {};
     if (message.token !== undefined) {
-      obj.token = RepoToken.toJSON(message.token);
+      obj.token = AuthToken.toJSON(message.token);
     }
     return obj;
   },
@@ -272,7 +292,7 @@ export const AddTokenResponse: MessageFns<AddTokenResponse> = {
   fromPartial(object: DeepPartial<AddTokenResponse>): AddTokenResponse {
     const message = createBaseAddTokenResponse();
     message.token = (object.token !== undefined && object.token !== null)
-      ? RepoToken.fromPartial(object.token)
+      ? AuthToken.fromPartial(object.token)
       : undefined;
     return message;
   },
@@ -285,7 +305,7 @@ function createBaseGetTokenResponse(): GetTokenResponse {
 export const GetTokenResponse: MessageFns<GetTokenResponse> = {
   encode(message: GetTokenResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.token !== undefined) {
-      RepoToken.encode(message.token, writer.uint32(10).fork()).join();
+      AuthToken.encode(message.token, writer.uint32(10).fork()).join();
     }
     return writer;
   },
@@ -302,7 +322,7 @@ export const GetTokenResponse: MessageFns<GetTokenResponse> = {
             break;
           }
 
-          message.token = RepoToken.decode(reader, reader.uint32());
+          message.token = AuthToken.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -315,13 +335,13 @@ export const GetTokenResponse: MessageFns<GetTokenResponse> = {
   },
 
   fromJSON(object: any): GetTokenResponse {
-    return { token: isSet(object.token) ? RepoToken.fromJSON(object.token) : undefined };
+    return { token: isSet(object.token) ? AuthToken.fromJSON(object.token) : undefined };
   },
 
   toJSON(message: GetTokenResponse): unknown {
     const obj: any = {};
     if (message.token !== undefined) {
-      obj.token = RepoToken.toJSON(message.token);
+      obj.token = AuthToken.toJSON(message.token);
     }
     return obj;
   },
@@ -332,7 +352,7 @@ export const GetTokenResponse: MessageFns<GetTokenResponse> = {
   fromPartial(object: DeepPartial<GetTokenResponse>): GetTokenResponse {
     const message = createBaseGetTokenResponse();
     message.token = (object.token !== undefined && object.token !== null)
-      ? RepoToken.fromPartial(object.token)
+      ? AuthToken.fromPartial(object.token)
       : undefined;
     return message;
   },
@@ -403,7 +423,7 @@ function createBaseUpdateTokenResponse(): UpdateTokenResponse {
 export const UpdateTokenResponse: MessageFns<UpdateTokenResponse> = {
   encode(message: UpdateTokenResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
     if (message.token !== undefined) {
-      RepoToken.encode(message.token, writer.uint32(10).fork()).join();
+      AuthToken.encode(message.token, writer.uint32(10).fork()).join();
     }
     return writer;
   },
@@ -420,7 +440,7 @@ export const UpdateTokenResponse: MessageFns<UpdateTokenResponse> = {
             break;
           }
 
-          message.token = RepoToken.decode(reader, reader.uint32());
+          message.token = AuthToken.decode(reader, reader.uint32());
           continue;
         }
       }
@@ -433,13 +453,13 @@ export const UpdateTokenResponse: MessageFns<UpdateTokenResponse> = {
   },
 
   fromJSON(object: any): UpdateTokenResponse {
-    return { token: isSet(object.token) ? RepoToken.fromJSON(object.token) : undefined };
+    return { token: isSet(object.token) ? AuthToken.fromJSON(object.token) : undefined };
   },
 
   toJSON(message: UpdateTokenResponse): unknown {
     const obj: any = {};
     if (message.token !== undefined) {
-      obj.token = RepoToken.toJSON(message.token);
+      obj.token = AuthToken.toJSON(message.token);
     }
     return obj;
   },
@@ -450,7 +470,7 @@ export const UpdateTokenResponse: MessageFns<UpdateTokenResponse> = {
   fromPartial(object: DeepPartial<UpdateTokenResponse>): UpdateTokenResponse {
     const message = createBaseUpdateTokenResponse();
     message.token = (object.token !== undefined && object.token !== null)
-      ? RepoToken.fromPartial(object.token)
+      ? AuthToken.fromPartial(object.token)
       : undefined;
     return message;
   },

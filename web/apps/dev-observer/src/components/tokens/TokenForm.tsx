@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {GitProvider, RepoToken} from "@devplan/contextify-api";
+import {AuthTokenProvider, AuthToken} from "@devplan/contextify-api";
 
 import {Button} from "@/components/ui/button.tsx";
 import {Input} from "@/components/ui/input.tsx";
@@ -16,13 +16,14 @@ import {Loader} from "@/components/Loader.tsx";
 
 const tokenFormSchema = z.object({
   namespace: z.string().optional(),
-  provider: z.nativeEnum(GitProvider, {
+  provider: z.nativeEnum(AuthTokenProvider, {
     errorMap: () => ({message: "Please select a valid provider"}),
   }),
   workspace: z.string().optional(),
   repo: z.string().optional(),
   system: z.boolean(),
   token: z.string().min(5, "Token is required").trim(),
+  insteadOfId: z.string().optional(),
 });
 
 export type TokenFormData = z.infer<typeof tokenFormSchema>;
@@ -34,14 +35,14 @@ interface TokenFormProps {
 const TokenForm: React.FC<TokenFormProps> = ({onSuccess}) => {
   const form = useForm<TokenFormData>({
     resolver: zodResolver(tokenFormSchema),
-    defaultValues: {provider: GitProvider.BIT_BUCKET, token: "", system: false},
+    defaultValues: {provider: AuthTokenProvider.BIT_BUCKET, token: "", system: false},
   });
   const {addToken} = useBoundStore()
   const [creating, setCreating] = useState(false);
 
   const onSubmit = (data: TokenFormData) => {
     setCreating(true);
-    void addToken(RepoToken.create({...data})).then(() => {
+    void addToken(AuthToken.create({...data}), data.insteadOfId).then(() => {
       form.reset()
       onSuccess?.()
     }).finally(() => setCreating(false));
@@ -74,7 +75,7 @@ const TokenForm: React.FC<TokenFormProps> = ({onSuccess}) => {
                 <FormItem>
                   <FormLabel>Provider</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(parseInt(value) as GitProvider)}
+                    onValueChange={(value) => field.onChange(parseInt(value) as AuthTokenProvider)}
                     value={field.value?.toString()}
                   >
                     <FormControl>
@@ -83,8 +84,8 @@ const TokenForm: React.FC<TokenFormProps> = ({onSuccess}) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={GitProvider.GITHUB.toString()}>GitHub</SelectItem>
-                      <SelectItem value={GitProvider.BIT_BUCKET.toString()}>BitBucket</SelectItem>
+                      <SelectItem value={AuthTokenProvider.JIRA.toString()}>Jira</SelectItem>
+                      <SelectItem value={AuthTokenProvider.BIT_BUCKET.toString()}>BitBucket</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage/>
@@ -156,6 +157,19 @@ const TokenForm: React.FC<TokenFormProps> = ({onSuccess}) => {
                       placeholder="Access token"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage/>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="insteadOfId"
+              render={({field}) => (
+                <FormItem>
+                  <FormLabel>Instead of (ID)</FormLabel>
+                  <FormControl>
+                    <Input {...field}/>
                   </FormControl>
                   <FormMessage/>
                 </FormItem>

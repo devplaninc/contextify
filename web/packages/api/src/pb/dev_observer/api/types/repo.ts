@@ -52,6 +52,11 @@ export interface GitRepository {
 export interface GitProperties {
   appInfo?: GitAppInfo | undefined;
   meta?: GitMeta | undefined;
+  bitBucketInfo?: BitBucketInfo | undefined;
+}
+
+export interface BitBucketInfo {
+  workspaceUuid: string;
 }
 
 export interface GitMeta {
@@ -65,24 +70,9 @@ export interface GitAppInfo {
   installationId?: number | undefined;
 }
 
-export interface RepoToken {
-  id: string;
-  namespace: string;
-  provider: GitProvider;
-  /** Name of the workspace if this is a workspace token. */
-  workspace?:
-    | string
-    | undefined;
-  /** Full name of the repo if this is a repo token. */
-  repo?:
-    | string
-    | undefined;
-  /** True if this is a system auto-provisioned token (e.g. provided by Forge for BitBucket) */
-  system: boolean;
-  token: string;
-  expiresAt?: Date | undefined;
-  createdAt: Date | undefined;
-  updatedAt: Date | undefined;
+export interface ReposFilter {
+  provider?: GitProvider | undefined;
+  owner?: string | undefined;
 }
 
 function createBaseGitRepository(): GitRepository {
@@ -244,7 +234,7 @@ export const GitRepository: MessageFns<GitRepository> = {
 };
 
 function createBaseGitProperties(): GitProperties {
-  return { appInfo: undefined, meta: undefined };
+  return { appInfo: undefined, meta: undefined, bitBucketInfo: undefined };
 }
 
 export const GitProperties: MessageFns<GitProperties> = {
@@ -254,6 +244,9 @@ export const GitProperties: MessageFns<GitProperties> = {
     }
     if (message.meta !== undefined) {
       GitMeta.encode(message.meta, writer.uint32(18).fork()).join();
+    }
+    if (message.bitBucketInfo !== undefined) {
+      BitBucketInfo.encode(message.bitBucketInfo, writer.uint32(26).fork()).join();
     }
     return writer;
   },
@@ -281,6 +274,14 @@ export const GitProperties: MessageFns<GitProperties> = {
           message.meta = GitMeta.decode(reader, reader.uint32());
           continue;
         }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.bitBucketInfo = BitBucketInfo.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -294,6 +295,7 @@ export const GitProperties: MessageFns<GitProperties> = {
     return {
       appInfo: isSet(object.appInfo) ? GitAppInfo.fromJSON(object.appInfo) : undefined,
       meta: isSet(object.meta) ? GitMeta.fromJSON(object.meta) : undefined,
+      bitBucketInfo: isSet(object.bitBucketInfo) ? BitBucketInfo.fromJSON(object.bitBucketInfo) : undefined,
     };
   },
 
@@ -304,6 +306,9 @@ export const GitProperties: MessageFns<GitProperties> = {
     }
     if (message.meta !== undefined) {
       obj.meta = GitMeta.toJSON(message.meta);
+    }
+    if (message.bitBucketInfo !== undefined) {
+      obj.bitBucketInfo = BitBucketInfo.toJSON(message.bitBucketInfo);
     }
     return obj;
   },
@@ -317,6 +322,67 @@ export const GitProperties: MessageFns<GitProperties> = {
       ? GitAppInfo.fromPartial(object.appInfo)
       : undefined;
     message.meta = (object.meta !== undefined && object.meta !== null) ? GitMeta.fromPartial(object.meta) : undefined;
+    message.bitBucketInfo = (object.bitBucketInfo !== undefined && object.bitBucketInfo !== null)
+      ? BitBucketInfo.fromPartial(object.bitBucketInfo)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseBitBucketInfo(): BitBucketInfo {
+  return { workspaceUuid: "" };
+}
+
+export const BitBucketInfo: MessageFns<BitBucketInfo> = {
+  encode(message: BitBucketInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.workspaceUuid !== "") {
+      writer.uint32(10).string(message.workspaceUuid);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): BitBucketInfo {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseBitBucketInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.workspaceUuid = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): BitBucketInfo {
+    return { workspaceUuid: isSet(object.workspaceUuid) ? gt.String(object.workspaceUuid) : "" };
+  },
+
+  toJSON(message: BitBucketInfo): unknown {
+    const obj: any = {};
+    if (message.workspaceUuid !== "") {
+      obj.workspaceUuid = message.workspaceUuid;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<BitBucketInfo>): BitBucketInfo {
+    return BitBucketInfo.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<BitBucketInfo>): BitBucketInfo {
+    const message = createBaseBitBucketInfo();
+    message.workspaceUuid = object.workspaceUuid ?? "";
     return message;
   },
 };
@@ -489,69 +555,34 @@ export const GitAppInfo: MessageFns<GitAppInfo> = {
   },
 };
 
-function createBaseRepoToken(): RepoToken {
-  return {
-    id: "",
-    namespace: "",
-    provider: 0,
-    workspace: undefined,
-    repo: undefined,
-    system: false,
-    token: "",
-    expiresAt: undefined,
-    createdAt: undefined,
-    updatedAt: undefined,
-  };
+function createBaseReposFilter(): ReposFilter {
+  return { provider: undefined, owner: undefined };
 }
 
-export const RepoToken: MessageFns<RepoToken> = {
-  encode(message: RepoToken, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.id !== "") {
-      writer.uint32(10).string(message.id);
+export const ReposFilter: MessageFns<ReposFilter> = {
+  encode(message: ReposFilter, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.provider !== undefined) {
+      writer.uint32(8).int32(message.provider);
     }
-    if (message.namespace !== "") {
-      writer.uint32(18).string(message.namespace);
-    }
-    if (message.provider !== 0) {
-      writer.uint32(24).int32(message.provider);
-    }
-    if (message.workspace !== undefined) {
-      writer.uint32(34).string(message.workspace);
-    }
-    if (message.repo !== undefined) {
-      writer.uint32(42).string(message.repo);
-    }
-    if (message.system !== false) {
-      writer.uint32(48).bool(message.system);
-    }
-    if (message.token !== "") {
-      writer.uint32(58).string(message.token);
-    }
-    if (message.expiresAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.expiresAt), writer.uint32(66).fork()).join();
-    }
-    if (message.createdAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(74).fork()).join();
-    }
-    if (message.updatedAt !== undefined) {
-      Timestamp.encode(toTimestamp(message.updatedAt), writer.uint32(82).fork()).join();
+    if (message.owner !== undefined) {
+      writer.uint32(18).string(message.owner);
     }
     return writer;
   },
 
-  decode(input: BinaryReader | Uint8Array, length?: number): RepoToken {
+  decode(input: BinaryReader | Uint8Array, length?: number): ReposFilter {
     const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
     const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseRepoToken();
+    const message = createBaseReposFilter();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1: {
-          if (tag !== 10) {
+          if (tag !== 8) {
             break;
           }
 
-          message.id = reader.string();
+          message.provider = reader.int32() as any;
           continue;
         }
         case 2: {
@@ -559,71 +590,7 @@ export const RepoToken: MessageFns<RepoToken> = {
             break;
           }
 
-          message.namespace = reader.string();
-          continue;
-        }
-        case 3: {
-          if (tag !== 24) {
-            break;
-          }
-
-          message.provider = reader.int32() as any;
-          continue;
-        }
-        case 4: {
-          if (tag !== 34) {
-            break;
-          }
-
-          message.workspace = reader.string();
-          continue;
-        }
-        case 5: {
-          if (tag !== 42) {
-            break;
-          }
-
-          message.repo = reader.string();
-          continue;
-        }
-        case 6: {
-          if (tag !== 48) {
-            break;
-          }
-
-          message.system = reader.bool();
-          continue;
-        }
-        case 7: {
-          if (tag !== 58) {
-            break;
-          }
-
-          message.token = reader.string();
-          continue;
-        }
-        case 8: {
-          if (tag !== 66) {
-            break;
-          }
-
-          message.expiresAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
-          continue;
-        }
-        case 9: {
-          if (tag !== 74) {
-            break;
-          }
-
-          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
-          continue;
-        }
-        case 10: {
-          if (tag !== 82) {
-            break;
-          }
-
-          message.updatedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          message.owner = reader.string();
           continue;
         }
       }
@@ -635,71 +602,31 @@ export const RepoToken: MessageFns<RepoToken> = {
     return message;
   },
 
-  fromJSON(object: any): RepoToken {
+  fromJSON(object: any): ReposFilter {
     return {
-      id: isSet(object.id) ? gt.String(object.id) : "",
-      namespace: isSet(object.namespace) ? gt.String(object.namespace) : "",
-      provider: isSet(object.provider) ? gitProviderFromJSON(object.provider) : 0,
-      workspace: isSet(object.workspace) ? gt.String(object.workspace) : undefined,
-      repo: isSet(object.repo) ? gt.String(object.repo) : undefined,
-      system: isSet(object.system) ? gt.Boolean(object.system) : false,
-      token: isSet(object.token) ? gt.String(object.token) : "",
-      expiresAt: isSet(object.expiresAt) ? fromJsonTimestamp(object.expiresAt) : undefined,
-      createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
-      updatedAt: isSet(object.updatedAt) ? fromJsonTimestamp(object.updatedAt) : undefined,
+      provider: isSet(object.provider) ? gitProviderFromJSON(object.provider) : undefined,
+      owner: isSet(object.owner) ? gt.String(object.owner) : undefined,
     };
   },
 
-  toJSON(message: RepoToken): unknown {
+  toJSON(message: ReposFilter): unknown {
     const obj: any = {};
-    if (message.id !== "") {
-      obj.id = message.id;
-    }
-    if (message.namespace !== "") {
-      obj.namespace = message.namespace;
-    }
-    if (message.provider !== 0) {
+    if (message.provider !== undefined) {
       obj.provider = gitProviderToJSON(message.provider);
     }
-    if (message.workspace !== undefined) {
-      obj.workspace = message.workspace;
-    }
-    if (message.repo !== undefined) {
-      obj.repo = message.repo;
-    }
-    if (message.system !== false) {
-      obj.system = message.system;
-    }
-    if (message.token !== "") {
-      obj.token = message.token;
-    }
-    if (message.expiresAt !== undefined) {
-      obj.expiresAt = message.expiresAt.toISOString();
-    }
-    if (message.createdAt !== undefined) {
-      obj.createdAt = message.createdAt.toISOString();
-    }
-    if (message.updatedAt !== undefined) {
-      obj.updatedAt = message.updatedAt.toISOString();
+    if (message.owner !== undefined) {
+      obj.owner = message.owner;
     }
     return obj;
   },
 
-  create(base?: DeepPartial<RepoToken>): RepoToken {
-    return RepoToken.fromPartial(base ?? {});
+  create(base?: DeepPartial<ReposFilter>): ReposFilter {
+    return ReposFilter.fromPartial(base ?? {});
   },
-  fromPartial(object: DeepPartial<RepoToken>): RepoToken {
-    const message = createBaseRepoToken();
-    message.id = object.id ?? "";
-    message.namespace = object.namespace ?? "";
-    message.provider = object.provider ?? 0;
-    message.workspace = object.workspace ?? undefined;
-    message.repo = object.repo ?? undefined;
-    message.system = object.system ?? false;
-    message.token = object.token ?? "";
-    message.expiresAt = object.expiresAt ?? undefined;
-    message.createdAt = object.createdAt ?? undefined;
-    message.updatedAt = object.updatedAt ?? undefined;
+  fromPartial(object: DeepPartial<ReposFilter>): ReposFilter {
+    const message = createBaseReposFilter();
+    message.provider = object.provider ?? undefined;
+    message.owner = object.owner ?? undefined;
     return message;
   },
 };

@@ -26,3 +26,11 @@ message GetRepositoryResponse{
 message DeleteRepositoryResponse{
   repeated dev_observer.api.types.repo.GitRepository repos = 1;
 }
+
+message FilterRepositoriesRequest {
+  dev_observer.api.types.repo.ReposFilter filter = 1;
+}
+
+message FilterRepositoriesResponse {
+  repeated dev_observer.api.types.repo.GitRepository repos = 1;
+}

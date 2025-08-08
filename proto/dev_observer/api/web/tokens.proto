@@ -2,27 +2,27 @@ syntax = "proto3";
 
 package dev_observer.api.web.tokens;
 
-import "dev_observer/api/types/repo.proto";
+import "dev_observer/api/types/tokens.proto";
 
 message ListTokensRequest {
-  // Optional namespace filter
-  optional string namespace = 1;
+  optional dev_observer.api.types.tokens.TokensFilter filter = 1;
 }
 
 message ListTokensResponse {
-  repeated dev_observer.api.types.repo.RepoToken tokens = 1;
+  repeated dev_observer.api.types.tokens.AuthToken tokens = 1;
 }
 
 message AddTokenRequest {
-  dev_observer.api.types.repo.RepoToken token = 1;
+  dev_observer.api.types.tokens.AuthToken token = 1;
+  optional string instead_of_id = 2;
 }
 
 message AddTokenResponse {
-  dev_observer.api.types.repo.RepoToken token = 1;
+  dev_observer.api.types.tokens.AuthToken token = 1;
 }
 
 message GetTokenResponse {
-  dev_observer.api.types.repo.RepoToken token = 1;
+  dev_observer.api.types.tokens.AuthToken token = 1;
 }
 
 message UpdateTokenRequest {
@@ -30,7 +30,7 @@ message UpdateTokenRequest {
 }
 
 message UpdateTokenResponse {
-  dev_observer.api.types.repo.RepoToken token = 1;
+  dev_observer.api.types.tokens.AuthToken token = 1;
 }
 
 message DeleteTokenResponse {

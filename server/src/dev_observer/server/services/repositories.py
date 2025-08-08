@@ -4,9 +4,10 @@ from fastapi import APIRouter
 from starlette.requests import Request
 
 from dev_observer.api.types.processing_pb2 import ProcessingItemKey
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProvider
+from dev_observer.api.types.repo_pb2 import GitRepository
 from dev_observer.api.web.repositories_pb2 import AddRepositoryRequest, AddRepositoryResponse, \
-    ListRepositoriesResponse, RescanRepositoryResponse, GetRepositoryResponse, DeleteRepositoryResponse
+    ListRepositoriesResponse, RescanRepositoryResponse, GetRepositoryResponse, DeleteRepositoryResponse, \
+    FilterRepositoriesRequest, FilterRepositoriesResponse
 from dev_observer.log import s_
 from dev_observer.repository.parser import parse_repository_url
 from dev_observer.storage.provider import StorageProvider
@@ -28,6 +29,7 @@ class RepositoriesService:
 
         self.router.add_api_route("/repositories", self.add_repository, methods=["POST"])
         self.router.add_api_route("/repositories", self.list, methods=["GET"])
+        self.router.add_api_route("/repositories/filter", self.filter, methods=["POST"])
         self.router.add_api_route("/repositories/{repo_id}", self.get, methods=["GET"])
         self.router.add_api_route("/repositories/{repo_id}", self.delete, methods=["DELETE"])
         self.router.add_api_route("/repositories/{repo_id}/rescan", self.rescan, methods=["POST"])
@@ -35,7 +37,7 @@ class RepositoriesService:
     async def add_repository(self, req: Request):
         request = parse_dict_pb(await req.json(), AddRepositoryRequest())
         _log.debug(s_("Adding repository", request=request))
-        
+
         parsed_url = parse_repository_url(request.url, request.provider)
         repo = await self._store.add_git_repo(GitRepository(
             full_name=parsed_url.get_full_name(),
@@ -58,6 +60,11 @@ class RepositoriesService:
     async def list(self):
         repos = await self._store.get_git_repos()
         return pb_to_dict(ListRepositoriesResponse(repos=repos))
+
+    async def filter(self, req: Request):
+        request = parse_dict_pb(await req.json(), FilterRepositoriesRequest())
+        repos = await self._store.filter_git_repos(request.filter)
+        return pb_to_dict(FilterRepositoriesResponse(repos=repos))
 
     async def rescan(self, repo_id: str):
         await self._store.set_next_processing_time(

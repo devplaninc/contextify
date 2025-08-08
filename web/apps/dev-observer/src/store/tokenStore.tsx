@@ -7,18 +7,19 @@ import {
   GetTokenResponse,
   ListTokensRequest,
   ListTokensResponse,
-  RepoToken,
+  AuthToken,
   UpdateTokenRequest,
-  UpdateTokenResponse
+  UpdateTokenResponse,
+  TokensFilter
 } from "@devplan/contextify-api";
 import {tokenAPI, tokensAPI, tokensListAPI} from "@/store/apiPaths.tsx";
 
 export interface TokenState {
-  tokens: Record<string, RepoToken>;
+  tokens: Record<string, AuthToken>;
 
-  listTokens: (req: ListTokensRequest) => Promise<string[]>;
+  listTokens: (filter: TokensFilter | undefined) => Promise<string[]>;
   fetchTokenById: (id: string) => Promise<void>;
-  addToken: (token: RepoToken) => Promise<void>;
+  addToken: (token: AuthToken, insteadOfId: string | undefined) => Promise<void>;
   updateToken: (id: string, tokenData: { token: string }) => Promise<void>;
   deleteToken: (id: string) => Promise<void>;
 }
@@ -31,11 +32,11 @@ export const createTokensSlice: StateCreator<
 > = ((set) => ({
   tokens: {},
 
-  listTokens: async req => fetchWithAuth(tokensListAPI(), ListTokensResponse, {
-    method: "POST", body: JSON.stringify(ListTokensRequest.toJSON(req)),
+  listTokens: async filter => fetchWithAuth(tokensListAPI(), ListTokensResponse, {
+    method: "POST", body: JSON.stringify(ListTokensRequest.toJSON({filter})),
   }).then(res => {
     const {tokens} = res;
-    const tokenMap = tokens.reduce((a, t) => ({...a, [t.id]: t}), {} as Record<string, RepoToken>);
+    const tokenMap = tokens.reduce((a, t) => ({...a, [t.id]: t}), {} as Record<string, AuthToken>);
     set(s => ({...s, tokens: {...s.tokens, ...tokenMap}}));
     return tokens.map(t => t.id);
   }),
@@ -48,11 +49,11 @@ export const createTokensSlice: StateCreator<
       }
     }),
 
-  addToken: async token => {
+  addToken: async (token, insteadOfId) => {
     return fetchWithAuth(
       tokensAPI(),
       AddTokenResponse,
-      {method: "POST", body: JSON.stringify(AddTokenRequest.toJSON({token}))},
+      {method: "POST", body: JSON.stringify(AddTokenRequest.toJSON({token, insteadOfId}))},
     ).then(r => {
       const {token} = r;
       if (token) {

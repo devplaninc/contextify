@@ -10,11 +10,12 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSessio
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, \
     ProcessingItemResult, ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, RepoToken, GitProvider
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, ReposFilter
 from dev_observer.api.types.sites_pb2 import WebSite
+from dev_observer.api.types.tokens_pb2 import AuthTokenProvider, AuthToken, TokensFilter
 from dev_observer.common.crypto import Encryptor
 from dev_observer.storage.postgresql.model import GitRepoEntity, ProcessingItemEntity, GlobalConfigEntity, \
-    WebsiteEntity, ProcessingItemResultEntity, RepoTokenEntity
+    WebsiteEntity, ProcessingItemResultEntity, AuthTokenEntity
 from dev_observer.storage.provider import StorageProvider, AddWebSiteData
 from dev_observer.util import parse_json_pb, pb_to_json, Clock, RealClock
 
@@ -34,6 +35,16 @@ class PostgresqlStorageProvider(StorageProvider):
     async def get_git_repos(self) -> MutableSequence[GitRepository]:
         async with AsyncSession(self._engine) as session:
             entities = await session.execute(select(GitRepoEntity))
+            return [_to_repo(e[0]) for e in entities.all()]
+
+    async def filter_git_repos(self, filter: ReposFilter) -> MutableSequence[GitRepository]:
+        async with AsyncSession(self._engine) as session:
+            query = select(GitRepoEntity)
+            if filter.HasField("provider"):
+                query = query.where(GitRepoEntity.provider == filter.provider)
+            if filter.HasField("owner"):
+                query = query.where(GitRepoEntity.owner == filter.owner.lower())
+            entities = await session.execute(query)
             return [_to_repo(e[0]) for e in entities.all()]
 
     async def get_git_repo(self, repo_id: str) -> Optional[GitRepository]:
@@ -58,11 +69,14 @@ class PostgresqlStorageProvider(StorageProvider):
                 ent = existing.first()
                 if ent is not None:
                     return _to_repo(ent[0])
+                parts = repo.full_name.split("/")
+                owner = parts[0]
                 r = GitRepoEntity(
                     id=repo_id,
                     full_name=repo.full_name,
                     json_data=pb_to_json(repo),
                     provider=repo.provider,
+                    owner=owner.lower(),
                 )
                 session.add(r)
                 return _to_optional_repo(await session.get(GitRepoEntity, repo_id))
@@ -312,13 +326,13 @@ class PostgresqlStorageProvider(StorageProvider):
                 return [_to_item(i) for i in items.all()]
 
     # Token CRUD operations
-    async def add_token(self, token: RepoToken) -> RepoToken:
+    async def add_token(self, token: AuthToken, old_token_id: Optional[str] = None) -> AuthToken:
         token_id = token.id
         if not token_id or len(token_id) == 0:
             token_id = f"{uuid.uuid4()}"
         async with AsyncSession(self._engine) as session:
             async with session.begin():
-                t = RepoTokenEntity(
+                t = AuthTokenEntity(
                     id=token_id,
                     namespace=token.namespace,
                     provider=token.provider,
@@ -329,19 +343,23 @@ class PostgresqlStorageProvider(StorageProvider):
                     expires_at=token.expires_at.ToDatetime() if token.HasField("expires_at") else None,
                 )
                 session.add(t)
-                return self._to_token(await session.get(RepoTokenEntity, token_id))
+                if old_token_id and len(old_token_id) > 0:
+                    await session.execute(
+                        delete(AuthTokenEntity).where(AuthTokenEntity.id == old_token_id)
+                    )
+                return self._to_token(await session.get(AuthTokenEntity, token_id))
 
-    async def get_token(self, token_id: str) -> Optional[RepoToken]:
+    async def get_token(self, token_id: str) -> Optional[AuthToken]:
         async with AsyncSession(self._engine) as session:
-            ent = await session.get(RepoTokenEntity, token_id)
+            ent = await session.get(AuthTokenEntity, token_id)
             return self._to_optional_token(ent)
 
-    async def update_token(self, token_id: str, token: str) -> Optional[RepoToken]:
+    async def update_token(self, token_id: str, token: str) -> Optional[AuthToken]:
         async with AsyncSession(self._engine) as session:
             async with session.begin():
                 await session.execute(
-                    update(RepoTokenEntity)
-                    .where(RepoTokenEntity.id == token_id)
+                    update(AuthTokenEntity)
+                    .where(AuthTokenEntity.id == token_id)
                     .values(
                         token=self._encryptor.encrypt(token, token_id),
                     )
@@ -351,32 +369,36 @@ class PostgresqlStorageProvider(StorageProvider):
     async def delete_token(self, token_id: str):
         async with AsyncSession(self._engine) as session:
             async with session.begin():
-                await session.execute(delete(RepoTokenEntity).where(RepoTokenEntity.id == token_id))
+                await session.execute(delete(AuthTokenEntity).where(AuthTokenEntity.id == token_id))
 
-    async def list_tokens(self, namespace: Optional[str] = None) -> List[RepoToken]:
+    async def list_tokens(self, filter: Optional[TokensFilter] = None) -> List[AuthToken]:
         async with AsyncSession(self._engine) as session:
-            query = select(RepoTokenEntity)
-            if namespace:
-                query = query.where(RepoTokenEntity.namespace == namespace)
+            query = select(AuthTokenEntity)
+            if filter:
+                if filter.HasField("namespace") and filter.namespace:
+                    query = query.where(AuthTokenEntity.namespace == filter.namespace)
+                if filter.HasField("workspace") and filter.workspace:
+                    query = query.where(AuthTokenEntity.workspace == filter.workspace)
             entities = await session.scalars(query)
             return [self._to_token(ent) for ent in entities.all()]
 
-    async def find_tokens(self, provider: int, workspace: Optional[str] = None, repo: Optional[str] = None) -> List[
-        RepoToken]:
+    async def find_tokens(
+            self, provider: AuthTokenProvider, workspace: Optional[str] = None, repo: Optional[str] = None,
+    ) -> List[AuthToken]:
         """Find tokens by provider, workspace, and repo. Returns tokens in priority order: workspace, system, repo."""
         async with AsyncSession(self._engine) as session:
-            query = select(RepoTokenEntity).where(RepoTokenEntity.provider == provider)
+            query = select(AuthTokenEntity).where(AuthTokenEntity.provider == provider)
 
             # Build conditions for different token types
             conditions = []
 
             # Workspace token condition
             if workspace:
-                conditions.append(RepoTokenEntity.workspace == workspace)
+                conditions.append(AuthTokenEntity.workspace == workspace)
 
             # Repo token condition
             if repo:
-                conditions.append(RepoTokenEntity.repo == repo)
+                conditions.append(AuthTokenEntity.repo == repo)
             if conditions:
                 from sqlalchemy import or_
                 query = query.where(or_(*conditions))
@@ -386,14 +408,14 @@ class PostgresqlStorageProvider(StorageProvider):
             entities = await session.scalars(query)
             return [self._to_token(ent) for ent in entities.all()]
 
-    def _to_optional_token(self, ent: Optional[RepoTokenEntity]) -> Optional[RepoToken]:
+    def _to_optional_token(self, ent: Optional[AuthTokenEntity]) -> Optional[AuthToken]:
         return None if ent is None else self._to_token(ent)
 
-    def _to_token(self, ent: RepoTokenEntity) -> RepoToken:
-        token = RepoToken(
+    def _to_token(self, ent: AuthTokenEntity) -> AuthToken:
+        token = AuthToken(
             id=ent.id,
             namespace=ent.namespace,
-            provider=cast(GitProvider, ent.provider),
+            provider=cast(AuthTokenProvider, ent.provider),
             system=ent.system,
             token=self._encryptor.decrypt(ent.token, ent.id),
         )

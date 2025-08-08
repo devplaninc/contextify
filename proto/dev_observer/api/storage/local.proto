@@ -6,6 +6,7 @@ import "dev_observer/api/types/processing.proto";
 import "dev_observer/api/types/repo.proto";
 import "dev_observer/api/types/config.proto";
 import "dev_observer/api/types/sites.proto";
+import "dev_observer/api/types/tokens.proto";
 
 message LocalStorageData {
   repeated dev_observer.api.types.repo.GitRepository git_repos = 1;
@@ -13,5 +14,5 @@ message LocalStorageData {
   dev_observer.api.types.config.GlobalConfig global_config = 3;
   repeated dev_observer.api.types.sites.WebSite web_sites = 4;
   repeated dev_observer.api.types.processing.ProcessingItemResult processing_results = 5;
-  repeated dev_observer.api.types.repo.RepoToken tokens = 6;
+  repeated dev_observer.api.types.tokens.AuthToken tokens = 6;
 }

@@ -3,7 +3,7 @@ import {useCallback} from "react";
 import {useShallow} from "zustand/react/shallow";
 import {useBoundStore} from "@/store/use-bound-store.tsx";
 import type {QueryResultCommon} from "@/hooks/queries.tsx";
-import type {RepoToken} from "@devplan/contextify-api";
+import type {AuthToken} from "@devplan/contextify-api";
 
 // Query keys for caching and invalidation
 export const tokenKeys = {
@@ -30,7 +30,7 @@ export interface UpdateTokenRequest {
 }
 
 // Hook for fetching tokens with optional filters
-export function useTokens(namespace?: string): { tokens: RepoToken[] | undefined } & QueryResultCommon {
+export function useTokens(namespace?: string): { tokens: AuthToken[] | undefined } & QueryResultCommon {
   const {listTokens} = useBoundStore();
   const queryFn = useCallback(async () => {
     return await listTokens({namespace})

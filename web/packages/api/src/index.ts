@@ -22,7 +22,8 @@ export {
   PeriodicAggregationResult,
   RepoObservation,
 } from './pb/dev_observer/api/types/processing';
-export {GitRepository, GitProvider, RepoToken} from './pb/dev_observer/api/types/repo';
+export {GitRepository, GitProvider} from './pb/dev_observer/api/types/repo';
+export {AuthToken, AuthTokenProvider, TokensFilter} from './pb/dev_observer/api/types/tokens';
 export {WebSite} from './pb/dev_observer/api/types/sites';
 export {
   ListWebSitesResponse,

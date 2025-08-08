@@ -6,7 +6,7 @@
 
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import { GitProvider, gitProviderFromJSON, gitProviderToJSON, GitRepository } from "../types/repo";
+import { GitProvider, gitProviderFromJSON, gitProviderToJSON, GitRepository, ReposFilter } from "../types/repo";
 
 export const protobufPackage = "dev_observer.api.web.repositories";
 
@@ -31,6 +31,14 @@ export interface GetRepositoryResponse {
 }
 
 export interface DeleteRepositoryResponse {
+  repos: GitRepository[];
+}
+
+export interface FilterRepositoriesRequest {
+  filter: ReposFilter | undefined;
+}
+
+export interface FilterRepositoriesResponse {
   repos: GitRepository[];
 }
 
@@ -384,6 +392,124 @@ export const DeleteRepositoryResponse: MessageFns<DeleteRepositoryResponse> = {
   },
   fromPartial(object: DeepPartial<DeleteRepositoryResponse>): DeleteRepositoryResponse {
     const message = createBaseDeleteRepositoryResponse();
+    message.repos = object.repos?.map((e) => GitRepository.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseFilterRepositoriesRequest(): FilterRepositoriesRequest {
+  return { filter: undefined };
+}
+
+export const FilterRepositoriesRequest: MessageFns<FilterRepositoriesRequest> = {
+  encode(message: FilterRepositoriesRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.filter !== undefined) {
+      ReposFilter.encode(message.filter, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): FilterRepositoriesRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseFilterRepositoriesRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.filter = ReposFilter.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): FilterRepositoriesRequest {
+    return { filter: isSet(object.filter) ? ReposFilter.fromJSON(object.filter) : undefined };
+  },
+
+  toJSON(message: FilterRepositoriesRequest): unknown {
+    const obj: any = {};
+    if (message.filter !== undefined) {
+      obj.filter = ReposFilter.toJSON(message.filter);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<FilterRepositoriesRequest>): FilterRepositoriesRequest {
+    return FilterRepositoriesRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<FilterRepositoriesRequest>): FilterRepositoriesRequest {
+    const message = createBaseFilterRepositoriesRequest();
+    message.filter = (object.filter !== undefined && object.filter !== null)
+      ? ReposFilter.fromPartial(object.filter)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseFilterRepositoriesResponse(): FilterRepositoriesResponse {
+  return { repos: [] };
+}
+
+export const FilterRepositoriesResponse: MessageFns<FilterRepositoriesResponse> = {
+  encode(message: FilterRepositoriesResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.repos) {
+      GitRepository.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): FilterRepositoriesResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseFilterRepositoriesResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.repos.push(GitRepository.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): FilterRepositoriesResponse {
+    return { repos: gt.Array.isArray(object?.repos) ? object.repos.map((e: any) => GitRepository.fromJSON(e)) : [] };
+  },
+
+  toJSON(message: FilterRepositoriesResponse): unknown {
+    const obj: any = {};
+    if (message.repos?.length) {
+      obj.repos = message.repos.map((e) => GitRepository.toJSON(e));
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<FilterRepositoriesResponse>): FilterRepositoriesResponse {
+    return FilterRepositoriesResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<FilterRepositoriesResponse>): FilterRepositoriesResponse {
+    const message = createBaseFilterRepositoriesResponse();
     message.repos = object.repos?.map((e) => GitRepository.fromPartial(e)) || [];
     return message;
   },

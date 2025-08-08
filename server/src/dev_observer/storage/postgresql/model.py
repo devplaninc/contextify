@@ -20,6 +20,7 @@ class GitRepoEntity(Base):
     full_name: Mapped[str] = mapped_column(index=True)
     provider: Mapped[int] = mapped_column(index=True, default=0)
     json_data: Mapped[str]
+    owner: Mapped[str] = mapped_column(index=True)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
@@ -37,8 +38,8 @@ class GitRepoEntity(Base):
         return f"GitRepoEntity(id={self.id}, json_data={self.json_data})"
 
 
-class RepoTokenEntity(Base):
-    __tablename__ = "repo_token"
+class AuthTokenEntity(Base):
+    __tablename__ = "auth_token"
 
     id: Mapped[str] = mapped_column(primary_key=True)
     namespace: Mapped[str] = mapped_column(index=True)
@@ -64,7 +65,7 @@ class RepoTokenEntity(Base):
     )
 
     def __repr__(self):
-        return f"RepoTokenEntity(id={self.id}, namespace={self.namespace}, provider={self.provider}, repo={self.repo})"
+        return f"AuthTokenEntity(id={self.id}, namespace={self.namespace}, provider={self.provider}, repo={self.repo})"
 
 
 class GlobalConfigEntity(Base):

@@ -1,32 +1,36 @@
 import React, {useState} from "react";
 import {format} from "date-fns";
-import {GitProvider, type RepoToken} from "@devplan/contextify-api";
+import {type AuthToken, AuthTokenProvider} from "@devplan/contextify-api";
 
 import {Button} from "@/components/ui/button.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table.tsx";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {useBoundStore} from "@/store/use-bound-store.tsx";
+import {Copy} from "lucide-react";
+import {toast} from "sonner";
 
 interface TokenTableProps {
-  tokens: RepoToken[];
+  tokens: AuthToken[];
   onRefresh?: () => void;
 }
 
-const TokenTable: React.FC<TokenTableProps> = ({ tokens, onRefresh }) => {
+const TokenTable: React.FC<TokenTableProps> = ({tokens, onRefresh}) => {
   const {deleteToken} = useBoundStore();
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = (tokenId: string) => {
     setDeleting(true);
-    void deleteToken(tokenId).then(() => {onRefresh?.()}).finally(() => setDeleting(false));
+    void deleteToken(tokenId).then(() => {
+      onRefresh?.()
+    }).finally(() => setDeleting(false));
   };
 
-  const getProviderName = (provider: GitProvider) => {
+  const getProviderName = (provider: AuthTokenProvider) => {
     switch (provider) {
-      case GitProvider.GITHUB:
-        return "GitHub";
-      case GitProvider.BIT_BUCKET:
+      case AuthTokenProvider.JIRA:
+        return "Jira";
+      case AuthTokenProvider.BIT_BUCKET:
         return "BitBucket";
       default:
         return "Unknown";
@@ -35,7 +39,7 @@ const TokenTable: React.FC<TokenTableProps> = ({ tokens, onRefresh }) => {
 
   const formatDate = (date: Date | undefined) => {
     if (!date) return "N/A";
-      return format(date, "MMM dd, yyyy HH:mm");
+    return format(date, "MMM dd, yyyy HH:mm");
   };
 
   return (
@@ -54,6 +58,7 @@ const TokenTable: React.FC<TokenTableProps> = ({ tokens, onRefresh }) => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Id</TableHead>
                   <TableHead>Namespace</TableHead>
                   <TableHead>Provider</TableHead>
                   <TableHead>Workspace</TableHead>
@@ -67,6 +72,13 @@ const TokenTable: React.FC<TokenTableProps> = ({ tokens, onRefresh }) => {
               <TableBody>
                 {tokens.map((token) => (
                   <TableRow key={token.id}>
+                    <TableCell className="flex gap-2 items-center">
+                      <div className="font-mono text-sm text-muted-foreground">{token.id.substring(0, 5)}...</div>
+                      <div className="opacity-60 hover:opacity-100 cursor-pointer" onClick={() => {
+                        void navigator.clipboard.writeText(token.id)
+                        toast.success("Token ID copied to clipboard")
+                      }}><Copy className="size-4"/></div>
+                    </TableCell>
                     <TableCell className="font-medium">{token.namespace}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
