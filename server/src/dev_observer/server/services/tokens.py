@@ -34,7 +34,13 @@ class TokensService:
 
     async def add_token(self, req: Request):
         request = parse_dict_pb(await req.json(), AddTokenRequest())
-        _log.debug(s_("Adding token", request=request))
+
+        _log.debug(s_("Adding token",
+                      provider=request.token.provider,
+                      workspace=request.token.workspace,
+                      system=request.token.system,
+                      instead_of_id=request.instead_of_id,
+                      ))
 
         token = AuthToken(
             namespace=request.token.namespace,
