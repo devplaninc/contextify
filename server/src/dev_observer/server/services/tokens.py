@@ -49,10 +49,8 @@ class TokensService:
             token=request.token.token,
             workspace=request.token.workspace,
             repo=request.token.repo,
+            expires_at=request.token.expires_at,
         )
-        if request.token.HasField("expires_at"):
-            token.expires_at.FromDatetime(request.token.expires_at)
-
         saved_token = await self._store.add_token(token, request.instead_of_id)
         return pb_to_dict(AddTokenResponse(token=saved_token))
 
