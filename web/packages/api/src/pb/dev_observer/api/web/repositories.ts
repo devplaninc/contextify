@@ -23,6 +23,11 @@ export interface AddRepositoryResponse {
   repo: GitRepository | undefined;
 }
 
+export interface RescanRepositoryRequest {
+  research?: boolean | undefined;
+  skipSummary?: boolean | undefined;
+}
+
 export interface RescanRepositoryResponse {
 }
 
@@ -232,6 +237,82 @@ export const AddRepositoryResponse: MessageFns<AddRepositoryResponse> = {
     message.repo = (object.repo !== undefined && object.repo !== null)
       ? GitRepository.fromPartial(object.repo)
       : undefined;
+    return message;
+  },
+};
+
+function createBaseRescanRepositoryRequest(): RescanRepositoryRequest {
+  return { research: undefined, skipSummary: undefined };
+}
+
+export const RescanRepositoryRequest: MessageFns<RescanRepositoryRequest> = {
+  encode(message: RescanRepositoryRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.research !== undefined) {
+      writer.uint32(8).bool(message.research);
+    }
+    if (message.skipSummary !== undefined) {
+      writer.uint32(16).bool(message.skipSummary);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RescanRepositoryRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRescanRepositoryRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.research = reader.bool();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.skipSummary = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RescanRepositoryRequest {
+    return {
+      research: isSet(object.research) ? gt.Boolean(object.research) : undefined,
+      skipSummary: isSet(object.skipSummary) ? gt.Boolean(object.skipSummary) : undefined,
+    };
+  },
+
+  toJSON(message: RescanRepositoryRequest): unknown {
+    const obj: any = {};
+    if (message.research !== undefined) {
+      obj.research = message.research;
+    }
+    if (message.skipSummary !== undefined) {
+      obj.skipSummary = message.skipSummary;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<RescanRepositoryRequest>): RescanRepositoryRequest {
+    return RescanRepositoryRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<RescanRepositoryRequest>): RescanRepositoryRequest {
+    const message = createBaseRescanRepositoryRequest();
+    message.research = object.research ?? undefined;
+    message.skipSummary = object.skipSummary ?? undefined;
     return message;
   },
 };

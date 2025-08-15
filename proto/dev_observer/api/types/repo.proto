@@ -44,3 +44,8 @@ message ReposFilter {
   optional GitProvider provider = 1;
   optional string owner = 2;
 }
+
+message CodeResearchMeta {
+  string summary = 1;
+  google.protobuf.Timestamp created_at = 2;
+}

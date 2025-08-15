@@ -1,12 +1,8 @@
 import asyncio
 import dataclasses
 import logging
-from typing import Optional, List, Union
+from typing import Optional
 
-from langchain.chat_models import init_chat_model
-from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 from langfuse.callback import CallbackHandler
 from langgraph.constants import END
@@ -16,7 +12,7 @@ from langgraph.utils.config import ensure_config
 from pydantic import BaseModel
 
 from dev_observer.analysis.provider import AnalysisProvider, AnalysisResult
-from dev_observer.api.types.ai_pb2 import ModelConfig
+from dev_observer.analysis.util import models
 from dev_observer.log import s_
 from dev_observer.prompts.langfuse import LangfuseAuthProps
 from dev_observer.prompts.provider import FormattedPrompt
@@ -123,41 +119,5 @@ class AnalysisState(BaseModel):
 class AnalysisNodes:
     async def analyze(self, _: AnalysisState, config: RunnableConfig):
         info = AnalysisInfo.from_config(config)
-        prompt = info.prompt
-        prompt_config = prompt.config
-        if prompt_config is None or prompt_config.model is None:
-            raise ValueError("Missing model in prompt config")
-
-        prompt_name = prompt.prompt_name
-
-        messages: List[BaseMessage] = []
-        if prompt.system is not None:
-            messages.append(SystemMessage(content=prompt.system.text))
-        if prompt.user is not None:
-            contents: List[Union[str, dict]] = []
-            text = prompt.user.text
-            image_url = prompt.user.image_url
-            if text is not None and len(text) > 0:
-                contents.append({"type": "text", "text": text})
-            if image_url is not None and len(image_url) > 0:
-                contents.append({"type": "image_url", "image_url": {"url": image_url}})
-            messages.append(HumanMessage(content=contents))
-
-        model = _model_from_config(prompt_config.model)
-        try:
-            _log.debug(s_("Creating prompt", prompt_config=prompt_config, prompt_name=prompt_name))
-            pt = ChatPromptTemplate.from_messages(messages)
-            if prompt.langfuse_prompt is not None:
-                pt.metadata = {"langfuse_prompt": prompt.langfuse_prompt}
-            pv = await pt.ainvoke({}, config=config)
-            _log.debug(s_("Invoking model", prompt_config=prompt_config, prompt_name=prompt_name))
-            response = await model.ainvoke(pv, config=config)
-            _log.debug(s_("Model replied", prompt_config=prompt_config, prompt_name=prompt_name))
-            return {"response": f"{response.content}"}
-        except BaseException as e:
-            _log.exception(s_("Model failed", prompt_config=prompt_config, prompt_name=prompt_name, error=e))
-            raise
-
-
-def _model_from_config(config: ModelConfig) -> BaseChatModel:
-    return init_chat_model(f"{config.provider}:{config.model_name}")
+        response = await models.ainvoke(config, info.prompt)
+        return {"response": f"{response.content}"}

@@ -23,6 +23,7 @@ const analyzerSchema = z.object({
 const analysisConfigSchema = z.object({
   repoAnalyzers: z.array(analyzerSchema),
   siteAnalyzers: z.array(analyzerSchema),
+  codeResearchAnalyzers: z.array(analyzerSchema),
   disableMasking: z.boolean(),
   defaultGitChangesAnalyzer: analyzerSchema.optional(),
   defaultAggregatedSummaryAnalyzer: analyzerSchema.optional(),
@@ -41,10 +42,16 @@ const repoAnalysisConfigFlattenSchema = z.object({
   maxFileSizeBytes: z.coerce.number(),
 })
 
+const repoAnalysisConfigResearchSchema = z.object({
+  maxRepoSizeMb: z.coerce.number(),
+  maxIterations: z.coerce.number(),
+})
+
 const repoAnalysisConfigSchema = z.object({
   flatten: repoAnalysisConfigFlattenSchema,
   processingIntervalSec: z.coerce.number(),
   disabled: z.boolean(),
+  research: repoAnalysisConfigResearchSchema,
 })
 
 const websiteCrawlingConfigSchema = z.object({
@@ -93,6 +100,8 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
     = useFieldArray({name: "analysis.repoAnalyzers", control: form.control});
   const {fields: siteAnalyzers, remove: removeSiteAnalyzer, append: appendSiteAnalyzer}
     = useFieldArray({name: "analysis.siteAnalyzers", control: form.control});
+  const {fields: codeResearchAnalyzers, remove: removeCodeResearchAnalyzer, append: appendCodeResearchAnalyzer}
+    = useFieldArray({name: "analysis.codeResearchAnalyzers", control: form.control});
   return <Form {...form}>
     {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -146,6 +155,62 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
         <Button onClick={(e) => {
           e.preventDefault()
           appendRepoAnalyzer(Analyzer.create({name: '', promptPrefix: '', fileName: "analysis.md"}))
+        }
+        }>
+          Add Analyzer
+        </Button>
+      </div>
+      <Separator/>
+      <div className="space-y-4">
+        <h2 className="font-semibold text-lg">Code Research Analyzers:</h2>
+        {codeResearchAnalyzers.map((f, i) => (
+          <div key={f.id} className="border rounded-md p-4 space-y-4">
+            <FormField
+              control={form.control}
+              name={`analysis.codeResearchAnalyzers.${i}.name`}
+              render={({field}) => (
+                <FormItem className="flex items-center gap-4">
+                  <FormLabel className="w-[100px]">Name:</FormLabel>
+                  <FormControl className="w-[200px]">
+                    <Input placeholder="Analyzer name" {...field}/>
+                  </FormControl>
+                  <FormMessage/>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`analysis.codeResearchAnalyzers.${i}.promptPrefix`}
+              render={({field}) => (
+                <FormItem className="flex items-center gap-4">
+                  <FormLabel className="w-[100px]">Prompt Prefix:</FormLabel>
+                  <FormControl className="w-[200px]">
+                    <Input placeholder="Analyzer prompt prefix" {...field}/>
+                  </FormControl>
+                  <FormMessage/>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`analysis.codeResearchAnalyzers.${i}.fileName`}
+              render={({field}) => (
+                <FormItem className="flex items-center gap-4">
+                  <FormLabel className="w-[100px]">File Name:</FormLabel>
+                  <FormControl className="w-[200px]">
+                    <Input placeholder="Analyzer file name" {...field}/>
+                  </FormControl>
+                  <FormMessage/>
+                </FormItem>
+              )}
+            />
+
+            <Button onClick={() => removeCodeResearchAnalyzer(i)}>Remove</Button>
+          </div>
+        ))}
+        <Button onClick={(e) => {
+          e.preventDefault()
+          appendCodeResearchAnalyzer(Analyzer.create({name: '', promptPrefix: '', fileName: "analysis.md"}))
         }
         }>
           Add Analyzer
@@ -498,6 +563,38 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
                     checked={field.value}
                     onChange={field.onChange}
                   />
+                </FormControl>
+                <FormMessage/>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="border rounded-md p-4 space-y-4">
+          <h3 className="font-medium">Research Settings</h3>
+
+          <FormField
+            control={form.control}
+            name="repoAnalysis.research.maxRepoSizeMb"
+            render={({field}) => (
+              <FormItem className="flex items-center gap-4">
+                <FormLabel className="w-[200px]">Max Repo Size (MB):</FormLabel>
+                <FormControl className="w-[200px]">
+                  <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/>
+                </FormControl>
+                <FormMessage/>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="repoAnalysis.research.maxIterations"
+            render={({field}) => (
+              <FormItem className="flex items-center gap-4">
+                <FormLabel className="w-[200px]">Max Iterations:</FormLabel>
+                <FormControl className="w-[200px]">
+                  <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/>
                 </FormControl>
                 <FormMessage/>
               </FormItem>

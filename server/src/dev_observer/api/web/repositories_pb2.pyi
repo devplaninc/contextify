@@ -26,6 +26,14 @@ class AddRepositoryResponse(_message.Message):
     repo: _repo_pb2.GitRepository
     def __init__(self, repo: _Optional[_Union[_repo_pb2.GitRepository, _Mapping]] = ...) -> None: ...
 
+class RescanRepositoryRequest(_message.Message):
+    __slots__ = ("research", "skip_summary")
+    RESEARCH_FIELD_NUMBER: _ClassVar[int]
+    SKIP_SUMMARY_FIELD_NUMBER: _ClassVar[int]
+    research: bool
+    skip_summary: bool
+    def __init__(self, research: bool = ..., skip_summary: bool = ...) -> None: ...
+
 class RescanRepositoryResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...

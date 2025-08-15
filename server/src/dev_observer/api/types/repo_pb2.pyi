@@ -72,3 +72,11 @@ class ReposFilter(_message.Message):
     provider: GitProvider
     owner: str
     def __init__(self, provider: _Optional[_Union[GitProvider, str]] = ..., owner: _Optional[str] = ...) -> None: ...
+
+class CodeResearchMeta(_message.Message):
+    __slots__ = ("summary", "created_at")
+    SUMMARY_FIELD_NUMBER: _ClassVar[int]
+    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
+    summary: str
+    created_at: _timestamp_pb2.Timestamp
+    def __init__(self, summary: _Optional[str] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...

@@ -24,6 +24,9 @@ export interface ProcessingItemKey {
     /** One-off request */
     { $case: "requestId"; value: string }
     | { $case: "periodicAggregationId"; value: string }
+    | //
+    /** Periodic repo research. */
+    { $case: "researchGitRepoId"; value: string }
     | undefined;
 }
 
@@ -129,6 +132,9 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
       case "periodicAggregationId":
         writer.uint32(826).string(message.entity.value);
         break;
+      case "researchGitRepoId":
+        writer.uint32(834).string(message.entity.value);
+        break;
     }
     return writer;
   },
@@ -172,6 +178,14 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
           message.entity = { $case: "periodicAggregationId", value: reader.string() };
           continue;
         }
+        case 104: {
+          if (tag !== 834) {
+            break;
+          }
+
+          message.entity = { $case: "researchGitRepoId", value: reader.string() };
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -191,6 +205,8 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
         ? { $case: "requestId", value: gt.String(object.requestId) }
         : isSet(object.periodicAggregationId)
         ? { $case: "periodicAggregationId", value: gt.String(object.periodicAggregationId) }
+        : isSet(object.researchGitRepoId)
+        ? { $case: "researchGitRepoId", value: gt.String(object.researchGitRepoId) }
         : undefined,
     };
   },
@@ -205,6 +221,8 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
       obj.requestId = message.entity.value;
     } else if (message.entity?.$case === "periodicAggregationId") {
       obj.periodicAggregationId = message.entity.value;
+    } else if (message.entity?.$case === "researchGitRepoId") {
+      obj.researchGitRepoId = message.entity.value;
     }
     return obj;
   },
@@ -236,6 +254,12 @@ export const ProcessingItemKey: MessageFns<ProcessingItemKey> = {
       case "periodicAggregationId": {
         if (object.entity?.value !== undefined && object.entity?.value !== null) {
           message.entity = { $case: "periodicAggregationId", value: object.entity.value };
+        }
+        break;
+      }
+      case "researchGitRepoId": {
+        if (object.entity?.value !== undefined && object.entity?.value !== null) {
+          message.entity = { $case: "researchGitRepoId", value: object.entity.value };
         }
         break;
       }

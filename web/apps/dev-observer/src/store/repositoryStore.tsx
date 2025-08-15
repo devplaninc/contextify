@@ -6,7 +6,8 @@ import {
   DeleteRepositoryResponse,
   GetRepositoryResponse,
   ListRepositoriesResponse,
-  GitProvider
+  GitProvider,
+  RescanRepositoryRequest
 } from "@devplan/contextify-api";
 import type {GitRepository} from "@devplan/contextify-api";
 import {fetchWithAuth, VoidParser} from "@/store/api.tsx";
@@ -19,7 +20,7 @@ export interface RepositoryState {
   fetchRepositoryById: (id: string) => Promise<void>;
   addRepository: (url: string) => Promise<void>;
   deleteRepository: (id: string) => Promise<void>;
-  rescanRepository: (id: string) => Promise<void>;
+  rescanRepository: (id: string, req?: RescanRepositoryRequest) => Promise<void>;
 }
 
 export const createRepositoriesSlice: StateCreator<
@@ -64,5 +65,7 @@ export const createRepositoriesSlice: StateCreator<
       const repositories = repos.reduce((a, r) => ({...a, [r.id]: r}), {} as Record<string, GitRepository>)
       set(s => ({...s, repositories}))
     }),
-  rescanRepository: async id => fetchWithAuth(repoRescanAPI(id), new VoidParser(), {method: "POST"}),
+  rescanRepository: async (id, req) => fetchWithAuth(repoRescanAPI(id), new VoidParser(), {
+    method: "POST", body: JSON.stringify(RescanRepositoryRequest.toJSON(req ?? {}))
+  }),
 }));

@@ -17,8 +17,10 @@ message SystemMessage {
 }
 
 message UserMessage {
+  reserved "image_url";
+  reserved 2;
   optional string text = 1;
-  optional string image_url = 2;
+  repeated string image_urls = 3;
 }
 
 message PromptTemplate {

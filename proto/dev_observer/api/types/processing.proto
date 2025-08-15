@@ -15,6 +15,8 @@ message ProcessingItemKey {
     // One-off request
     string request_id = 102;
     string periodic_aggregation_id = 103;
+    // Periodic repo research.
+    string research_git_repo_id = 104;
   }
 }
 
