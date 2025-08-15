@@ -20,3 +20,13 @@ class PromptsProvider(Protocol):
     @abstractmethod
     async def get_formatted(self, name: str, params: Optional[Dict[str, str]] = None) -> FormattedPrompt:
         ...
+
+
+class PrefixedPromptsFetcher:
+    provider: PromptsProvider
+
+    def __init__(self, provider: PromptsProvider):
+        self.provider = provider
+
+    async def get(self, prefix: str, suffix: str, params: Optional[Dict[str, str]] = None) -> FormattedPrompt:
+        return await self.provider.get_formatted(f"{prefix}_{suffix}", params)

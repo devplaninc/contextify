@@ -1,6 +1,7 @@
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -27,12 +28,12 @@ class SystemMessage(_message.Message):
     def __init__(self, text: _Optional[str] = ...) -> None: ...
 
 class UserMessage(_message.Message):
-    __slots__ = ("text", "image_url")
+    __slots__ = ("text", "image_urls")
     TEXT_FIELD_NUMBER: _ClassVar[int]
-    IMAGE_URL_FIELD_NUMBER: _ClassVar[int]
+    IMAGE_URLS_FIELD_NUMBER: _ClassVar[int]
     text: str
-    image_url: str
-    def __init__(self, text: _Optional[str] = ..., image_url: _Optional[str] = ...) -> None: ...
+    image_urls: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, text: _Optional[str] = ..., image_urls: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class PromptTemplate(_message.Message):
     __slots__ = ("system", "user", "config")

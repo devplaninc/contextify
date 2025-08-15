@@ -75,6 +75,11 @@ export interface ReposFilter {
   owner?: string | undefined;
 }
 
+export interface CodeResearchMeta {
+  summary: string;
+  createdAt: Date | undefined;
+}
+
 function createBaseGitRepository(): GitRepository {
   return { id: "", name: "", fullName: "", url: "", description: "", provider: 0, properties: undefined };
 }
@@ -627,6 +632,82 @@ export const ReposFilter: MessageFns<ReposFilter> = {
     const message = createBaseReposFilter();
     message.provider = object.provider ?? undefined;
     message.owner = object.owner ?? undefined;
+    return message;
+  },
+};
+
+function createBaseCodeResearchMeta(): CodeResearchMeta {
+  return { summary: "", createdAt: undefined };
+}
+
+export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
+  encode(message: CodeResearchMeta, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.summary !== "") {
+      writer.uint32(10).string(message.summary);
+    }
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CodeResearchMeta {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCodeResearchMeta();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.summary = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CodeResearchMeta {
+    return {
+      summary: isSet(object.summary) ? gt.String(object.summary) : "",
+      createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
+    };
+  },
+
+  toJSON(message: CodeResearchMeta): unknown {
+    const obj: any = {};
+    if (message.summary !== "") {
+      obj.summary = message.summary;
+    }
+    if (message.createdAt !== undefined) {
+      obj.createdAt = message.createdAt.toISOString();
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CodeResearchMeta>): CodeResearchMeta {
+    return CodeResearchMeta.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CodeResearchMeta>): CodeResearchMeta {
+    const message = createBaseCodeResearchMeta();
+    message.summary = object.summary ?? "";
+    message.createdAt = object.createdAt ?? undefined;
     return message;
   },
 };

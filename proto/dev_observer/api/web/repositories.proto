@@ -17,6 +17,11 @@ message AddRepositoryResponse {
   dev_observer.api.types.repo.GitRepository repo = 1;
 }
 
+message RescanRepositoryRequest{
+  optional bool research = 1;
+  optional bool skip_summary = 2;
+}
+
 message RescanRepositoryResponse{}
 
 message GetRepositoryResponse{

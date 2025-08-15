@@ -1,0 +1,118 @@
+import asyncio
+import dataclasses
+import logging
+import os
+import shutil
+from typing import Optional, List
+
+from langgraph.graph.state import CompiledStateGraph
+from langgraph.utils.config import ensure_config
+
+from dev_observer.analysis.code.nodes import AnalysisState
+from dev_observer.api.types.observations_pb2 import ObservationKey, Observation
+from dev_observer.api.types.processing_pb2 import ProcessingItemResultData
+from dev_observer.api.types.repo_pb2 import CodeResearchMeta
+from dev_observer.observations.provider import ObservationsProvider
+from dev_observer.processors.observations import get_repo_key_pref
+from dev_observer.repository.cloner import clone_repository
+from dev_observer.repository.provider import GitRepositoryProvider
+from dev_observer.repository.types import ObservedRepo
+from dev_observer.storage.provider import StorageProvider
+from dev_observer.util import Clock, RealClock, pb_to_json
+
+_log = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class CodeResearchTask:
+    prompt_prefix: str
+    repo_path: str
+    max_iterations: int
+    dir_key: ObservationKey
+
+
+class CodeResearchProcessor:
+    _graph: CompiledStateGraph[AnalysisState, AnalysisState, AnalysisState]
+    _git: GitRepositoryProvider
+    _store: StorageProvider
+    _observations: ObservationsProvider
+
+    _clock: Clock
+
+    def __init__(self,
+                 graph: CompiledStateGraph[AnalysisState],
+                 git: GitRepositoryProvider,
+                 store: StorageProvider,
+                 observations: ObservationsProvider,
+                 clock: Clock = RealClock(),
+                 ):
+        self._graph = graph
+        self._git = git
+        self._store = store
+        self._observations = observations
+        self._clock = clock
+
+    async def research_repository(self, repo: ObservedRepo) -> Optional[ProcessingItemResultData]:
+        config = await self._store.get_global_config()
+        if len(config.analysis.code_research_analyzers) == 0:
+            return None
+
+        conf = config.repo_analysis.research
+        clone_result = await clone_repository(
+            repo, self._git,
+            max_size_mb=conf.max_repo_size_mb or 1000,
+            depth="1",
+        )
+        repo_path = clone_result.path
+        async def clean_up():
+            if os.path.exists(repo_path):
+                # noinspection PyTypeChecker
+                await asyncio.to_thread(shutil.rmtree, repo_path, False)
+
+        try:
+            tasks: List[CodeResearchTask] = []
+            for analyzer in config.analysis.code_research_analyzers:
+                key = f"{get_repo_key_pref(repo.git_repo)}/{analyzer.file_name}"
+                tasks.append(CodeResearchTask(
+                    prompt_prefix=analyzer.prompt_prefix,
+                    repo_path=repo_path,
+                    max_iterations=conf.max_iterations or 1,
+                    dir_key=ObservationKey(kind="repo_research", name=analyzer.file_name, key=key),
+                ))
+
+            coro_tasks = [self._process_task(t) for t in tasks]
+            await asyncio.gather(*coro_tasks, return_exceptions=True)
+            return ProcessingItemResultData(
+                observations=[t.dir_key for t in tasks]
+            )
+        finally:
+            await clean_up()
+
+
+
+    async def _process_task(self, task: CodeResearchTask):
+        in_state: AnalysisState = AnalysisState(
+            repo_path=task.repo_path,
+            max_iterations=task.max_iterations,
+            prompt_prefix=task.prompt_prefix,
+            messages=[],
+        )
+        # noinspection PyTypeChecker
+        response = await self._graph.ainvoke(
+            in_state, ensure_config({"recursion_limit": 100}), output_keys=["full_analysis", "analysis_summary"])
+
+        dir_key = task.dir_key
+        meta = CodeResearchMeta(
+            summary=response["analysis_summary"],
+            created_at=self._clock.now(),
+        )
+        meta_obs = Observation(
+            key=ObservationKey(kind=dir_key.kind, name="meta.json", key=f"{dir_key.key}/meta.json"),
+            content=pb_to_json(meta),
+        )
+        research_obs = Observation(
+            key=ObservationKey(kind=dir_key.kind, name="research.md", key=f"{dir_key.key}/research.md"),
+            content=response["full_analysis"],
+        )
+        await self._observations.store(research_obs)
+        await self._observations.store(meta_obs)

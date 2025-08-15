@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, Tuple, Dict
 
+from dev_observer.analysis.code.graph import create_code_research_graph
 from dev_observer.analysis.langgraph_provider import LanggraphAnalysisProvider
 from dev_observer.analysis.provider import AnalysisProvider
 from dev_observer.analysis.stub import StubAnalysisProvider
@@ -11,6 +12,7 @@ from dev_observer.observations.local import LocalObservationsProvider
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.observations.s3 import S3ObservationsProvider
 from dev_observer.processors.aggregated_summary import AggregatedSummaryProcessor
+from dev_observer.processors.code_research import CodeResearchProcessor
 from dev_observer.processors.git.changes import GitChangesHandler
 from dev_observer.processors.git_changes import GitChangesProcessor
 from dev_observer.processors.periodic import PeriodicProcessor
@@ -225,6 +227,11 @@ def detect_server_env(settings: Settings) -> ServerEnv:
     bg_agg_summary_processor = AggregatedSummaryProcessor(
         bg_analysis, bg_repository, prompts, observations, tokenizer, bg_git_changes_handler, bg_storage)
     users = detect_users_provider(settings)
+    research_graph = create_code_research_graph(prompts)
+
+    bg_research_processor = CodeResearchProcessor(
+        research_graph, bg_repository, bg_storage, observations
+    )
 
     # Extract API key from settings if available
     api_keys = None
@@ -243,6 +250,7 @@ def detect_server_env(settings: Settings) -> ServerEnv:
             bg_agg_summary_processor,
             bg_git_changes_handler,
             websites_processor=bg_sites_processor,
+            research_processor=bg_research_processor,
         ),
         users=users,
         api_keys=api_keys or [],

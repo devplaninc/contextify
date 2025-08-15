@@ -10,6 +10,7 @@ from dev_observer.common.errors import TerminalError
 from dev_observer.common.schedule import get_next_date, pb_to_datetime
 from dev_observer.log import s_
 from dev_observer.processors.aggregated_summary import AggregatedSummaryProcessor
+from dev_observer.processors.code_research import CodeResearchProcessor
 from dev_observer.processors.flattening import ObservationRequest
 from dev_observer.processors.git.changes import GitChangesHandler, ProcessGitChangesParams
 from dev_observer.processors.observations import get_repo_key_pref
@@ -29,6 +30,7 @@ class PeriodicProcessor:
     _aggregated_summary_processor: AggregatedSummaryProcessor
     _git_changes_handler: GitChangesHandler
     _websites_processor: Optional[WebsitesProcessor]
+    _research_processor: Optional[CodeResearchProcessor]
     _clock: Clock
 
     def __init__(self,
@@ -37,6 +39,7 @@ class PeriodicProcessor:
                  aggregated_summary_processor: AggregatedSummaryProcessor,
                  git_changes_handler: GitChangesHandler,
                  websites_processor: Optional[WebsitesProcessor] = None,
+                 research_processor: Optional[CodeResearchProcessor] = None,
                  clock: Clock = RealClock(),
                  ):
         self._storage = storage
@@ -44,6 +47,7 @@ class PeriodicProcessor:
         self._git_changes_handler = git_changes_handler
         self._aggregated_summary_processor = aggregated_summary_processor
         self._websites_processor = websites_processor
+        self._research_processor = research_processor
         self._clock = clock
 
     async def run(self):
@@ -127,7 +131,9 @@ class PeriodicProcessor:
     async def _process_item(self, item: ProcessingItem) -> Optional[ProcessingItemResultData]:
         ent_type = item.key.WhichOneof("entity")
         if ent_type == "github_repo_id":
-            return await self._process_github_repo(item.key.github_repo_id)
+            return await self._process_git_repo_summary(item.key.github_repo_id)
+        if ent_type == "research_git_repo_id":
+            return await self._process_git_repo_research(item.key.research_git_repo_id)
         elif ent_type == "website_url":
             if self._websites_processor is None:
                 _log.error(s_("Website processor is not configured", url=item.key.website_url))
@@ -146,7 +152,7 @@ class PeriodicProcessor:
         else:
             raise ValueError(f"[{ent_type}] is not supported")
 
-    async def _process_github_repo(self, repo_id: str) -> Optional[ProcessingItemResultData]:
+    async def _process_git_repo_summary(self, repo_id: str) -> Optional[ProcessingItemResultData]:
         config = await self._storage.get_global_config()
         if config.HasField("repo_analysis") and config.repo_analysis.disabled:
             _log.warning(s_("Repo analysis disabled"))
@@ -168,6 +174,19 @@ class PeriodicProcessor:
             _log.debug(s_("No analyzers configured, skipping", repo=repo))
             return None
         return await self._repos_processor.process(ObservedRepo(url=repo.url, git_repo=repo), requests, config)
+
+    async def _process_git_repo_research(self, repo_id: str) -> Optional[ProcessingItemResultData]:
+        processor = self._research_processor
+        if processor is None:
+            return None
+        repo = await self._storage.get_git_repo(repo_id)
+        if repo is None:
+            _log.error(s_("Git repo not found", repo_id=repo_id))
+            raise ValueError(f"Repo with id [{repo_id}] is not found")
+        _log.info(s_("Researching git repo", repo=repo))
+        result = await processor.research_repository(ObservedRepo(url=repo.url, git_repo=repo))
+        _log.info(s_("Repo research done.", repo=repo))
+        return result
 
     async def _process_website(self, website_url: str) -> Optional[ProcessingItemResultData]:
         _log.debug(s_("Processing website", url=website_url))

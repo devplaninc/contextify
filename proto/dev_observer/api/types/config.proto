@@ -16,6 +16,7 @@ message AnalysisConfig {
   bool disable_masking = 3;
   optional dev_observer.api.types.observations.Analyzer default_git_changes_analyzer = 4;
   optional dev_observer.api.types.observations.Analyzer default_aggregated_summary_analyzer = 5;
+  repeated dev_observer.api.types.observations.Analyzer code_research_analyzers = 6;
 }
 
 message UserManagementStatus {
@@ -27,6 +28,7 @@ message RepoAnalysisConfig {
   Flatten flatten = 1;
   int32 processing_interval_sec = 2;
   bool disabled = 3;
+  Research research = 4;
 
   message Flatten {
     bool compress = 1;
@@ -41,6 +43,11 @@ message RepoAnalysisConfig {
     string large_repo_ignore_pattern = 8;
     bool compress_large = 9;
     int32 max_file_size_bytes = 10;
+  }
+
+  message Research {
+    int32 max_repo_size_mb = 1;
+    int32 max_iterations = 2;
   }
 }
 

@@ -7,7 +7,7 @@ from dev_observer.api.types.processing_pb2 import ProcessingItemKey
 from dev_observer.api.types.repo_pb2 import GitRepository
 from dev_observer.api.web.repositories_pb2 import AddRepositoryRequest, AddRepositoryResponse, \
     ListRepositoriesResponse, RescanRepositoryResponse, GetRepositoryResponse, DeleteRepositoryResponse, \
-    FilterRepositoriesRequest, FilterRepositoriesResponse
+    FilterRepositoriesRequest, FilterRepositoriesResponse, RescanRepositoryRequest
 from dev_observer.log import s_
 from dev_observer.repository.parser import parse_repository_url
 from dev_observer.storage.provider import StorageProvider
@@ -66,8 +66,14 @@ class RepositoriesService:
         repos = await self._store.filter_git_repos(request.filter)
         return pb_to_dict(FilterRepositoriesResponse(repos=repos))
 
-    async def rescan(self, repo_id: str):
-        await self._store.set_next_processing_time(
-            ProcessingItemKey(github_repo_id=repo_id), self._clock.now(),
-        )
+    async def rescan(self, repo_id: str, req: Request):
+        request = parse_dict_pb(await req.json(), RescanRepositoryRequest())
+        if not request.skip_summary:
+            await self._store.set_next_processing_time(
+                ProcessingItemKey(github_repo_id=repo_id), self._clock.now(),
+            )
+        if request.research:
+            await self._store.set_next_processing_time(
+                ProcessingItemKey(research_git_repo_id=repo_id), self._clock.now(),
+            )
         return pb_to_dict(RescanRepositoryResponse())

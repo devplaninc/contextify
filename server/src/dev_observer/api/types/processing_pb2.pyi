@@ -9,16 +9,18 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class ProcessingItemKey(_message.Message):
-    __slots__ = ("github_repo_id", "website_url", "request_id", "periodic_aggregation_id")
+    __slots__ = ("github_repo_id", "website_url", "request_id", "periodic_aggregation_id", "research_git_repo_id")
     GITHUB_REPO_ID_FIELD_NUMBER: _ClassVar[int]
     WEBSITE_URL_FIELD_NUMBER: _ClassVar[int]
     REQUEST_ID_FIELD_NUMBER: _ClassVar[int]
     PERIODIC_AGGREGATION_ID_FIELD_NUMBER: _ClassVar[int]
+    RESEARCH_GIT_REPO_ID_FIELD_NUMBER: _ClassVar[int]
     github_repo_id: str
     website_url: str
     request_id: str
     periodic_aggregation_id: str
-    def __init__(self, github_repo_id: _Optional[str] = ..., website_url: _Optional[str] = ..., request_id: _Optional[str] = ..., periodic_aggregation_id: _Optional[str] = ...) -> None: ...
+    research_git_repo_id: str
+    def __init__(self, github_repo_id: _Optional[str] = ..., website_url: _Optional[str] = ..., request_id: _Optional[str] = ..., periodic_aggregation_id: _Optional[str] = ..., research_git_repo_id: _Optional[str] = ...) -> None: ...
 
 class ProcessingItem(_message.Message):
     __slots__ = ("key", "next_processing", "last_processed", "last_error", "no_processing", "processing_started_at", "data")

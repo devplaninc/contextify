@@ -34,6 +34,11 @@ const RepositoryDetailsPage: React.FC = () => {
       .then(() => toast.success(`Rescan started`))
       .catch(e => toast.error(`Failed to initialize rescan: ${e}`))
   }, [id, rescanRepository])
+  const research = useCallback(() => {
+    rescanRepository(id!, {research: true, skipSummary: true})
+      .then(() => toast.success(`Research started`))
+      .catch(e => toast.error(`Failed to initialize research: ${e}`))
+  }, [id, rescanRepository])
 
   const handleBack = () => navigate("/repositories");
 
@@ -79,7 +84,10 @@ const RepositoryDetailsPage: React.FC = () => {
             </TabsList>
             <TabsContent value="analysis">
               <div className="space-y-4">
-                <Button onClick={rescan}>Rescan</Button>
+                <div className="flex gap-2 items-center">
+                  <Button onClick={rescan}>Rescan</Button>
+                  <Button onClick={research}>Research</Button>
+                </div>
                 <RepoAnalysisList repo={repository}/>
               </div>
             </TabsContent>

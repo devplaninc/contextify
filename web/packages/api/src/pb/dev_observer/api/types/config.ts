@@ -22,6 +22,7 @@ export interface AnalysisConfig {
   disableMasking: boolean;
   defaultGitChangesAnalyzer?: Analyzer | undefined;
   defaultAggregatedSummaryAnalyzer?: Analyzer | undefined;
+  codeResearchAnalyzers: Analyzer[];
 }
 
 export interface UserManagementStatus {
@@ -33,6 +34,7 @@ export interface RepoAnalysisConfig {
   flatten: RepoAnalysisConfig_Flatten | undefined;
   processingIntervalSec: number;
   disabled: boolean;
+  research: RepoAnalysisConfig_Research | undefined;
 }
 
 export interface RepoAnalysisConfig_Flatten {
@@ -48,6 +50,11 @@ export interface RepoAnalysisConfig_Flatten {
   largeRepoIgnorePattern: string;
   compressLarge: boolean;
   maxFileSizeBytes: number;
+}
+
+export interface RepoAnalysisConfig_Research {
+  maxRepoSizeMb: number;
+  maxIterations: number;
 }
 
 export interface WebsiteCrawlingConfig {
@@ -164,6 +171,7 @@ function createBaseAnalysisConfig(): AnalysisConfig {
     disableMasking: false,
     defaultGitChangesAnalyzer: undefined,
     defaultAggregatedSummaryAnalyzer: undefined,
+    codeResearchAnalyzers: [],
   };
 }
 
@@ -183,6 +191,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     }
     if (message.defaultAggregatedSummaryAnalyzer !== undefined) {
       Analyzer.encode(message.defaultAggregatedSummaryAnalyzer, writer.uint32(42).fork()).join();
+    }
+    for (const v of message.codeResearchAnalyzers) {
+      Analyzer.encode(v!, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -234,6 +245,14 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
           message.defaultAggregatedSummaryAnalyzer = Analyzer.decode(reader, reader.uint32());
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.codeResearchAnalyzers.push(Analyzer.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -258,6 +277,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
       defaultAggregatedSummaryAnalyzer: isSet(object.defaultAggregatedSummaryAnalyzer)
         ? Analyzer.fromJSON(object.defaultAggregatedSummaryAnalyzer)
         : undefined,
+      codeResearchAnalyzers: gt.Array.isArray(object?.codeResearchAnalyzers)
+        ? object.codeResearchAnalyzers.map((e: any) => Analyzer.fromJSON(e))
+        : [],
     };
   },
 
@@ -278,6 +300,9 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     if (message.defaultAggregatedSummaryAnalyzer !== undefined) {
       obj.defaultAggregatedSummaryAnalyzer = Analyzer.toJSON(message.defaultAggregatedSummaryAnalyzer);
     }
+    if (message.codeResearchAnalyzers?.length) {
+      obj.codeResearchAnalyzers = message.codeResearchAnalyzers.map((e) => Analyzer.toJSON(e));
+    }
     return obj;
   },
 
@@ -297,6 +322,7 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
       (object.defaultAggregatedSummaryAnalyzer !== undefined && object.defaultAggregatedSummaryAnalyzer !== null)
         ? Analyzer.fromPartial(object.defaultAggregatedSummaryAnalyzer)
         : undefined;
+    message.codeResearchAnalyzers = object.codeResearchAnalyzers?.map((e) => Analyzer.fromPartial(e)) || [];
     return message;
   },
 };
@@ -378,7 +404,7 @@ export const UserManagementStatus: MessageFns<UserManagementStatus> = {
 };
 
 function createBaseRepoAnalysisConfig(): RepoAnalysisConfig {
-  return { flatten: undefined, processingIntervalSec: 0, disabled: false };
+  return { flatten: undefined, processingIntervalSec: 0, disabled: false, research: undefined };
 }
 
 export const RepoAnalysisConfig: MessageFns<RepoAnalysisConfig> = {
@@ -391,6 +417,9 @@ export const RepoAnalysisConfig: MessageFns<RepoAnalysisConfig> = {
     }
     if (message.disabled !== false) {
       writer.uint32(24).bool(message.disabled);
+    }
+    if (message.research !== undefined) {
+      RepoAnalysisConfig_Research.encode(message.research, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -426,6 +455,14 @@ export const RepoAnalysisConfig: MessageFns<RepoAnalysisConfig> = {
           message.disabled = reader.bool();
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.research = RepoAnalysisConfig_Research.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -440,6 +477,7 @@ export const RepoAnalysisConfig: MessageFns<RepoAnalysisConfig> = {
       flatten: isSet(object.flatten) ? RepoAnalysisConfig_Flatten.fromJSON(object.flatten) : undefined,
       processingIntervalSec: isSet(object.processingIntervalSec) ? gt.Number(object.processingIntervalSec) : 0,
       disabled: isSet(object.disabled) ? gt.Boolean(object.disabled) : false,
+      research: isSet(object.research) ? RepoAnalysisConfig_Research.fromJSON(object.research) : undefined,
     };
   },
 
@@ -454,6 +492,9 @@ export const RepoAnalysisConfig: MessageFns<RepoAnalysisConfig> = {
     if (message.disabled !== false) {
       obj.disabled = message.disabled;
     }
+    if (message.research !== undefined) {
+      obj.research = RepoAnalysisConfig_Research.toJSON(message.research);
+    }
     return obj;
   },
 
@@ -467,6 +508,9 @@ export const RepoAnalysisConfig: MessageFns<RepoAnalysisConfig> = {
       : undefined;
     message.processingIntervalSec = object.processingIntervalSec ?? 0;
     message.disabled = object.disabled ?? false;
+    message.research = (object.research !== undefined && object.research !== null)
+      ? RepoAnalysisConfig_Research.fromPartial(object.research)
+      : undefined;
     return message;
   },
 };
@@ -682,6 +726,82 @@ export const RepoAnalysisConfig_Flatten: MessageFns<RepoAnalysisConfig_Flatten> 
     message.largeRepoIgnorePattern = object.largeRepoIgnorePattern ?? "";
     message.compressLarge = object.compressLarge ?? false;
     message.maxFileSizeBytes = object.maxFileSizeBytes ?? 0;
+    return message;
+  },
+};
+
+function createBaseRepoAnalysisConfig_Research(): RepoAnalysisConfig_Research {
+  return { maxRepoSizeMb: 0, maxIterations: 0 };
+}
+
+export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research> = {
+  encode(message: RepoAnalysisConfig_Research, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.maxRepoSizeMb !== 0) {
+      writer.uint32(8).int32(message.maxRepoSizeMb);
+    }
+    if (message.maxIterations !== 0) {
+      writer.uint32(16).int32(message.maxIterations);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RepoAnalysisConfig_Research {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRepoAnalysisConfig_Research();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.maxRepoSizeMb = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.maxIterations = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RepoAnalysisConfig_Research {
+    return {
+      maxRepoSizeMb: isSet(object.maxRepoSizeMb) ? gt.Number(object.maxRepoSizeMb) : 0,
+      maxIterations: isSet(object.maxIterations) ? gt.Number(object.maxIterations) : 0,
+    };
+  },
+
+  toJSON(message: RepoAnalysisConfig_Research): unknown {
+    const obj: any = {};
+    if (message.maxRepoSizeMb !== 0) {
+      obj.maxRepoSizeMb = Math.round(message.maxRepoSizeMb);
+    }
+    if (message.maxIterations !== 0) {
+      obj.maxIterations = Math.round(message.maxIterations);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<RepoAnalysisConfig_Research>): RepoAnalysisConfig_Research {
+    return RepoAnalysisConfig_Research.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<RepoAnalysisConfig_Research>): RepoAnalysisConfig_Research {
+    const message = createBaseRepoAnalysisConfig_Research();
+    message.maxRepoSizeMb = object.maxRepoSizeMb ?? 0;
+    message.maxIterations = object.maxIterations ?? 0;
     return message;
   },
 };

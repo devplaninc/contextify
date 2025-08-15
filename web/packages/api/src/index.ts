@@ -57,7 +57,10 @@ export {
   AddRepositoryResponse,
   AddRepositoryRequest,
   ListRepositoriesResponse,
-  RescanRepositoryResponse
+  RescanRepositoryResponse,
+  RescanRepositoryRequest,
+  FilterRepositoriesResponse,
+  FilterRepositoriesRequest,
 } from './pb/dev_observer/api/web/repositories';
 export {
   ListTokensRequest,

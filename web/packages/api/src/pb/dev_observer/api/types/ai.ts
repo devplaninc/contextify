@@ -25,7 +25,7 @@ export interface SystemMessage {
 
 export interface UserMessage {
   text?: string | undefined;
-  imageUrl?: string | undefined;
+  imageUrls: string[];
 }
 
 export interface PromptTemplate {
@@ -245,7 +245,7 @@ export const SystemMessage: MessageFns<SystemMessage> = {
 };
 
 function createBaseUserMessage(): UserMessage {
-  return { text: undefined, imageUrl: undefined };
+  return { text: undefined, imageUrls: [] };
 }
 
 export const UserMessage: MessageFns<UserMessage> = {
@@ -253,8 +253,8 @@ export const UserMessage: MessageFns<UserMessage> = {
     if (message.text !== undefined) {
       writer.uint32(10).string(message.text);
     }
-    if (message.imageUrl !== undefined) {
-      writer.uint32(18).string(message.imageUrl);
+    for (const v of message.imageUrls) {
+      writer.uint32(26).string(v!);
     }
     return writer;
   },
@@ -274,12 +274,12 @@ export const UserMessage: MessageFns<UserMessage> = {
           message.text = reader.string();
           continue;
         }
-        case 2: {
-          if (tag !== 18) {
+        case 3: {
+          if (tag !== 26) {
             break;
           }
 
-          message.imageUrl = reader.string();
+          message.imageUrls.push(reader.string());
           continue;
         }
       }
@@ -294,7 +294,7 @@ export const UserMessage: MessageFns<UserMessage> = {
   fromJSON(object: any): UserMessage {
     return {
       text: isSet(object.text) ? gt.String(object.text) : undefined,
-      imageUrl: isSet(object.imageUrl) ? gt.String(object.imageUrl) : undefined,
+      imageUrls: gt.Array.isArray(object?.imageUrls) ? object.imageUrls.map((e: any) => gt.String(e)) : [],
     };
   },
 
@@ -303,8 +303,8 @@ export const UserMessage: MessageFns<UserMessage> = {
     if (message.text !== undefined) {
       obj.text = message.text;
     }
-    if (message.imageUrl !== undefined) {
-      obj.imageUrl = message.imageUrl;
+    if (message.imageUrls?.length) {
+      obj.imageUrls = message.imageUrls;
     }
     return obj;
   },
@@ -315,7 +315,7 @@ export const UserMessage: MessageFns<UserMessage> = {
   fromPartial(object: DeepPartial<UserMessage>): UserMessage {
     const message = createBaseUserMessage();
     message.text = object.text ?? undefined;
-    message.imageUrl = object.imageUrl ?? undefined;
+    message.imageUrls = object.imageUrls?.map((e) => e) || [];
     return message;
   },
 };
