@@ -73,6 +73,18 @@ class CodeResearchNodes:
                 tools=bash_tools(),
                 history=state["messages"] or [],
             ))
+            retry = 3
+            while retry > 0:
+                if response.response_metadata.get('finish_reason', None) == 'MALFORMED_FUNCTION_CALL':
+                    await asyncio.sleep(20)
+                    retry -= 1
+                    _log.debug(s_("Retrying due to MALFORMED_FUNCTION_CALL", **p))
+                    response = await models.ainvoke(config, prompt, models.InvokeParams(
+                        tools=bash_tools(),
+                        history=state["messages"] or [],
+                    ))
+                else:
+                    break
             _log.debug(s_("Response received", response=response, **p))
             has_tools = isinstance(response, AIMessage) and len(response.tool_calls) > 0
             if not has_tools:
@@ -134,7 +146,7 @@ class CodeResearchNodes:
             _log.exception(s_("Exception", error=str(e), **p))
             raise
 
-    async def _execute_tool(self, repo_path: str, tool_call: ToolCall, timeout: float = 5.0) -> ToolMessage:
+    async def _execute_tool(self, repo_path: str, tool_call: ToolCall, timeout: float = 45.0) -> ToolMessage:
         p = {"op": "code_research", "node": "tools_call", "repo_path": repo_path, "tool": tool_call["name"]}
         try:
             _log.debug(s_("Executing", **p))

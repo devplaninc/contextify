@@ -7,7 +7,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
+import dev_observer
 from dev_observer.log import s_
+
+dev_observer.log.encoder = dev_observer.log.PlainTextEncoder()
+logging.basicConfig(level=logging.DEBUG)
+
+# Or suppress all AWS-related debug messages
+logging.getLogger('boto3').setLevel(logging.WARNING)
+logging.getLogger('botocore').setLevel(logging.WARNING)
+logging.getLogger('aiobotocore').setLevel(logging.WARNING)
+logging.getLogger('httpcore').setLevel(logging.WARNING)
+logging.getLogger('openai').setLevel(logging.WARNING)
+
 from dev_observer.server import detect
 from dev_observer.server.middleware.auth import AuthMiddleware
 from dev_observer.server.services.config import ConfigService

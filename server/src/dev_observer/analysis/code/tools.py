@@ -31,8 +31,9 @@ async def execute_repo_bash_tool(cmd: str, repo_path: str, args: str = "") -> st
 
         if process.returncode != 0:
             err = stderr.decode('utf-8').strip()
-            _log.warning(s_("Bash tool failed", tool=cmd, args=args, err=err))
-            return f"Error: {err}"
+            out = stdout.decode('utf-8').strip()
+            _log.warning(s_("Bash tool failed", tool=cmd, args=args, err=err, out=out, returncode=process.returncode))
+            return f"Non 0 return code: \ncode: {process.returncode}\nstdout: {out}\nstderr: {err}"
 
         return stdout.decode('utf-8')
     except Exception as e:

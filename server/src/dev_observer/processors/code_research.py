@@ -99,7 +99,7 @@ class CodeResearchProcessor:
         )
         # noinspection PyTypeChecker
         response = await self._graph.ainvoke(
-            in_state, ensure_config({"recursion_limit": 100}), output_keys=["full_analysis", "analysis_summary"])
+            in_state, ensure_config({"recursion_limit": 500}), output_keys=["full_analysis", "analysis_summary"])
 
         dir_key = task.dir_key
         meta = CodeResearchMeta(

@@ -1,8 +1,12 @@
+import base64
 import dataclasses
+import json
 import logging
+import os
 import re
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any
 
+from google.oauth2 import service_account
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage
@@ -13,8 +17,27 @@ from langchain_core.tools import BaseTool
 from dev_observer.api.types.ai_pb2 import ModelConfig
 from dev_observer.log import s_
 from dev_observer.prompts.provider import FormattedPrompt
+import vertexai
 
 _log = logging.getLogger(__name__)
+
+if (os.environ.get("INIT_VERTEX_AI", "false") == "true" and os.environ.get("GCP_PROJECT", None) is not None
+        and os.environ.get("GCP_REGION", None) is not None):
+    _credentials: Optional[service_account.Credentials] = None
+    if os.environ.get("GOOGLE_SA_KEY", None) is not None:
+        __sa_key = os.environ["GOOGLE_SA_KEY"]
+        __decoded = base64.b64decode(__sa_key)
+        _credentials = service_account.Credentials.from_service_account_info(json.loads(__decoded))
+
+    _log.info(s_("Initializing Vertex AI client", creds_exist=_credentials is not None))
+
+    vertexai.init(
+        project=os.environ.get("GCP_PROJECT"),
+        location=os.environ.get("GCP_REGION"),
+        credentials=_credentials
+    )
+else:
+    _log.info("Vertex AI init skipped")
 
 
 def model_from_config(config: ModelConfig) -> BaseChatModel:
@@ -67,7 +90,7 @@ async def ainvoke(
         if prompt.langfuse_prompt is not None:
             pt.metadata = {"langfuse_prompt": prompt.langfuse_prompt}
         pv = await pt.ainvoke(params.input, config=config)
-        _log.debug(s_("Invoking model", **log_extra))
+        _log.debug(s_("Invoking model", pv=pv, **log_extra))
         response = await model.ainvoke(pv, config=config)
         _log.debug(s_("Model replied", **log_extra))
         return response
