@@ -1,10 +1,13 @@
+import datetime
+
 from google.protobuf import timestamp_pb2 as _timestamp_pb2
 from dev_observer.api.types import observations_pb2 as _observations_pb2
 from dev_observer.api.types import schedule_pb2 as _schedule_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
+from collections.abc import Iterable as _Iterable, Mapping as _Mapping
+from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -38,7 +41,7 @@ class ProcessingItem(_message.Message):
     no_processing: bool
     processing_started_at: _timestamp_pb2.Timestamp
     data: ProcessingItemData
-    def __init__(self, key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., next_processing: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., last_processed: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., last_error: _Optional[str] = ..., no_processing: bool = ..., processing_started_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., data: _Optional[_Union[ProcessingItemData, _Mapping]] = ...) -> None: ...
+    def __init__(self, key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., next_processing: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_processed: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., last_error: _Optional[str] = ..., no_processing: bool = ..., processing_started_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., data: _Optional[_Union[ProcessingItemData, _Mapping]] = ...) -> None: ...
 
 class PeriodicAggregation(_message.Message):
     __slots__ = ("params", "schedule")
@@ -61,7 +64,7 @@ class AggregatedSummaryParams(_message.Message):
     look_back_days: int
     end_date: _timestamp_pb2.Timestamp
     target: AggregatedSummaryParams.Target
-    def __init__(self, look_back_days: _Optional[int] = ..., end_date: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., target: _Optional[_Union[AggregatedSummaryParams.Target, _Mapping]] = ...) -> None: ...
+    def __init__(self, look_back_days: _Optional[int] = ..., end_date: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., target: _Optional[_Union[AggregatedSummaryParams.Target, _Mapping]] = ...) -> None: ...
 
 class ProcessingRequest(_message.Message):
     __slots__ = ("git_changes",)
@@ -91,7 +94,7 @@ class ProcessingItemResult(_message.Message):
     created_at: _timestamp_pb2.Timestamp
     data: ProcessingItemData
     result_data: ProcessingItemResultData
-    def __init__(self, id: _Optional[str] = ..., key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., error_message: _Optional[str] = ..., created_at: _Optional[_Union[_timestamp_pb2.Timestamp, _Mapping]] = ..., data: _Optional[_Union[ProcessingItemData, _Mapping]] = ..., result_data: _Optional[_Union[ProcessingItemResultData, _Mapping]] = ...) -> None: ...
+    def __init__(self, id: _Optional[str] = ..., key: _Optional[_Union[ProcessingItemKey, _Mapping]] = ..., error_message: _Optional[str] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., data: _Optional[_Union[ProcessingItemData, _Mapping]] = ..., result_data: _Optional[_Union[ProcessingItemResultData, _Mapping]] = ...) -> None: ...
 
 class RepoObservation(_message.Message):
     __slots__ = ("repo_id", "observations")

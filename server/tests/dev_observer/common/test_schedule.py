@@ -1,4 +1,5 @@
 import datetime
+import unittest
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -7,7 +8,7 @@ from dev_observer.api.types.schedule_pb2 import Schedule, DayOfWeek
 from dev_observer.common.schedule import get_next_date
 
 
-class TestGetNextDate:
+class TestGetNextDate(unittest.TestCase):
     """Test cases for the get_next_date function."""
 
     def test_daily_schedule_future_time_today(self):

@@ -9,7 +9,7 @@ from langgraph.constants import END
 from langgraph.graph import MessagesState
 from langgraph.types import Command
 
-from dev_observer.analysis.code.tools import bash_tools, bash_tool_names, execute_repo_bash_tool
+from dev_observer.analysis.code.tools import bash_tools, bash_tool_names, execute_repo_bash_tool, _validate_bash_command, _execute_bash_pipeline
 from dev_observer.analysis.util import models
 from dev_observer.analysis.util.models import extract_xml
 from dev_observer.log import s_
@@ -132,7 +132,7 @@ class CodeResearchNodes:
             _log.debug(s_("Calling tools", **p))
 
             task_results = await asyncio.gather(
-                *[self._execute_tool(repo_path, tool_call) for tool_call in tools_to_call],
+                *[self._execute_bash_tool(repo_path, tool_call) for tool_call in tools_to_call],
                 return_exceptions=True,
             )
             _log.debug(s_("Tool calls done", **p))
@@ -146,17 +146,17 @@ class CodeResearchNodes:
             _log.exception(s_("Exception", error=str(e), **p))
             raise
 
-    async def _execute_tool(self, repo_path: str, tool_call: ToolCall, timeout: float = 45.0) -> ToolMessage:
+    async def _execute_bash_tool(self, repo_path: str, tool_call: ToolCall, timeout: float = 45.0) -> ToolMessage:
         p = {"op": "code_research", "node": "tools_call", "repo_path": repo_path, "tool": tool_call["name"]}
         try:
             _log.debug(s_("Executing", **p))
-            tool_name = tool_call["name"]
             tool_args = tool_call.get("args", {})
-            arg = tool_args.get("arg", "")
+            command = tool_args.get("command", "")
             result = await asyncio.wait_for(
-                execute_repo_bash_tool(tool_name, repo_path, arg),
+                self._execute_bash_command(command, repo_path),
                 timeout=timeout
             )
+
             _log.debug(s_("Executed", **p))
             return ToolMessage(
                 content=result,
@@ -176,6 +176,13 @@ class CodeResearchNodes:
                 tool_call_id=tool_call["id"],
                 status="error",
             )
+
+    async def _execute_bash_command(self, command: str, repo_path: str) -> str:
+        """Execute a bash command with validation and pipeline support."""
+        if not _validate_bash_command(command):
+            return "Error: Command contains disallowed commands or headless execution patterns"
+        
+        return await _execute_bash_pipeline(command, repo_path)
 
     async def _produce_analysis(self, state: AnalysisState, config: RunnableConfig) -> AnalysisResult:
         prompt = await self._prompts.get(state['prompt_prefix'], "produce", self._get_prompt_params(state))

@@ -90,7 +90,7 @@ async def ainvoke(
         if prompt.langfuse_prompt is not None:
             pt.metadata = {"langfuse_prompt": prompt.langfuse_prompt}
         pv = await pt.ainvoke(params.input, config=config)
-        _log.debug(s_("Invoking model", pv=pv, **log_extra))
+        _log.debug(s_("Invoking model", **log_extra))
         response = await model.ainvoke(pv, config=config)
         _log.debug(s_("Model replied", **log_extra))
         return response

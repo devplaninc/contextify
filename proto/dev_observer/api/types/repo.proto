@@ -49,3 +49,22 @@ message CodeResearchMeta {
   string summary = 1;
   google.protobuf.Timestamp created_at = 2;
 }
+
+message ResearchLog {
+  repeated ResearchLogItem items = 1;
+  google.protobuf.Timestamp started_at = 2;
+  google.protobuf.Timestamp finished_at = 3;
+}
+
+message ResearchLogItem {
+  string observation = 1;
+  repeated ToolCallResult tool_calls = 2;
+  google.protobuf.Timestamp started_at = 3;
+  google.protobuf.Timestamp finished_at = 4;
+}
+
+message ToolCallResult {
+  string requested_tool_call = 1;
+  string result = 2;
+  bool success = 3;
+}

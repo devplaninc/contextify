@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import List
 import shlex
+import re
 
 from langchain_core.tools import tool, BaseTool
 
@@ -9,12 +10,125 @@ from dev_observer.log import s_
 
 _log = logging.getLogger(__name__)
 
+# Allowed readonly commands for bash tool security
+ALLOWED_BASH_COMMANDS = {
+    'ls', 'cat', 'head', 'tail', 'grep', 'find', 'tree', 'wc', 'sort', 'uniq', 'cut'
+}
+
+
+def _validate_bash_command(command_string: str) -> bool:
+    """Validate that a command string only contains allowed commands and is not headless."""
+    if not command_string.strip():
+        return False
+    
+    # Check for headless execution patterns (commands ending with &, nohup, etc.)
+    headless_patterns = [
+        r'&\s*$',  # ending with &
+        r'^\s*nohup\s+',  # starting with nohup
+        r'>\s*/dev/null.*&',  # redirecting to /dev/null and backgrounding
+    ]
+    for pattern in headless_patterns:
+        if re.search(pattern, command_string):
+            return False
+    
+    # Split by pipes while respecting quotes
+    # First, try to parse the entire command to check for syntax errors
+    try:
+        # This will raise ValueError if there are unclosed quotes
+        shlex.split(command_string)
+    except ValueError:
+        # Invalid shell syntax (unclosed quotes, etc.)
+        return False
+    
+    # Split by pipes using a more sophisticated approach that respects quotes
+    pipe_parts = []
+    current_part = ""
+    in_quote = False
+    quote_char = None
+    
+    i = 0
+    while i < len(command_string):
+        char = command_string[i]
+        
+        if not in_quote and char in ('"', "'"):
+            in_quote = True
+            quote_char = char
+            current_part += char
+        elif in_quote and char == quote_char:
+            # Check if it's escaped
+            if i > 0 and command_string[i-1] == '\\':
+                current_part += char
+            else:
+                in_quote = False
+                quote_char = None
+                current_part += char
+        elif not in_quote and char == '|':
+            pipe_parts.append(current_part.strip())
+            current_part = ""
+        else:
+            current_part += char
+        
+        i += 1
+    
+    # Add the last part
+    if current_part.strip():
+        pipe_parts.append(current_part.strip())
+    
+    # Validate each pipeline part
+    for part in pipe_parts:
+        if not part:
+            continue
+            
+        # Parse the first word (command name) from each pipe part
+        try:
+            tokens = shlex.split(part)
+            if not tokens:
+                continue
+            command_name = tokens[0]
+        except ValueError:
+            # Invalid shell syntax
+            return False
+        
+        # Check if command is in allowed list
+        if command_name not in ALLOWED_BASH_COMMANDS:
+            return False
+    
+    return True
+
+
+async def _execute_bash_pipeline(command_string: str, repo_path: str) -> str:
+    """Execute a bash command pipeline safely."""
+    _log.debug(s_("Executing bash pipeline", command=command_string, repo_path=repo_path))
+    
+    try:
+        # Execute the full pipeline using shell
+        process = await asyncio.create_subprocess_shell(
+            command_string,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=repo_path,
+            shell=True
+        )
+
+        stdout, stderr = await process.communicate()
+
+        if process.returncode != 0:
+            err = stderr.decode('utf-8').strip()
+            out = stdout.decode('utf-8').strip()
+            _log.warning(s_("Bash pipeline failed", command=command_string, err=err, out=out, returncode=process.returncode))
+            return f"Non 0 return code: \ncode: {process.returncode}\nstdout: {out}\nstderr: {err}"
+
+        return stdout.decode('utf-8')
+    except Exception as e:
+        _log.warning(s_("Bash pipeline crashed", command=command_string, exc=e))
+        return f"Error: {str(e)}"
+
 
 async def execute_repo_bash_tool(cmd: str, repo_path: str, args: str = "") -> str:
+    """Legacy function for backward compatibility with individual commands."""
     _log.debug(s_("Executing bash tool", tool=cmd, args=args))
     try:
         parsed_args = shlex.split(args) if args.strip() else []
-
 
         # Build full command
         full_cmd = [cmd] + parsed_args
@@ -42,125 +156,34 @@ async def execute_repo_bash_tool(cmd: str, repo_path: str, args: str = "") -> st
 
 
 @tool(parse_docstring=True)
-def tree(arg: str) -> str:
+def bash(command: str) -> str:
     """
-    Display directory tree structure using the tree command.
+    Execute bash commands safely with support for pipes and readonly operations.
 
-    This tool is a direct equivalent to the bash `tree` command.
-    It shows the hierarchical structure of directories and files in a tree format.
-    It's useful for understanding the overall organization of a codebase.
+    This tool allows executing bash command pipelines for code exploration and analysis.
+    It supports piped commands like 'head test.tsx | grep java' and only allows
+    readonly commands from a predefined whitelist for security.
 
     Args:
-        arg: A single string argument for 'tree' bash command. Command line arguments for tree command (e.g., "-L 2 ." for max depth 2,
-              "-I 'node_modules|.git'" to ignore certain directories)
+        command (str): A bash command string that can include pipes. Only readonly commands from the following whitelist: ls, cat, head, tail, grep, find, tree, wc, sort, uniq, cut. Commands cannot be run headless (no & or nohup).
+
 
     Returns:
         a string output of the command
 
     Examples:
-        tree(".")  # Show tree of current directory
-        tree("-L 2 src")  # Show tree of src directory with max depth 2
-        tree("-I '.git|node_modules' .")  # Show tree ignoring .git and node_modules
+        bash("ls -la")  # List directory contents
+        bash("find . -name '*.py' | head -10")  # Find Python files, show first 10
+        bash("cat README.md | grep -i install")  # Search for install in README
+        bash("head -20 src/main.py | grep import")  # Show imports from main.py
     """
-    pass
-
-
-@tool(parse_docstring=True)
-def ls(arg: str) -> str:
-    """
-    List directory contents using the ls command.
-
-    This tool is a direct equivalent to the bash `ls` command.
-    It displays files and directories in the specified location.
-    It's useful for exploring directory contents and file permissions.
-
-    Args:
-        arg: A single string argument for 'ls' bash command. Command line arguments for ls command (e.g., "-la" for detailed listing,
-              "-lh" for human-readable sizes, "src/" to list specific directory)
-
-    Returns:
-        a string output of the command
-
-    Examples:
-        ls(".")  # List current directory
-        ls("-la")  # List all files with detailed info including hidden files
-        ls("-lh src/")  # List src directory with human-readable file sizes
-    """
-    pass
-
-
-@tool(parse_docstring=True)
-def cat(arg: str) -> str:
-    """
-    Display file contents using the cat command.
-
-    This tool is a direct equivalent to the bash `cat` command.
-    It reads and displays the contents of one or more files.
-    It's essential for examining source code, configuration files, and documentation.
-
-    Args:
-        arg: A single string argument for 'cat' bash command. (e.g., "README.md", "-n file.py" for numbered lines, "file1.txt file2.txt" for multiple files)
-
-    Returns:
-        a string output of the command
-
-    Examples:
-        cat("README.md")  # Display README file contents
-        cat("-n src/main.py")  # Display main.py with line numbers
-        cat("package.json Makefile")  # Display contents of multiple files
-    """
-    pass
-
-
-@tool(parse_docstring=True)
-def find(arg: str) -> str:
-    """
-    Search for files and directories using the find command.
-
-    This tool is a direct equivalent to the bash `find` command.
-    It locates files and directories based on various criteria like name, type, size, etc.
-    It's powerful for discovering files matching specific patterns or properties in the codebase.
-
-    Args:
-        arg: A single string argument for 'find' bash command. Search criteria and options for find command (e.g., ". -name '*.py'",
-              ". -type f -name 'test*'", "src -name '*.js' -not -path '*/node_modules/*'")
-
-    Returns:
-        a string output of the command
-
-    Examples:
-        find(". -name '*.py'")  # Find all Python files
-        find(". -type f -name 'README*'")  # Find all README files
-        find("src -name '*.js' -not -path '*/node_modules/*'")  # Find JS files excluding node_modules
-    """
-    pass
-
-
-@tool(parse_docstring=True)
-def grep(arg: str) -> str:
-    """
-    Search for text patterns in files using the grep command.
-
-    This tool is a direct equivalent to the bash `grep` command.
-    It searches through file contents for specific patterns, regular expressions, or text.
-    It's invaluable for finding function definitions, imports, specific strings, or code patterns.
-
-    Args:
-        arg: A single string argument for 'grep' bash command. Pattern and options for grep command (e.g., "-r 'function' .", "-n 'import' src/", "'class.*:' --include='*.py' .")
-
-    Returns:
-        a string output of the command
-
-    Examples:
-        grep("-r 'function' .")  # Search for 'function' recursively in all files
-        grep("-n 'import' src/")  # Search for 'import' in src/ with line numbers
-        grep("'class.*:' --include='*.py' .")  # Find class definitions in Python files
-    """
-    pass
+    # This will be implemented via dynamic binding in bash_tools()
+    return "Tool not implemented - use via dynamic binding"
 
 
 def bash_tools() -> List[BaseTool]:
-    return [tree, ls, cat, find, grep]
+    """Return list of bash tools."""
+    return [bash]
 
 
 def bash_tool_names() -> List[str]:
