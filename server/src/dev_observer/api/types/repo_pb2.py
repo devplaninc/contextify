@@ -23,35 +23,38 @@ _sym_db = _symbol_database.Default()
 
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
+from dev_observer.api.types import ai_pb2 as dev__observer_dot_api_dot_types_dot_ai__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/types/repo.proto\x12\x1b\x64\x65v_observer.api.types.repo\x1a\x1fgoogle/protobuf/timestamp.proto\"\xee\x01\n\rGitRepository\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\x12:\n\x08provider\x18\x06 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\x12\x43\n\nproperties\x18\x07 \x01(\x0b\x32*.dev_observer.api.types.repo.GitPropertiesH\x00\x88\x01\x01\x42\r\n\x0b_properties\"\xfc\x01\n\rGitProperties\x12>\n\x08\x61pp_info\x18\x01 \x01(\x0b\x32\'.dev_observer.api.types.repo.GitAppInfoH\x00\x88\x01\x01\x12\x37\n\x04meta\x18\x02 \x01(\x0b\x32$.dev_observer.api.types.repo.GitMetaH\x01\x88\x01\x01\x12H\n\x0f\x62it_bucket_info\x18\x03 \x01(\x0b\x32*.dev_observer.api.types.repo.BitBucketInfoH\x02\x88\x01\x01\x42\x0b\n\t_app_infoB\x07\n\x05_metaB\x12\n\x10_bit_bucket_info\"\'\n\rBitBucketInfo\x12\x16\n\x0eworkspace_uuid\x18\x01 \x01(\t\"\x83\x01\n\x07GitMeta\x12\x30\n\x0clast_refresh\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x16\n\tclone_url\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x14\n\x07size_kb\x18\x03 \x01(\x05H\x01\x88\x01\x01\x42\x0c\n\n_clone_urlB\n\n\x08_size_kb\"p\n\nGitAppInfo\x12\x30\n\x0clast_refresh\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x1c\n\x0finstallation_id\x18\x02 \x01(\x05H\x00\x88\x01\x01\x42\x12\n\x10_installation_id\"y\n\x0bReposFilter\x12?\n\x08provider\x18\x01 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProviderH\x00\x88\x01\x01\x12\x12\n\x05owner\x18\x02 \x01(\tH\x01\x88\x01\x01\x42\x0b\n\t_providerB\x08\n\x06_owner\"S\n\x10\x43odeResearchMeta\x12\x0f\n\x07summary\x18\x01 \x01(\t\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xab\x01\n\x0bResearchLog\x12;\n\x05items\x18\x01 \x03(\x0b\x32,.dev_observer.api.types.repo.ResearchLogItem\x12.\n\nstarted_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0b\x66inished_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xc8\x01\n\x0fResearchLogItem\x12\x13\n\x0bobservation\x18\x01 \x01(\t\x12?\n\ntool_calls\x18\x02 \x03(\x0b\x32+.dev_observer.api.types.repo.ToolCallResult\x12.\n\nstarted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0b\x66inished_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"N\n\x0eToolCallResult\x12\x1b\n\x13requested_tool_call\x18\x01 \x01(\t\x12\x0e\n\x06result\x18\x02 \x01(\t\x12\x0f\n\x07success\x18\x03 \x01(\x08*)\n\x0bGitProvider\x12\n\n\x06GITHUB\x10\x00\x12\x0e\n\nBIT_BUCKET\x10\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/types/repo.proto\x12\x1b\x64\x65v_observer.api.types.repo\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1f\x64\x65v_observer/api/types/ai.proto\"\xee\x01\n\rGitRepository\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x11\n\tfull_name\x18\x03 \x01(\t\x12\x0b\n\x03url\x18\x04 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\x12:\n\x08provider\x18\x06 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\x12\x43\n\nproperties\x18\x07 \x01(\x0b\x32*.dev_observer.api.types.repo.GitPropertiesH\x00\x88\x01\x01\x42\r\n\x0b_properties\"\xfc\x01\n\rGitProperties\x12>\n\x08\x61pp_info\x18\x01 \x01(\x0b\x32\'.dev_observer.api.types.repo.GitAppInfoH\x00\x88\x01\x01\x12\x37\n\x04meta\x18\x02 \x01(\x0b\x32$.dev_observer.api.types.repo.GitMetaH\x01\x88\x01\x01\x12H\n\x0f\x62it_bucket_info\x18\x03 \x01(\x0b\x32*.dev_observer.api.types.repo.BitBucketInfoH\x02\x88\x01\x01\x42\x0b\n\t_app_infoB\x07\n\x05_metaB\x12\n\x10_bit_bucket_info\"\'\n\rBitBucketInfo\x12\x16\n\x0eworkspace_uuid\x18\x01 \x01(\t\"\x83\x01\n\x07GitMeta\x12\x30\n\x0clast_refresh\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x16\n\tclone_url\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x14\n\x07size_kb\x18\x03 \x01(\x05H\x01\x88\x01\x01\x42\x0c\n\n_clone_urlB\n\n\x08_size_kb\"p\n\nGitAppInfo\x12\x30\n\x0clast_refresh\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x1c\n\x0finstallation_id\x18\x02 \x01(\x05H\x00\x88\x01\x01\x42\x12\n\x10_installation_id\"y\n\x0bReposFilter\x12?\n\x08provider\x18\x01 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProviderH\x00\x88\x01\x01\x12\x12\n\x05owner\x18\x02 \x01(\tH\x01\x88\x01\x01\x42\x0b\n\t_providerB\x08\n\x06_owner\"S\n\x10\x43odeResearchMeta\x12\x0f\n\x07summary\x18\x01 \x01(\t\x12.\n\ncreated_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\xff\x01\n\x0bResearchLog\x12;\n\x05items\x18\x01 \x03(\x0b\x32,.dev_observer.api.types.repo.ResearchLogItem\x12.\n\nstarted_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0b\x66inished_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x42\n\x0btotal_usage\x18\x06 \x01(\x0b\x32(.dev_observer.api.types.ai.UsageMetadataH\x00\x88\x01\x01\x42\x0e\n\x0c_total_usage\"\xa2\x02\n\x0fResearchLogItem\x12\x14\n\x0cobservations\x18\x01 \x01(\t\x12?\n\ntool_calls\x18\x02 \x03(\x0b\x32+.dev_observer.api.types.repo.ToolCallResult\x12.\n\nstarted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0b\x66inished_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0f\n\x07summary\x18\x05 \x01(\t\x12<\n\x05usage\x18\x06 \x01(\x0b\x32(.dev_observer.api.types.ai.UsageMetadataH\x00\x88\x01\x01\x42\x08\n\x06_usage\"\xc6\x01\n\x0eToolCallResult\x12\x1b\n\x13requested_tool_call\x18\x01 \x01(\t\x12\x0e\n\x06result\x18\x02 \x01(\t\x12J\n\x06status\x18\x03 \x01(\x0e\x32:.dev_observer.api.types.repo.ToolCallResult.ToolCallStatus\";\n\x0eToolCallStatus\x12\x0f\n\x0bUNPROCESSED\x10\x00\x12\x0b\n\x07SUCCESS\x10\x01\x12\x0b\n\x07\x46\x41ILURE\x10\x02*)\n\x0bGitProvider\x12\n\n\x06GITHUB\x10\x00\x12\x0e\n\nBIT_BUCKET\x10\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.types.repo_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_GITPROVIDER']._serialized_start=1549
-  _globals['_GITPROVIDER']._serialized_end=1590
-  _globals['_GITREPOSITORY']._serialized_start=100
-  _globals['_GITREPOSITORY']._serialized_end=338
-  _globals['_GITPROPERTIES']._serialized_start=341
-  _globals['_GITPROPERTIES']._serialized_end=593
-  _globals['_BITBUCKETINFO']._serialized_start=595
-  _globals['_BITBUCKETINFO']._serialized_end=634
-  _globals['_GITMETA']._serialized_start=637
-  _globals['_GITMETA']._serialized_end=768
-  _globals['_GITAPPINFO']._serialized_start=770
-  _globals['_GITAPPINFO']._serialized_end=882
-  _globals['_REPOSFILTER']._serialized_start=884
-  _globals['_REPOSFILTER']._serialized_end=1005
-  _globals['_CODERESEARCHMETA']._serialized_start=1007
-  _globals['_CODERESEARCHMETA']._serialized_end=1090
-  _globals['_RESEARCHLOG']._serialized_start=1093
-  _globals['_RESEARCHLOG']._serialized_end=1264
-  _globals['_RESEARCHLOGITEM']._serialized_start=1267
-  _globals['_RESEARCHLOGITEM']._serialized_end=1467
-  _globals['_TOOLCALLRESULT']._serialized_start=1469
-  _globals['_TOOLCALLRESULT']._serialized_end=1547
+  _globals['_GITPROVIDER']._serialized_start=1877
+  _globals['_GITPROVIDER']._serialized_end=1918
+  _globals['_GITREPOSITORY']._serialized_start=133
+  _globals['_GITREPOSITORY']._serialized_end=371
+  _globals['_GITPROPERTIES']._serialized_start=374
+  _globals['_GITPROPERTIES']._serialized_end=626
+  _globals['_BITBUCKETINFO']._serialized_start=628
+  _globals['_BITBUCKETINFO']._serialized_end=667
+  _globals['_GITMETA']._serialized_start=670
+  _globals['_GITMETA']._serialized_end=801
+  _globals['_GITAPPINFO']._serialized_start=803
+  _globals['_GITAPPINFO']._serialized_end=915
+  _globals['_REPOSFILTER']._serialized_start=917
+  _globals['_REPOSFILTER']._serialized_end=1038
+  _globals['_CODERESEARCHMETA']._serialized_start=1040
+  _globals['_CODERESEARCHMETA']._serialized_end=1123
+  _globals['_RESEARCHLOG']._serialized_start=1126
+  _globals['_RESEARCHLOG']._serialized_end=1381
+  _globals['_RESEARCHLOGITEM']._serialized_start=1384
+  _globals['_RESEARCHLOGITEM']._serialized_end=1674
+  _globals['_TOOLCALLRESULT']._serialized_start=1677
+  _globals['_TOOLCALLRESULT']._serialized_end=1875
+  _globals['_TOOLCALLRESULT_TOOLCALLSTATUS']._serialized_start=1816
+  _globals['_TOOLCALLRESULT_TOOLCALLSTATUS']._serialized_end=1875
 # @@protoc_insertion_point(module_scope)

@@ -22,7 +22,6 @@ export interface AnalysisConfig {
   disableMasking: boolean;
   defaultGitChangesAnalyzer?: Analyzer | undefined;
   defaultAggregatedSummaryAnalyzer?: Analyzer | undefined;
-  codeResearchAnalyzers: Analyzer[];
 }
 
 export interface UserManagementStatus {
@@ -55,6 +54,8 @@ export interface RepoAnalysisConfig_Flatten {
 export interface RepoAnalysisConfig_Research {
   maxRepoSizeMb: number;
   maxIterations: number;
+  generalPrefix?: string | undefined;
+  analyzers: Analyzer[];
 }
 
 export interface WebsiteCrawlingConfig {
@@ -171,7 +172,6 @@ function createBaseAnalysisConfig(): AnalysisConfig {
     disableMasking: false,
     defaultGitChangesAnalyzer: undefined,
     defaultAggregatedSummaryAnalyzer: undefined,
-    codeResearchAnalyzers: [],
   };
 }
 
@@ -191,9 +191,6 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     }
     if (message.defaultAggregatedSummaryAnalyzer !== undefined) {
       Analyzer.encode(message.defaultAggregatedSummaryAnalyzer, writer.uint32(42).fork()).join();
-    }
-    for (const v of message.codeResearchAnalyzers) {
-      Analyzer.encode(v!, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -245,14 +242,6 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
           message.defaultAggregatedSummaryAnalyzer = Analyzer.decode(reader, reader.uint32());
           continue;
         }
-        case 6: {
-          if (tag !== 50) {
-            break;
-          }
-
-          message.codeResearchAnalyzers.push(Analyzer.decode(reader, reader.uint32()));
-          continue;
-        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -277,9 +266,6 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
       defaultAggregatedSummaryAnalyzer: isSet(object.defaultAggregatedSummaryAnalyzer)
         ? Analyzer.fromJSON(object.defaultAggregatedSummaryAnalyzer)
         : undefined,
-      codeResearchAnalyzers: gt.Array.isArray(object?.codeResearchAnalyzers)
-        ? object.codeResearchAnalyzers.map((e: any) => Analyzer.fromJSON(e))
-        : [],
     };
   },
 
@@ -300,9 +286,6 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
     if (message.defaultAggregatedSummaryAnalyzer !== undefined) {
       obj.defaultAggregatedSummaryAnalyzer = Analyzer.toJSON(message.defaultAggregatedSummaryAnalyzer);
     }
-    if (message.codeResearchAnalyzers?.length) {
-      obj.codeResearchAnalyzers = message.codeResearchAnalyzers.map((e) => Analyzer.toJSON(e));
-    }
     return obj;
   },
 
@@ -322,7 +305,6 @@ export const AnalysisConfig: MessageFns<AnalysisConfig> = {
       (object.defaultAggregatedSummaryAnalyzer !== undefined && object.defaultAggregatedSummaryAnalyzer !== null)
         ? Analyzer.fromPartial(object.defaultAggregatedSummaryAnalyzer)
         : undefined;
-    message.codeResearchAnalyzers = object.codeResearchAnalyzers?.map((e) => Analyzer.fromPartial(e)) || [];
     return message;
   },
 };
@@ -731,7 +713,7 @@ export const RepoAnalysisConfig_Flatten: MessageFns<RepoAnalysisConfig_Flatten> 
 };
 
 function createBaseRepoAnalysisConfig_Research(): RepoAnalysisConfig_Research {
-  return { maxRepoSizeMb: 0, maxIterations: 0 };
+  return { maxRepoSizeMb: 0, maxIterations: 0, generalPrefix: undefined, analyzers: [] };
 }
 
 export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research> = {
@@ -741,6 +723,12 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     }
     if (message.maxIterations !== 0) {
       writer.uint32(16).int32(message.maxIterations);
+    }
+    if (message.generalPrefix !== undefined) {
+      writer.uint32(26).string(message.generalPrefix);
+    }
+    for (const v of message.analyzers) {
+      Analyzer.encode(v!, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -768,6 +756,22 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
           message.maxIterations = reader.int32();
           continue;
         }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.generalPrefix = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.analyzers.push(Analyzer.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -781,6 +785,8 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     return {
       maxRepoSizeMb: isSet(object.maxRepoSizeMb) ? gt.Number(object.maxRepoSizeMb) : 0,
       maxIterations: isSet(object.maxIterations) ? gt.Number(object.maxIterations) : 0,
+      generalPrefix: isSet(object.generalPrefix) ? gt.String(object.generalPrefix) : undefined,
+      analyzers: gt.Array.isArray(object?.analyzers) ? object.analyzers.map((e: any) => Analyzer.fromJSON(e)) : [],
     };
   },
 
@@ -792,6 +798,12 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     if (message.maxIterations !== 0) {
       obj.maxIterations = Math.round(message.maxIterations);
     }
+    if (message.generalPrefix !== undefined) {
+      obj.generalPrefix = message.generalPrefix;
+    }
+    if (message.analyzers?.length) {
+      obj.analyzers = message.analyzers.map((e) => Analyzer.toJSON(e));
+    }
     return obj;
   },
 
@@ -802,6 +814,8 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     const message = createBaseRepoAnalysisConfig_Research();
     message.maxRepoSizeMb = object.maxRepoSizeMb ?? 0;
     message.maxIterations = object.maxIterations ?? 0;
+    message.generalPrefix = object.generalPrefix ?? undefined;
+    message.analyzers = object.analyzers?.map((e) => Analyzer.fromPartial(e)) || [];
     return message;
   },
 };

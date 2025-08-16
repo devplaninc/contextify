@@ -9,7 +9,7 @@ from dev_observer.api.types.ai_pb2 import PromptConfig, SystemMessage, UserMessa
 
 @dataclasses.dataclass
 class FormattedPrompt:
-    config: PromptConfig
+    config: Optional[PromptConfig]
     system: Optional[SystemMessage]
     user: Optional[UserMessage]
     langfuse_prompt: Optional[ChatPromptClient] = None

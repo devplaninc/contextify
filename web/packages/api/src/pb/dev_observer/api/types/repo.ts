@@ -7,6 +7,7 @@
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { Timestamp } from "../../../google/protobuf/timestamp";
+import { UsageMetadata } from "./ai";
 
 export const protobufPackage = "dev_observer.api.types.repo";
 
@@ -84,19 +85,57 @@ export interface ResearchLog {
   items: ResearchLogItem[];
   startedAt: Date | undefined;
   finishedAt: Date | undefined;
+  totalUsage?: UsageMetadata | undefined;
 }
 
 export interface ResearchLogItem {
-  observation: string;
+  observations: string;
   toolCalls: ToolCallResult[];
   startedAt: Date | undefined;
   finishedAt: Date | undefined;
+  summary: string;
+  usage?: UsageMetadata | undefined;
 }
 
 export interface ToolCallResult {
   requestedToolCall: string;
   result: string;
-  success: boolean;
+  status: ToolCallResult_ToolCallStatus;
+}
+
+export enum ToolCallResult_ToolCallStatus {
+  UNPROCESSED = 0,
+  SUCCESS = 1,
+  FAILURE = 2,
+}
+
+export function toolCallResult_ToolCallStatusFromJSON(object: any): ToolCallResult_ToolCallStatus {
+  switch (object) {
+    case 0:
+    case "UNPROCESSED":
+      return ToolCallResult_ToolCallStatus.UNPROCESSED;
+    case 1:
+    case "SUCCESS":
+      return ToolCallResult_ToolCallStatus.SUCCESS;
+    case 2:
+    case "FAILURE":
+      return ToolCallResult_ToolCallStatus.FAILURE;
+    default:
+      throw new gt.Error("Unrecognized enum value " + object + " for enum ToolCallResult_ToolCallStatus");
+  }
+}
+
+export function toolCallResult_ToolCallStatusToJSON(object: ToolCallResult_ToolCallStatus): string {
+  switch (object) {
+    case ToolCallResult_ToolCallStatus.UNPROCESSED:
+      return "UNPROCESSED";
+    case ToolCallResult_ToolCallStatus.SUCCESS:
+      return "SUCCESS";
+    case ToolCallResult_ToolCallStatus.FAILURE:
+      return "FAILURE";
+    default:
+      throw new gt.Error("Unrecognized enum value " + object + " for enum ToolCallResult_ToolCallStatus");
+  }
 }
 
 function createBaseGitRepository(): GitRepository {
@@ -732,7 +771,7 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
 };
 
 function createBaseResearchLog(): ResearchLog {
-  return { items: [], startedAt: undefined, finishedAt: undefined };
+  return { items: [], startedAt: undefined, finishedAt: undefined, totalUsage: undefined };
 }
 
 export const ResearchLog: MessageFns<ResearchLog> = {
@@ -745,6 +784,9 @@ export const ResearchLog: MessageFns<ResearchLog> = {
     }
     if (message.finishedAt !== undefined) {
       Timestamp.encode(toTimestamp(message.finishedAt), writer.uint32(26).fork()).join();
+    }
+    if (message.totalUsage !== undefined) {
+      UsageMetadata.encode(message.totalUsage, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -780,6 +822,14 @@ export const ResearchLog: MessageFns<ResearchLog> = {
           message.finishedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.totalUsage = UsageMetadata.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -794,6 +844,7 @@ export const ResearchLog: MessageFns<ResearchLog> = {
       items: gt.Array.isArray(object?.items) ? object.items.map((e: any) => ResearchLogItem.fromJSON(e)) : [],
       startedAt: isSet(object.startedAt) ? fromJsonTimestamp(object.startedAt) : undefined,
       finishedAt: isSet(object.finishedAt) ? fromJsonTimestamp(object.finishedAt) : undefined,
+      totalUsage: isSet(object.totalUsage) ? UsageMetadata.fromJSON(object.totalUsage) : undefined,
     };
   },
 
@@ -808,6 +859,9 @@ export const ResearchLog: MessageFns<ResearchLog> = {
     if (message.finishedAt !== undefined) {
       obj.finishedAt = message.finishedAt.toISOString();
     }
+    if (message.totalUsage !== undefined) {
+      obj.totalUsage = UsageMetadata.toJSON(message.totalUsage);
+    }
     return obj;
   },
 
@@ -819,18 +873,28 @@ export const ResearchLog: MessageFns<ResearchLog> = {
     message.items = object.items?.map((e) => ResearchLogItem.fromPartial(e)) || [];
     message.startedAt = object.startedAt ?? undefined;
     message.finishedAt = object.finishedAt ?? undefined;
+    message.totalUsage = (object.totalUsage !== undefined && object.totalUsage !== null)
+      ? UsageMetadata.fromPartial(object.totalUsage)
+      : undefined;
     return message;
   },
 };
 
 function createBaseResearchLogItem(): ResearchLogItem {
-  return { observation: "", toolCalls: [], startedAt: undefined, finishedAt: undefined };
+  return {
+    observations: "",
+    toolCalls: [],
+    startedAt: undefined,
+    finishedAt: undefined,
+    summary: "",
+    usage: undefined,
+  };
 }
 
 export const ResearchLogItem: MessageFns<ResearchLogItem> = {
   encode(message: ResearchLogItem, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.observation !== "") {
-      writer.uint32(10).string(message.observation);
+    if (message.observations !== "") {
+      writer.uint32(10).string(message.observations);
     }
     for (const v of message.toolCalls) {
       ToolCallResult.encode(v!, writer.uint32(18).fork()).join();
@@ -840,6 +904,12 @@ export const ResearchLogItem: MessageFns<ResearchLogItem> = {
     }
     if (message.finishedAt !== undefined) {
       Timestamp.encode(toTimestamp(message.finishedAt), writer.uint32(34).fork()).join();
+    }
+    if (message.summary !== "") {
+      writer.uint32(42).string(message.summary);
+    }
+    if (message.usage !== undefined) {
+      UsageMetadata.encode(message.usage, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -856,7 +926,7 @@ export const ResearchLogItem: MessageFns<ResearchLogItem> = {
             break;
           }
 
-          message.observation = reader.string();
+          message.observations = reader.string();
           continue;
         }
         case 2: {
@@ -883,6 +953,22 @@ export const ResearchLogItem: MessageFns<ResearchLogItem> = {
           message.finishedAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.summary = reader.string();
+          continue;
+        }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.usage = UsageMetadata.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -894,19 +980,21 @@ export const ResearchLogItem: MessageFns<ResearchLogItem> = {
 
   fromJSON(object: any): ResearchLogItem {
     return {
-      observation: isSet(object.observation) ? gt.String(object.observation) : "",
+      observations: isSet(object.observations) ? gt.String(object.observations) : "",
       toolCalls: gt.Array.isArray(object?.toolCalls)
         ? object.toolCalls.map((e: any) => ToolCallResult.fromJSON(e))
         : [],
       startedAt: isSet(object.startedAt) ? fromJsonTimestamp(object.startedAt) : undefined,
       finishedAt: isSet(object.finishedAt) ? fromJsonTimestamp(object.finishedAt) : undefined,
+      summary: isSet(object.summary) ? gt.String(object.summary) : "",
+      usage: isSet(object.usage) ? UsageMetadata.fromJSON(object.usage) : undefined,
     };
   },
 
   toJSON(message: ResearchLogItem): unknown {
     const obj: any = {};
-    if (message.observation !== "") {
-      obj.observation = message.observation;
+    if (message.observations !== "") {
+      obj.observations = message.observations;
     }
     if (message.toolCalls?.length) {
       obj.toolCalls = message.toolCalls.map((e) => ToolCallResult.toJSON(e));
@@ -917,6 +1005,12 @@ export const ResearchLogItem: MessageFns<ResearchLogItem> = {
     if (message.finishedAt !== undefined) {
       obj.finishedAt = message.finishedAt.toISOString();
     }
+    if (message.summary !== "") {
+      obj.summary = message.summary;
+    }
+    if (message.usage !== undefined) {
+      obj.usage = UsageMetadata.toJSON(message.usage);
+    }
     return obj;
   },
 
@@ -925,16 +1019,20 @@ export const ResearchLogItem: MessageFns<ResearchLogItem> = {
   },
   fromPartial(object: DeepPartial<ResearchLogItem>): ResearchLogItem {
     const message = createBaseResearchLogItem();
-    message.observation = object.observation ?? "";
+    message.observations = object.observations ?? "";
     message.toolCalls = object.toolCalls?.map((e) => ToolCallResult.fromPartial(e)) || [];
     message.startedAt = object.startedAt ?? undefined;
     message.finishedAt = object.finishedAt ?? undefined;
+    message.summary = object.summary ?? "";
+    message.usage = (object.usage !== undefined && object.usage !== null)
+      ? UsageMetadata.fromPartial(object.usage)
+      : undefined;
     return message;
   },
 };
 
 function createBaseToolCallResult(): ToolCallResult {
-  return { requestedToolCall: "", result: "", success: false };
+  return { requestedToolCall: "", result: "", status: 0 };
 }
 
 export const ToolCallResult: MessageFns<ToolCallResult> = {
@@ -945,8 +1043,8 @@ export const ToolCallResult: MessageFns<ToolCallResult> = {
     if (message.result !== "") {
       writer.uint32(18).string(message.result);
     }
-    if (message.success !== false) {
-      writer.uint32(24).bool(message.success);
+    if (message.status !== 0) {
+      writer.uint32(24).int32(message.status);
     }
     return writer;
   },
@@ -979,7 +1077,7 @@ export const ToolCallResult: MessageFns<ToolCallResult> = {
             break;
           }
 
-          message.success = reader.bool();
+          message.status = reader.int32() as any;
           continue;
         }
       }
@@ -995,7 +1093,7 @@ export const ToolCallResult: MessageFns<ToolCallResult> = {
     return {
       requestedToolCall: isSet(object.requestedToolCall) ? gt.String(object.requestedToolCall) : "",
       result: isSet(object.result) ? gt.String(object.result) : "",
-      success: isSet(object.success) ? gt.Boolean(object.success) : false,
+      status: isSet(object.status) ? toolCallResult_ToolCallStatusFromJSON(object.status) : 0,
     };
   },
 
@@ -1007,8 +1105,8 @@ export const ToolCallResult: MessageFns<ToolCallResult> = {
     if (message.result !== "") {
       obj.result = message.result;
     }
-    if (message.success !== false) {
-      obj.success = message.success;
+    if (message.status !== 0) {
+      obj.status = toolCallResult_ToolCallStatusToJSON(message.status);
     }
     return obj;
   },
@@ -1020,7 +1118,7 @@ export const ToolCallResult: MessageFns<ToolCallResult> = {
     const message = createBaseToolCallResult();
     message.requestedToolCall = object.requestedToolCall ?? "";
     message.result = object.result ?? "";
-    message.success = object.success ?? false;
+    message.status = object.status ?? 0;
     return message;
   },
 };

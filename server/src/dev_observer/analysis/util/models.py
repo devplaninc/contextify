@@ -4,8 +4,9 @@ import json
 import logging
 import os
 import re
-from typing import List, Optional, Union, Any
+from typing import List, Optional, Union
 
+import vertexai
 from google.oauth2 import service_account
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models import BaseChatModel
@@ -17,7 +18,6 @@ from langchain_core.tools import BaseTool
 from dev_observer.api.types.ai_pb2 import ModelConfig
 from dev_observer.log import s_
 from dev_observer.prompts.provider import FormattedPrompt
-import vertexai
 
 _log = logging.getLogger(__name__)
 
@@ -99,16 +99,13 @@ async def ainvoke(
         raise
 
 
-def extract_xml(text: str, tag: str) -> str:
-    """
-    Extracts the content of the specified XML tag from the given text. Used for parsing structured responses
+def to_str_content(content: Union[str, list[Union[str, dict]]]) -> str:
+    if isinstance(content, str):
+        return content
+    return '\n'.join(content)
 
-    Args:
-        text (str): The text containing the XML.
-        tag (str): The XML tag to extract content from.
 
-    Returns:
-        str: The content of the specified XML tag, or an empty string if the tag is not found.
-    """
+def extract_xml(content: Union[str, list[Union[str, dict]]], tag: str) -> Optional[str]:
+    text = to_str_content(content)
     match = re.search(f'<{tag}>(.*?)</{tag}>', text, re.DOTALL)
-    return match.group(1) if match else ""
+    return match.group(1) if match else None

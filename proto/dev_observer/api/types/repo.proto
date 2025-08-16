@@ -3,6 +3,7 @@ syntax = "proto3";
 package dev_observer.api.types.repo;
 
 import "google/protobuf/timestamp.proto";
+import "dev_observer/api/types/ai.proto";
 
 enum GitProvider {
   GITHUB = 0;
@@ -54,17 +55,26 @@ message ResearchLog {
   repeated ResearchLogItem items = 1;
   google.protobuf.Timestamp started_at = 2;
   google.protobuf.Timestamp finished_at = 3;
+  optional api.types.ai.UsageMetadata total_usage = 6;
 }
 
 message ResearchLogItem {
-  string observation = 1;
+  string observations = 1;
   repeated ToolCallResult tool_calls = 2;
   google.protobuf.Timestamp started_at = 3;
   google.protobuf.Timestamp finished_at = 4;
+  string summary = 5;
+  optional api.types.ai.UsageMetadata usage = 6;
 }
 
 message ToolCallResult {
   string requested_tool_call = 1;
   string result = 2;
-  bool success = 3;
+  ToolCallStatus status = 3;
+
+  enum ToolCallStatus {
+    UNPROCESSED = 0;
+    SUCCESS=1;
+    FAILURE=2;
+  }
 }

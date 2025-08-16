@@ -28,3 +28,9 @@ message PromptTemplate {
   optional UserMessage user = 2;
   PromptConfig config = 3;
 }
+
+message UsageMetadata {
+  int32 input_tokens = 1;
+  int32 output_tokens = 2;
+  int32 total_tokens = 3;
+}

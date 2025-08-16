@@ -1,6 +1,7 @@
 import datetime
 
 from google.protobuf import timestamp_pb2 as _timestamp_pb2
+from dev_observer.api.types import ai_pb2 as _ai_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
@@ -86,33 +87,47 @@ class CodeResearchMeta(_message.Message):
     def __init__(self, summary: _Optional[str] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
 
 class ResearchLog(_message.Message):
-    __slots__ = ("items", "started_at", "finished_at")
+    __slots__ = ("items", "started_at", "finished_at", "total_usage")
     ITEMS_FIELD_NUMBER: _ClassVar[int]
     STARTED_AT_FIELD_NUMBER: _ClassVar[int]
     FINISHED_AT_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_USAGE_FIELD_NUMBER: _ClassVar[int]
     items: _containers.RepeatedCompositeFieldContainer[ResearchLogItem]
     started_at: _timestamp_pb2.Timestamp
     finished_at: _timestamp_pb2.Timestamp
-    def __init__(self, items: _Optional[_Iterable[_Union[ResearchLogItem, _Mapping]]] = ..., started_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., finished_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    total_usage: _ai_pb2.UsageMetadata
+    def __init__(self, items: _Optional[_Iterable[_Union[ResearchLogItem, _Mapping]]] = ..., started_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., finished_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., total_usage: _Optional[_Union[_ai_pb2.UsageMetadata, _Mapping]] = ...) -> None: ...
 
 class ResearchLogItem(_message.Message):
-    __slots__ = ("observation", "tool_calls", "started_at", "finished_at")
-    OBSERVATION_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("observations", "tool_calls", "started_at", "finished_at", "summary", "usage")
+    OBSERVATIONS_FIELD_NUMBER: _ClassVar[int]
     TOOL_CALLS_FIELD_NUMBER: _ClassVar[int]
     STARTED_AT_FIELD_NUMBER: _ClassVar[int]
     FINISHED_AT_FIELD_NUMBER: _ClassVar[int]
-    observation: str
+    SUMMARY_FIELD_NUMBER: _ClassVar[int]
+    USAGE_FIELD_NUMBER: _ClassVar[int]
+    observations: str
     tool_calls: _containers.RepeatedCompositeFieldContainer[ToolCallResult]
     started_at: _timestamp_pb2.Timestamp
     finished_at: _timestamp_pb2.Timestamp
-    def __init__(self, observation: _Optional[str] = ..., tool_calls: _Optional[_Iterable[_Union[ToolCallResult, _Mapping]]] = ..., started_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., finished_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    summary: str
+    usage: _ai_pb2.UsageMetadata
+    def __init__(self, observations: _Optional[str] = ..., tool_calls: _Optional[_Iterable[_Union[ToolCallResult, _Mapping]]] = ..., started_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., finished_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., summary: _Optional[str] = ..., usage: _Optional[_Union[_ai_pb2.UsageMetadata, _Mapping]] = ...) -> None: ...
 
 class ToolCallResult(_message.Message):
-    __slots__ = ("requested_tool_call", "result", "success")
+    __slots__ = ("requested_tool_call", "result", "status")
+    class ToolCallStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+        __slots__ = ()
+        UNPROCESSED: _ClassVar[ToolCallResult.ToolCallStatus]
+        SUCCESS: _ClassVar[ToolCallResult.ToolCallStatus]
+        FAILURE: _ClassVar[ToolCallResult.ToolCallStatus]
+    UNPROCESSED: ToolCallResult.ToolCallStatus
+    SUCCESS: ToolCallResult.ToolCallStatus
+    FAILURE: ToolCallResult.ToolCallStatus
     REQUESTED_TOOL_CALL_FIELD_NUMBER: _ClassVar[int]
     RESULT_FIELD_NUMBER: _ClassVar[int]
-    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    STATUS_FIELD_NUMBER: _ClassVar[int]
     requested_tool_call: str
     result: str
-    success: bool
-    def __init__(self, requested_tool_call: _Optional[str] = ..., result: _Optional[str] = ..., success: bool = ...) -> None: ...
+    status: ToolCallResult.ToolCallStatus
+    def __init__(self, requested_tool_call: _Optional[str] = ..., result: _Optional[str] = ..., status: _Optional[_Union[ToolCallResult.ToolCallStatus, str]] = ...) -> None: ...

@@ -11,12 +11,13 @@ message GlobalConfig {
 }
 
 message AnalysisConfig {
+  reserved "code_research_analyzers";
+  reserved 6;
   repeated dev_observer.api.types.observations.Analyzer repo_analyzers = 1;
   repeated dev_observer.api.types.observations.Analyzer site_analyzers = 2;
   bool disable_masking = 3;
   optional dev_observer.api.types.observations.Analyzer default_git_changes_analyzer = 4;
   optional dev_observer.api.types.observations.Analyzer default_aggregated_summary_analyzer = 5;
-  repeated dev_observer.api.types.observations.Analyzer code_research_analyzers = 6;
 }
 
 message UserManagementStatus {
@@ -48,6 +49,8 @@ message RepoAnalysisConfig {
   message Research {
     int32 max_repo_size_mb = 1;
     int32 max_iterations = 2;
+    optional string general_prefix = 3;
+    repeated dev_observer.api.types.observations.Analyzer analyzers = 4;
   }
 }
 

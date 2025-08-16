@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 import logging
 from typing import List
 import shlex
@@ -14,6 +15,11 @@ _log = logging.getLogger(__name__)
 ALLOWED_BASH_COMMANDS = {
     'ls', 'cat', 'head', 'tail', 'grep', 'find', 'tree', 'wc', 'sort', 'uniq', 'cut'
 }
+
+@dataclasses.dataclass
+class BashResult:
+    result: str
+    success: bool = True
 
 
 def _validate_bash_command(command_string: str) -> bool:
@@ -96,7 +102,7 @@ def _validate_bash_command(command_string: str) -> bool:
     return True
 
 
-async def _execute_bash_pipeline(command_string: str, repo_path: str) -> str:
+async def _execute_bash_pipeline(command_string: str, repo_path: str) -> BashResult:
     """Execute a bash command pipeline safely."""
     _log.debug(s_("Executing bash pipeline", command=command_string, repo_path=repo_path))
     
@@ -116,12 +122,15 @@ async def _execute_bash_pipeline(command_string: str, repo_path: str) -> str:
             err = stderr.decode('utf-8').strip()
             out = stdout.decode('utf-8').strip()
             _log.warning(s_("Bash pipeline failed", command=command_string, err=err, out=out, returncode=process.returncode))
-            return f"Non 0 return code: \ncode: {process.returncode}\nstdout: {out}\nstderr: {err}"
+            return BashResult(
+                result=f"Non 0 return code: \ncode: {process.returncode}\nstdout: {out}\nstderr: {err}",
+                success=False
+            )
 
-        return stdout.decode('utf-8')
+        return BashResult(result=stdout.decode('utf-8'))
     except Exception as e:
         _log.warning(s_("Bash pipeline crashed", command=command_string, exc=e))
-        return f"Error: {str(e)}"
+        return BashResult(result=f"Error: {str(e)}", success=False)
 
 
 async def execute_repo_bash_tool(cmd: str, repo_path: str, args: str = "") -> str:

@@ -1,36 +1,43 @@
 import asyncio
 import dataclasses
 import logging
-from typing import Literal, Optional, List, Dict, Any
+from typing import Literal, Optional, List, Dict, Any, TypedDict
 
-from langchain_core.messages import AIMessage, ToolCall, ToolMessage
+from langchain_core.messages import AIMessage, ToolCall, BaseMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.constants import END
-from langgraph.graph import MessagesState
 from langgraph.types import Command
 
-from dev_observer.analysis.code.tools import bash_tools, bash_tool_names, execute_repo_bash_tool, _validate_bash_command, _execute_bash_pipeline
+from dev_observer.analysis.code.tools import bash_tools, bash_tool_names, _validate_bash_command, \
+    _execute_bash_pipeline, BashResult
 from dev_observer.analysis.util import models
-from dev_observer.analysis.util.models import extract_xml
+from dev_observer.analysis.util.models import extract_xml, to_str_content
+from dev_observer.analysis.util.usage import extract_usage, sum_usage
+from dev_observer.api.types.repo_pb2 import ResearchLog, ResearchLogItem, ToolCallResult
 from dev_observer.log import s_
-from dev_observer.prompts.provider import PromptsProvider, PrefixedPromptsFetcher
+from dev_observer.prompts.provider import PromptsProvider, PrefixedPromptsFetcher, FormattedPrompt
+from dev_observer.util import Clock, RealClock, pb_to_dict
 
 _log = logging.getLogger(__name__)
 
 
-class AnalysisState(MessagesState, total=False):
+class AnalysisState(TypedDict, total=False):
     """
     Attributes:
         repo_path: The path to the checked-out repository that will be analyzed.
         max_iterations: The maximum number of iterations to be performed
             during the analysis process.
-        prompt_prefix: Prefix for the prompt to be used for analysis.
+        general_prompt_prefix: Prefix for the general prompt to be used for analysis.
+        task_prompt_prefix: Prefix for the task-specific prompt to be used for analysis.
     """
     repo_path: str
     max_iterations: int
-    prompt_prefix: str
+    general_prompt_prefix: str
+    task_prompt_prefix: str
+    repo_url: str
+    repo_name: str
 
-    iteration_count: Optional[int]
+    research_log: Optional[dict]
     full_analysis: Optional[str]
     analysis_summary: Optional[str]
 
@@ -39,167 +46,366 @@ class AnalysisState(MessagesState, total=False):
 class AnalysisResult:
     full: str
     summary: str
+    response: BaseMessage
+
+
+@dataclasses.dataclass
+class ResearchStep:
+    iteration: int
+    max_iterations: int
+    repo_url: str
+    repo_name: str
+    history: List[BaseMessage]
+
+
+@dataclasses.dataclass
+class ResearchStepResult:
+    log_item: ResearchLogItem
+    stop: bool = False
+    plan_response: Optional[BaseMessage] = None
+    tool_messages: Optional[List[ToolMessage]] = None
+    summarize_response: Optional[BaseMessage] = None
+
+
+@dataclasses.dataclass
+class ToolCallResponse:
+    result: ToolCallResult
+    tool_message: ToolMessage
 
 
 class CodeResearchNodes:
     _prompts: PrefixedPromptsFetcher
+    _clock: Clock
 
-    def __init__(self, prompts: PromptsProvider):
+    def __init__(self, prompts: PromptsProvider, clock: Clock = RealClock()):
         self._prompts = PrefixedPromptsFetcher(prompts)
+        self._clock = clock
 
     async def analyze_node(
             self, state: AnalysisState, config: RunnableConfig,
-    ) -> Command[Literal["tools", "__end__"]]:
+    ) -> Command[Literal["__end__"]]:
         p = {"op": "code_research", "node": "analyze", **_st(state)}
+        messages: List[BaseMessage] = []
         try:
-            _log.debug(s_("Entering", **p))
+            iteration = 0
+            max_iterations = state.get("max_iterations", 1)
 
-            async def produce() -> Command:
-                result = await self._produce_analysis(state, config)
-                return Command(
-                    update={
-                        "full_analysis": result.full,
-                        "analysis_summary": result.summary,
-                    },
-                    goto=END,
+            research_log = ResearchLog(
+                started_at=self._clock.now(),
+            )
+            exit_reason = "max_iteration"
+            _log.info(s_("Starting research", exit_reason=exit_reason, **p))
+            while iteration < max_iterations:
+                iteration += 1
+                step = ResearchStep(
+                    iteration=iteration,
+                    max_iterations=max_iterations,
+                    repo_url=state["repo_url"],
+                    repo_name=state["repo_name"],
+                    history=_clean_tools(messages, 4, threshold=2000),
                 )
+                step_result = await self._do_research_iteration(state, config, step)
+                if step_result.plan_response:
+                    messages.append(step_result.plan_response)
+                if step_result.tool_messages:
+                    messages.extend(step_result.tool_messages)
+                if step_result.summarize_response:
+                    messages.append(step_result.summarize_response)
 
-            if state.get("iteration_count", 0) >= state.get("max_iterations", 5):
-                _log.debug(s_("Analysis done", reason="max_iterations", **p))
-                return await produce()
+                _log.debug(s_("Research step done", iteration=iteration, step_usage=step_result.log_item.usage, **p))
 
-            prompt = await self._prompts.get(state['prompt_prefix'], "analyze", self._get_prompt_params(state))
-            response = await models.ainvoke(config, prompt, models.InvokeParams(
-                tools=bash_tools(),
-                history=state["messages"] or [],
-            ))
-            retry = 3
-            while retry > 0:
-                if response.response_metadata.get('finish_reason', None) == 'MALFORMED_FUNCTION_CALL':
-                    await asyncio.sleep(20)
-                    retry -= 1
-                    _log.debug(s_("Retrying due to MALFORMED_FUNCTION_CALL", **p))
-                    response = await models.ainvoke(config, prompt, models.InvokeParams(
-                        tools=bash_tools(),
-                        history=state["messages"] or [],
-                    ))
-                else:
+                research_log.total_usage.CopyFrom(sum_usage(research_log.total_usage, step_result.log_item.usage))
+
+                research_log.items.append(step_result.log_item)
+                if step_result.stop:
+                    exit_reason = "done"
                     break
-            _log.debug(s_("Response received", response=response, **p))
-            has_tools = isinstance(response, AIMessage) and len(response.tool_calls) > 0
-            if not has_tools:
-                _log.debug(s_("Analysis done", reason="no_tools", **p))
-                return await produce()
+                if len(step_result.log_item.tool_calls) == 0:
+                    _log.warning(s_("Unexpected research with no tool calls", **p))
+                    continue
+            _log.info(
+                s_("Research finished, compiling report", total_usage=research_log.total_usage, exit_reason=exit_reason,
+                   **p))
 
-            _log.debug(s_("Going to process tools", **p))
+            step = ResearchStep(
+                iteration=iteration,
+                max_iterations=max_iterations,
+                repo_url=state["repo_url"],
+                repo_name=state["repo_name"],
+                history=_clean_tools(messages, threshold=2000),
+            )
+
+            result = await self._produce_analysis(state, config, step)
+            summary_usage = extract_usage(result.response)
+            research_log.total_usage.CopyFrom(sum_usage(research_log.total_usage, summary_usage))
+            _log.info(s_("Research compiled", total_usage=research_log.total_usage, report_usage=summary_usage, **p))
             return Command(
-                update={"messages": [response], "iteration_count": state.get("iteration_count", 0) + 1},
-                goto="tools",
+                update={
+                    "full_analysis": result.full,
+                    "analysis_summary": result.summary,
+                    "research_log": pb_to_dict(research_log),
+                },
+                goto=END,
             )
         except Exception as e:
             _log.exception(s_("Exception", error=str(e), **p))
             raise
 
-    async def tools_node(self, state: AnalysisState) -> Command[Literal["analyze"]]:
-        p: Dict[str, Any] = {"op": "code_research", "node": "tools", **_st(state)}
-        try:
-            repo_path = state["repo_path"]
-            last_message = state["messages"][-1] if state["messages"] else None
-            if not last_message:
-                return Command(goto="analyze")
-            tool_calls = last_message.tool_calls if isinstance(last_message, AIMessage) else []
-            if not tool_calls or len(tool_calls) == 0:
-                return Command(goto="analyze")
+    async def _do_research_iteration(
+            self,
+            state: AnalysisState,
+            config: RunnableConfig,
+            step: ResearchStep,
+    ) -> ResearchStepResult:
+        p = {"op": "code_research", "node": "research_iteration", "iteration": step.iteration, **_st(state)}
+        _log.debug(s_("Entering", **p))
 
-            tool_results: List[ToolMessage] = []
-            allowed_tools = bash_tool_names()
-            tools_to_call: List[ToolCall] = []
-            for tool_call in last_message.tool_calls:
-                tool_name = tool_call["name"]
-                if tool_name not in allowed_tools:
-                    tool_results.append(ToolMessage(
-                        content=f"Unexpected tool: {tool_name}",
-                        tool_call_id=tool_call["id"],
-                        status="error",
-                    ))
-                    continue
-                tools_to_call.append(tool_call)
+        plan_response = await self._do_plan(state, config, step)
+        log_item = ResearchLogItem(
+            started_at=self._clock.now(),
+            usage=extract_usage(plan_response)
+        )
+        step_result = ResearchStepResult(log_item=log_item)
+        step_result.plan_response = plan_response
 
-            if len(tools_to_call) == 0:
-                return Command(goto="analyze")
+        has_tools = isinstance(plan_response, AIMessage) and len(plan_response.tool_calls) > 0
+        if not has_tools:
+            log_item.finished_at = self._clock.now()
+            step_result.stop = True
+            return step_result
+        _log.debug(s_("Processing tools", **p))
+        responses: List[ToolCallResponse] = await self._handle_tools(state, plan_response.tool_calls)
+        tool_messages = [r.tool_message for r in responses]
+        step_result.tool_messages = tool_messages
 
-            p["tools"] = [f"{t["name"]} {t.get("args", "")}" for t in tools_to_call]
-            _log.debug(s_("Calling tools", **p))
+        log_item.tool_calls.extend([r.result for r in responses])
 
-            task_results = await asyncio.gather(
-                *[self._execute_bash_tool(repo_path, tool_call) for tool_call in tools_to_call],
-                return_exceptions=True,
-            )
-            _log.debug(s_("Tool calls done", **p))
-            tool_results.extend(task_results)
+        sum_prompt = await self._get_prompt(state, step, "summarize")
+        updated_history = [*step.history, plan_response, *tool_messages]
+        sum_response = await models.ainvoke(config, sum_prompt, models.InvokeParams(history=updated_history))
+        log_item.usage.CopyFrom(sum_usage(log_item.usage, extract_usage(sum_response)))
 
-            return Command(
-                update={"messages": tool_results},
-                goto="analyze",
-            )
-        except BaseException as e:
-            _log.exception(s_("Exception", error=str(e), **p))
-            raise
+        _log.debug(s_("Summary response received", **p, response=sum_response))
+        step_result.summarize_response = sum_response
 
-    async def _execute_bash_tool(self, repo_path: str, tool_call: ToolCall, timeout: float = 45.0) -> ToolMessage:
-        p = {"op": "code_research", "node": "tools_call", "repo_path": repo_path, "tool": tool_call["name"]}
-        try:
-            _log.debug(s_("Executing", **p))
-            tool_args = tool_call.get("args", {})
-            command = tool_args.get("command", "")
-            result = await asyncio.wait_for(
-                self._execute_bash_command(command, repo_path),
-                timeout=timeout
-            )
+        log_item.finished_at = self._clock.now()
 
-            _log.debug(s_("Executed", **p))
-            return ToolMessage(
-                content=result,
-                tool_call_id=tool_call["id"]
-            )
-        except asyncio.TimeoutError:
-            _log.error(s_("Tool execution timed out", timeout=timeout, **p))
-            return ToolMessage(
-                content=f"Tool {tool_call['name']} timed out after {timeout} seconds",
-                tool_call_id=tool_call["id"],
-                status="error",
-            )
-        except BaseException as e:
-            _log.exception(s_("Failed", exc=e, **p))
-            return ToolMessage(
-                content=f"Error executing {tool_call["name"]}: {str(e)}",
-                tool_call_id=tool_call["id"],
-                status="error",
-            )
+        return step_result
 
-    async def _execute_bash_command(self, command: str, repo_path: str) -> str:
+    async def _do_plan(self, state: AnalysisState, config: RunnableConfig, step: ResearchStep, ) -> BaseMessage:
+        p = {"op": "code_research", "node": "do_plan", "iteration": step.iteration, **_st(state)}
+        plan_prompt = await self._get_prompt(state, step, "plan")
+        invoke_params = models.InvokeParams(tools=bash_tools(), history=step.history)
+        plan_response = await models.ainvoke(config, plan_prompt, invoke_params)
+        retry = 3
+        while retry > 0:
+            if plan_response.response_metadata.get('finish_reason', None) == 'MALFORMED_FUNCTION_CALL':
+                _log.debug(s_("Got MALFORMED_FUNCTION_CALL", **p))
+                await asyncio.sleep(1)
+                retry -= 1
+                _log.debug(s_("Retrying due to MALFORMED_FUNCTION_CALL", retries_left=retry, **p))
+                plan_response = await models.ainvoke(config, plan_prompt, invoke_params)
+            else:
+                break
+        _log.debug(s_("Plan response received", **p, response=plan_response))
+        return plan_response
+
+    async def _execute_bash_command(self, command: str, repo_path: str) -> BashResult:
         """Execute a bash command with validation and pipeline support."""
         if not _validate_bash_command(command):
-            return "Error: Command contains disallowed commands or headless execution patterns"
-        
+            return BashResult(
+                result="Error: Command contains disallowed commands or headless execution patterns",
+                success=False
+            )
+
         return await _execute_bash_pipeline(command, repo_path)
 
-    async def _produce_analysis(self, state: AnalysisState, config: RunnableConfig) -> AnalysisResult:
-        prompt = await self._prompts.get(state['prompt_prefix'], "produce", self._get_prompt_params(state))
-        response = await models.ainvoke(config, prompt, models.InvokeParams(history=state["messages"] or []))
-        content = response.content
+    async def _produce_analysis(
+            self,
+            state: AnalysisState,
+            config: RunnableConfig,
+            step: ResearchStep,
+    ) -> AnalysisResult:
+        p = {"op": "code_research", "node": "produce_analysis", "iteration": step.iteration, **_st(state)}
+        prompt = await self._get_prompt(state, step, "produce")
+        response = await models.ainvoke(config, prompt, models.InvokeParams(history=step.history))
+        _log.debug(s_("Analysis response received", **p, response=response))
         return AnalysisResult(
-            full=extract_xml(content, "full_analysis"),
-            summary=extract_xml(content, "analysis_summary"),
+            full=extract_xml(response.content, "full_analysis"),
+            summary=extract_xml(response.content, "analysis_summary"),
+            response=response,
         )
 
-    def _get_prompt_params(self, _: AnalysisState) -> Dict[str, str]:
-        return {}
+    async def _get_prompt(
+            self, state: AnalysisState, step: ResearchStep, suffix: str, extra_params: Optional[dict] = None,
+    ) -> FormattedPrompt:
+        params = self._get_prompt_params(step)
+        if extra_params:
+            params.update(extra_params)
+        general = await self._prompts.get(state["general_prompt_prefix"], suffix, params)
+        task = await self._prompts.get(state["task_prompt_prefix"], "query", params)
+        system = general.system
+        if task.system and task.system.text:
+            system.text = f"{system.text}\n\n{task.system.text}"
+        return FormattedPrompt(
+            config=task.config or general.config,
+            system=system,
+            user=task.user,
+            langfuse_prompt=general.langfuse_prompt,
+            prompt_name=general.prompt_name,
+        )
+
+    def _get_prompt_params(self, step: ResearchStep) -> Dict[str, str]:
+        return {
+            "iteration": step.iteration,
+            "max_iterations": step.max_iterations,
+            "repo_url": step.repo_url,
+            "repo_name": step.repo_name,
+        }
+
+    async def _handle_tool(self, tool_call: ToolCall, repo_path: str) -> ToolCallResponse:
+        p = {"op": "handle_tool", "tool_call": tool_call}
+        _log.debug(s_("Entering", **p))
+        allowed_tools = bash_tool_names()
+        tool_name = tool_call["name"]
+        response = ToolCallResponse(
+            result=ToolCallResult(
+                requested_tool_call=f"{tool_name}: {tool_call.get('args', {})}",
+                status=ToolCallResult.ToolCallStatus.SUCCESS,
+            ),
+            tool_message=ToolMessage(
+                tool_call_id=tool_call["id"],
+                content="",
+            ),
+        )
+
+        def set_msg(msg: str, success: bool = True):
+            response.result.result = msg
+            response.tool_message.content = msg
+            if not success:
+                response.result.status = ToolCallResult.ToolCallStatus.FAILURE
+                response.tool_message.status = "error"
+
+        try:
+            _log.debug(s_("Entering", **p))
+            if tool_name not in allowed_tools:
+                set_msg(f"Unexpected tool: {tool_name}", False)
+                return response
+            tool_args = tool_call.get("args", {})
+            command = tool_args.get("command", "")
+            bash_result = await asyncio.wait_for(
+                self._execute_bash_command(command, repo_path),
+                timeout=45.0
+            )
+            set_msg(bash_result.result, bash_result.success)
+            _log.debug(s_("Tool call finished", success=bash_result.success, **p))
+            return response
+        except asyncio.TimeoutError as e:
+            set_msg(f"Tool {tool_name} timed out after", False)
+            _log.exception(s_("Tool call timed out", exc=e, result=response.result.result, **p))
+            return response
+        except Exception as e:
+            set_msg(f"Tool call failed: {e}", False)
+            _log.exception(s_("Tool call timed out", exc=e, **p))
+            return response
+
+    async def _handle_tools(self, state: AnalysisState, tool_calls: List[ToolCall]) -> List[ToolCallResponse]:
+        p: Dict[str, Any] = {"op": "code_research", "node": "handle_tools", **_st(state)}
+        allowed_tools = bash_tool_names()
+        bash_commands: List[str] = []
+        _log.debug(s_("Entering", tool_calls=tool_calls, **p))
+        responses: List[ToolCallResponse] = []
+        for tool_call in tool_calls:
+            tool_name = tool_call["name"]
+            if tool_name not in allowed_tools:
+                msg = ToolMessage(
+                    tool_call_id=tool_call["id"],
+                    content=f"Unexpected tool: {tool_name}",
+                    status="error",
+                )
+                responses.append(ToolCallResponse(
+                    tool_message=msg,
+                    result=_to_tool_result(tool_call, msg),
+                ))
+                continue
+            tool_args = tool_call.get("args", {})
+            bash_commands.append(tool_args.get("command", ""))
+        call_results = await asyncio.gather(
+            *[self._handle_tool(tool_call, state["repo_path"]) for tool_call in tool_calls],
+        )
+        _log.debug(s_("Tool calls done", **p))
+        responses.extend(call_results)
+        return responses
 
 
 def _st(state: AnalysisState) -> dict:
     try:
-        return {k: state.get(k) for k in ["iteration_count", "repo_path", "max_iterations", "prompt_prefix"]}
+        return {k: state.get(k) for k in ["max_iterations", "task_prompt_prefix"]}
     except BaseException as e:
         _log.exception(s_("Failed to get state params", error=e))
         return {}
+
+
+def _to_tool_result(tool_call: ToolCall, tool_msg: ToolMessage) -> ToolCallResult:
+    tool_name = tool_call["name"]
+    status = ToolCallResult.ToolCallStatus.SUCCESS if tool_msg.status == "success" \
+        else ToolCallResult.ToolCallStatus.FAILURE
+    return ToolCallResult(
+        requested_tool_call=f"{tool_name}: {tool_call.get('args', {})}",
+        result=tool_msg.content,
+        status=status,
+    )
+
+def _clean_tool_msg(msg: ToolMessage, threshold: int = 0) -> ToolMessage:
+    str_content = to_str_content(msg.content)
+    if len(str_content) > threshold:
+        return ToolMessage(content="[REDACTED]", tool_call_id=msg.tool_call_id, status=msg.status)
+    return msg
+
+def _clean_tools(messages: List[BaseMessage], depth: int = 0, threshold: int = 0) -> List[BaseMessage]:
+    """
+    Create a new copy of messages where ToolMessage "content" is replaced with [REDACTED].
+
+    Args:
+        messages: List of messages to clean
+        depth: If not 0, only clean ToolMessages before the latest AIMessage at the specified depth
+
+    Returns:
+        New list of messages with ToolMessage content redacted
+    """
+    if not messages:
+        return []
+
+    result = []
+
+    # If depth is 0, clean all ToolMessages
+    if depth == 0:
+        for msg in messages:
+            if isinstance(msg, ToolMessage):
+                result.append(_clean_tool_msg(msg, threshold))
+            else:
+                result.append(msg)
+        return result
+
+    # Find the latest AIMessage at the specified depth
+    ai_message_indices = []
+    for i, msg in enumerate(messages):
+        if isinstance(msg, AIMessage):
+            ai_message_indices.append(i)
+
+    # If we don't have enough AIMessages for the specified depth, clean nothing
+    if len(ai_message_indices) < depth:
+        return messages[:]  # Return a shallow copy
+
+    # Get the index of the latest AIMessage at the specified depth
+    # depth=1 means the latest AIMessage, depth=2 means the second-to-latest, etc.
+    latest_ai_index = ai_message_indices[-depth]
+
+    # Clean ToolMessages only before this AIMessage
+    for i, msg in enumerate(messages):
+        if i < latest_ai_index and isinstance(msg, ToolMessage):
+            result.append(_clean_tool_msg(msg, threshold))
+        else:
+            result.append(msg)
+
+    return result

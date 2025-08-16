@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1f\x64\x65v_observer/api/types/ai.proto\x12\x19\x64\x65v_observer.api.types.ai\"E\n\x0cPromptConfig\x12\x35\n\x05model\x18\x01 \x01(\x0b\x32&.dev_observer.api.types.ai.ModelConfig\"H\n\x0bModelConfig\x12\x10\n\x08provider\x18\x01 \x01(\t\x12\x12\n\nmodel_name\x18\x02 \x01(\t\x12\x13\n\x0btemperature\x18\x03 \x01(\x02\"\x1d\n\rSystemMessage\x12\x0c\n\x04text\x18\x01 \x01(\t\"N\n\x0bUserMessage\x12\x11\n\x04text\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x12\n\nimage_urls\x18\x03 \x03(\tB\x07\n\x05_textJ\x04\x08\x02\x10\x03R\timage_url\"\xd7\x01\n\x0ePromptTemplate\x12=\n\x06system\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.ai.SystemMessageH\x00\x88\x01\x01\x12\x39\n\x04user\x18\x02 \x01(\x0b\x32&.dev_observer.api.types.ai.UserMessageH\x01\x88\x01\x01\x12\x37\n\x06\x63onfig\x18\x03 \x01(\x0b\x32\'.dev_observer.api.types.ai.PromptConfigB\t\n\x07_systemB\x07\n\x05_userb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1f\x64\x65v_observer/api/types/ai.proto\x12\x19\x64\x65v_observer.api.types.ai\"E\n\x0cPromptConfig\x12\x35\n\x05model\x18\x01 \x01(\x0b\x32&.dev_observer.api.types.ai.ModelConfig\"H\n\x0bModelConfig\x12\x10\n\x08provider\x18\x01 \x01(\t\x12\x12\n\nmodel_name\x18\x02 \x01(\t\x12\x13\n\x0btemperature\x18\x03 \x01(\x02\"\x1d\n\rSystemMessage\x12\x0c\n\x04text\x18\x01 \x01(\t\"N\n\x0bUserMessage\x12\x11\n\x04text\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x12\n\nimage_urls\x18\x03 \x03(\tB\x07\n\x05_textJ\x04\x08\x02\x10\x03R\timage_url\"\xd7\x01\n\x0ePromptTemplate\x12=\n\x06system\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.ai.SystemMessageH\x00\x88\x01\x01\x12\x39\n\x04user\x18\x02 \x01(\x0b\x32&.dev_observer.api.types.ai.UserMessageH\x01\x88\x01\x01\x12\x37\n\x06\x63onfig\x18\x03 \x01(\x0b\x32\'.dev_observer.api.types.ai.PromptConfigB\t\n\x07_systemB\x07\n\x05_user\"R\n\rUsageMetadata\x12\x14\n\x0cinput_tokens\x18\x01 \x01(\x05\x12\x15\n\routput_tokens\x18\x02 \x01(\x05\x12\x14\n\x0ctotal_tokens\x18\x03 \x01(\x05\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -41,4 +41,6 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_USERMESSAGE']._serialized_end=316
   _globals['_PROMPTTEMPLATE']._serialized_start=319
   _globals['_PROMPTTEMPLATE']._serialized_end=534
+  _globals['_USAGEMETADATA']._serialized_start=536
+  _globals['_USAGEMETADATA']._serialized_end=618
 # @@protoc_insertion_point(module_scope)

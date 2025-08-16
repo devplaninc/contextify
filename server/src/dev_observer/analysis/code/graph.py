@@ -12,6 +12,5 @@ def create_code_research_graph(
     nodes = CodeResearchNodes(prompts)
     workflow = StateGraph(AnalysisState)
     workflow.add_node("analyze", nodes.analyze_node)
-    workflow.add_node("tools", nodes.tools_node)
     workflow.set_entry_point("analyze")
     return workflow.compile()

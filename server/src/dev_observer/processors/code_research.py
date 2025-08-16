@@ -1,5 +1,6 @@
 import asyncio
 import dataclasses
+import json
 import logging
 import os
 import shutil
@@ -25,8 +26,11 @@ _log = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class CodeResearchTask:
-    prompt_prefix: str
+    general_prompt_prefix: str
+    task_prompt_prefix: str
     repo_path: str
+    repo_url: str
+    repo_name: str
     max_iterations: int
     dir_key: ObservationKey
 
@@ -54,7 +58,12 @@ class CodeResearchProcessor:
 
     async def research_repository(self, repo: ObservedRepo) -> Optional[ProcessingItemResultData]:
         config = await self._store.get_global_config()
-        if len(config.analysis.code_research_analyzers) == 0:
+        analyzers = config.repo_analysis.research.analyzers
+        if len(analyzers) == 0:
+            return None
+
+        general_prefix = config.repo_analysis.research.general_prefix
+        if not general_prefix or len(general_prefix) == 0:
             return None
 
         conf = config.repo_analysis.research
@@ -64,6 +73,7 @@ class CodeResearchProcessor:
             depth="1",
         )
         repo_path = clone_result.path
+
         async def clean_up():
             if os.path.exists(repo_path):
                 # noinspection PyTypeChecker
@@ -71,13 +81,16 @@ class CodeResearchProcessor:
 
         try:
             tasks: List[CodeResearchTask] = []
-            for analyzer in config.analysis.code_research_analyzers:
+            for analyzer in analyzers:
                 key = f"{get_repo_key_pref(repo.git_repo)}/{analyzer.file_name}"
                 tasks.append(CodeResearchTask(
-                    prompt_prefix=analyzer.prompt_prefix,
+                    general_prompt_prefix=general_prefix,
+                    task_prompt_prefix=analyzer.prompt_prefix,
                     repo_path=repo_path,
                     max_iterations=conf.max_iterations or 1,
                     dir_key=ObservationKey(kind="repo_research", name=analyzer.file_name, key=key),
+                    repo_url=repo.url,
+                    repo_name=repo.git_repo.name,
                 ))
 
             coro_tasks = [self._process_task(t) for t in tasks]
@@ -88,18 +101,20 @@ class CodeResearchProcessor:
         finally:
             await clean_up()
 
-
-
     async def _process_task(self, task: CodeResearchTask):
         in_state: AnalysisState = AnalysisState(
             repo_path=task.repo_path,
             max_iterations=task.max_iterations,
-            prompt_prefix=task.prompt_prefix,
-            messages=[],
+            general_prompt_prefix=task.general_prompt_prefix,
+            task_prompt_prefix=task.task_prompt_prefix,
+            repo_url=task.repo_url,
+            repo_name=task.repo_name,
         )
         # noinspection PyTypeChecker
         response = await self._graph.ainvoke(
-            in_state, ensure_config({"recursion_limit": 500}), output_keys=["full_analysis", "analysis_summary"])
+            in_state,
+            ensure_config({"recursion_limit": 200}),
+            output_keys=["full_analysis", "analysis_summary", "research_log"])
 
         dir_key = task.dir_key
         meta = CodeResearchMeta(
@@ -114,5 +129,10 @@ class CodeResearchProcessor:
             key=ObservationKey(kind=dir_key.kind, name="research.md", key=f"{dir_key.key}/research.md"),
             content=response["full_analysis"],
         )
+        log_obs = Observation(
+            key=ObservationKey(kind=dir_key.kind, name="research_log.json", key=f"{dir_key.key}/research_log.json"),
+            content=json.dumps(response["research_log"], indent=2),
+        )
         await self._observations.store(research_obs)
         await self._observations.store(meta_obs)
+        await self._observations.store(log_obs)

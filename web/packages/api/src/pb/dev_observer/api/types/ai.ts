@@ -34,6 +34,12 @@ export interface PromptTemplate {
   config: PromptConfig | undefined;
 }
 
+export interface UsageMetadata {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
 function createBasePromptConfig(): PromptConfig {
   return { model: undefined };
 }
@@ -414,6 +420,98 @@ export const PromptTemplate: MessageFns<PromptTemplate> = {
     message.config = (object.config !== undefined && object.config !== null)
       ? PromptConfig.fromPartial(object.config)
       : undefined;
+    return message;
+  },
+};
+
+function createBaseUsageMetadata(): UsageMetadata {
+  return { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+}
+
+export const UsageMetadata: MessageFns<UsageMetadata> = {
+  encode(message: UsageMetadata, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.inputTokens !== 0) {
+      writer.uint32(8).int32(message.inputTokens);
+    }
+    if (message.outputTokens !== 0) {
+      writer.uint32(16).int32(message.outputTokens);
+    }
+    if (message.totalTokens !== 0) {
+      writer.uint32(24).int32(message.totalTokens);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): UsageMetadata {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseUsageMetadata();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.inputTokens = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.outputTokens = reader.int32();
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.totalTokens = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): UsageMetadata {
+    return {
+      inputTokens: isSet(object.inputTokens) ? gt.Number(object.inputTokens) : 0,
+      outputTokens: isSet(object.outputTokens) ? gt.Number(object.outputTokens) : 0,
+      totalTokens: isSet(object.totalTokens) ? gt.Number(object.totalTokens) : 0,
+    };
+  },
+
+  toJSON(message: UsageMetadata): unknown {
+    const obj: any = {};
+    if (message.inputTokens !== 0) {
+      obj.inputTokens = Math.round(message.inputTokens);
+    }
+    if (message.outputTokens !== 0) {
+      obj.outputTokens = Math.round(message.outputTokens);
+    }
+    if (message.totalTokens !== 0) {
+      obj.totalTokens = Math.round(message.totalTokens);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<UsageMetadata>): UsageMetadata {
+    return UsageMetadata.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<UsageMetadata>): UsageMetadata {
+    const message = createBaseUsageMetadata();
+    message.inputTokens = object.inputTokens ?? 0;
+    message.outputTokens = object.outputTokens ?? 0;
+    message.totalTokens = object.totalTokens ?? 0;
     return message;
   },
 };

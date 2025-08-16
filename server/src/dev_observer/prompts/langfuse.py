@@ -1,14 +1,14 @@
 import dataclasses
 import logging
-from typing import Optional, Dict
+from typing import Optional, Dict, cast
 
-from google.protobuf import json_format
 from langfuse import Langfuse
 from langfuse.model import ChatPromptClient
 
 from dev_observer.api.types.ai_pb2 import PromptConfig, SystemMessage, UserMessage
 from dev_observer.log import s_
 from dev_observer.prompts.provider import PromptsProvider, FormattedPrompt
+from dev_observer.util import parse_dict_pb
 
 _log = logging.getLogger(__name__)
 
@@ -31,9 +31,12 @@ class LangfusePromptsProvider(PromptsProvider):
         label = self._default_label
         _log.debug(s_("Retrieving Langfuse prompt template", template=name, label=label))
         prompt = self._fetch_prompt(name)
-        if prompt.config is None:
-            raise ValueError("Langfuse prompt template must have a config")
-        config: PromptConfig = json_format.ParseDict(prompt.config, PromptConfig())
+        config: Optional[PromptConfig] = None
+        if prompt.config is not None:
+            parsed: PromptConfig = parse_dict_pb(cast(dict, prompt.config), PromptConfig())
+            if parsed.HasField("model"):
+                config = parsed
+
         chat_prompt = prompt.compile(**params)
         system: Optional[str] = None
         user: Optional[str] = None

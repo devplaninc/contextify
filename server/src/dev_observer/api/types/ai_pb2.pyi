@@ -45,3 +45,13 @@ class PromptTemplate(_message.Message):
     user: UserMessage
     config: PromptConfig
     def __init__(self, system: _Optional[_Union[SystemMessage, _Mapping]] = ..., user: _Optional[_Union[UserMessage, _Mapping]] = ..., config: _Optional[_Union[PromptConfig, _Mapping]] = ...) -> None: ...
+
+class UsageMetadata(_message.Message):
+    __slots__ = ("input_tokens", "output_tokens", "total_tokens")
+    INPUT_TOKENS_FIELD_NUMBER: _ClassVar[int]
+    OUTPUT_TOKENS_FIELD_NUMBER: _ClassVar[int]
+    TOTAL_TOKENS_FIELD_NUMBER: _ClassVar[int]
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    def __init__(self, input_tokens: _Optional[int] = ..., output_tokens: _Optional[int] = ..., total_tokens: _Optional[int] = ...) -> None: ...
