@@ -58,6 +58,12 @@ export interface RepoAnalysisConfig_Research {
   analyzers: Analyzer[];
   reportChunkSize: number;
   maxToolContentTokens: number;
+  historyLimits: RepoAnalysisConfig_ResearchHistoryLimits | undefined;
+}
+
+export interface RepoAnalysisConfig_ResearchHistoryLimits {
+  plan: number;
+  summarize: number;
 }
 
 export interface WebsiteCrawlingConfig {
@@ -722,6 +728,7 @@ function createBaseRepoAnalysisConfig_Research(): RepoAnalysisConfig_Research {
     analyzers: [],
     reportChunkSize: 0,
     maxToolContentTokens: 0,
+    historyLimits: undefined,
   };
 }
 
@@ -744,6 +751,9 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     }
     if (message.maxToolContentTokens !== 0) {
       writer.uint32(48).int32(message.maxToolContentTokens);
+    }
+    if (message.historyLimits !== undefined) {
+      RepoAnalysisConfig_ResearchHistoryLimits.encode(message.historyLimits, writer.uint32(58).fork()).join();
     }
     return writer;
   },
@@ -803,6 +813,14 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
           message.maxToolContentTokens = reader.int32();
           continue;
         }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.historyLimits = RepoAnalysisConfig_ResearchHistoryLimits.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -820,6 +838,9 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
       analyzers: gt.Array.isArray(object?.analyzers) ? object.analyzers.map((e: any) => Analyzer.fromJSON(e)) : [],
       reportChunkSize: isSet(object.reportChunkSize) ? gt.Number(object.reportChunkSize) : 0,
       maxToolContentTokens: isSet(object.maxToolContentTokens) ? gt.Number(object.maxToolContentTokens) : 0,
+      historyLimits: isSet(object.historyLimits)
+        ? RepoAnalysisConfig_ResearchHistoryLimits.fromJSON(object.historyLimits)
+        : undefined,
     };
   },
 
@@ -843,6 +864,9 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     if (message.maxToolContentTokens !== 0) {
       obj.maxToolContentTokens = Math.round(message.maxToolContentTokens);
     }
+    if (message.historyLimits !== undefined) {
+      obj.historyLimits = RepoAnalysisConfig_ResearchHistoryLimits.toJSON(message.historyLimits);
+    }
     return obj;
   },
 
@@ -857,6 +881,85 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     message.analyzers = object.analyzers?.map((e) => Analyzer.fromPartial(e)) || [];
     message.reportChunkSize = object.reportChunkSize ?? 0;
     message.maxToolContentTokens = object.maxToolContentTokens ?? 0;
+    message.historyLimits = (object.historyLimits !== undefined && object.historyLimits !== null)
+      ? RepoAnalysisConfig_ResearchHistoryLimits.fromPartial(object.historyLimits)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseRepoAnalysisConfig_ResearchHistoryLimits(): RepoAnalysisConfig_ResearchHistoryLimits {
+  return { plan: 0, summarize: 0 };
+}
+
+export const RepoAnalysisConfig_ResearchHistoryLimits: MessageFns<RepoAnalysisConfig_ResearchHistoryLimits> = {
+  encode(message: RepoAnalysisConfig_ResearchHistoryLimits, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.plan !== 0) {
+      writer.uint32(8).int32(message.plan);
+    }
+    if (message.summarize !== 0) {
+      writer.uint32(16).int32(message.summarize);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RepoAnalysisConfig_ResearchHistoryLimits {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRepoAnalysisConfig_ResearchHistoryLimits();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.plan = reader.int32();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.summarize = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RepoAnalysisConfig_ResearchHistoryLimits {
+    return {
+      plan: isSet(object.plan) ? gt.Number(object.plan) : 0,
+      summarize: isSet(object.summarize) ? gt.Number(object.summarize) : 0,
+    };
+  },
+
+  toJSON(message: RepoAnalysisConfig_ResearchHistoryLimits): unknown {
+    const obj: any = {};
+    if (message.plan !== 0) {
+      obj.plan = Math.round(message.plan);
+    }
+    if (message.summarize !== 0) {
+      obj.summarize = Math.round(message.summarize);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<RepoAnalysisConfig_ResearchHistoryLimits>): RepoAnalysisConfig_ResearchHistoryLimits {
+    return RepoAnalysisConfig_ResearchHistoryLimits.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<RepoAnalysisConfig_ResearchHistoryLimits>): RepoAnalysisConfig_ResearchHistoryLimits {
+    const message = createBaseRepoAnalysisConfig_ResearchHistoryLimits();
+    message.plan = object.plan ?? 0;
+    message.summarize = object.summarize ?? 0;
     return message;
   },
 };

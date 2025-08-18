@@ -53,6 +53,12 @@ message RepoAnalysisConfig {
     repeated dev_observer.api.types.observations.Analyzer analyzers = 4;
     int32 report_chunk_size = 5;
     int32 max_tool_content_tokens = 6;
+    ResearchHistoryLimits history_limits = 7;
+  }
+
+  message ResearchHistoryLimits {
+    int32 plan = 1;
+    int32 summarize = 2;
   }
 }
 

@@ -62,12 +62,17 @@ def extract_prompt_messages(prompt: FormattedPrompt) -> List[BaseMessage]:
         messages.append(HumanMessage(content=contents))
     return messages
 
+@dataclasses.dataclass
+class Truncate:
+    limit: int
+    tokenizer: TokenizerProvider
 
 @dataclasses.dataclass
 class InvokeParams:
     input: dict = dataclasses.field(default_factory=dict)
     tools: Optional[List[BaseTool]] = None
     history: List[BaseMessage] = dataclasses.field(default_factory=list)
+    history_truncate: Optional[Truncate] = None
 
 
 async def ainvoke(
@@ -92,7 +97,11 @@ async def ainvoke(
             model = model.bind_tools(params.tools)
         prompt_name = prompt.prompt_name
         messages = extract_prompt_messages(prompt)
-        messages = [*messages, *params.history]
+        history = params.history
+        if len(history) > 0 and params.history_truncate is not None:
+            tr = params.history_truncate
+            history = truncate_history(history, tr.tokenizer, tr.limit)
+        messages = [*messages, *history]
         log_extra.update({"prompt_config": prompt.config, "prompt_name": prompt_name})
         _log.debug(s_("Creating prompt", **log_extra))
         pt = ChatPromptTemplate.from_messages(messages)
@@ -121,7 +130,7 @@ def extract_xml(content: Union[str, list[Union[str, dict]]], tag: str) -> Option
 
 
 def count_message_tokens(msg: BaseMessage, tokenizer: TokenizerProvider) -> int:
-    return len(tokenizer.encode(msg.content))
+    return len(tokenizer.encode(to_str_content(msg.content)))
 
 
 def count_messages_tokens(messages: List[BaseMessage], tokenizer: TokenizerProvider) -> int:
@@ -199,6 +208,69 @@ def to_tool_result(tool_call: ToolCall, tool_msg: ToolMessage) -> ToolCallResult
         result=tool_msg.content,
         status=status,
     )
+
+_truncated_str = "[TRUNCATED: CONTENT TOO LONG]"
+
+def truncate_history(history: List[BaseMessage], tokenizer: TokenizerProvider, max_tokens: int) -> List[BaseMessage]:
+    """
+    Truncate history to fit under max_tokens by replacing ToolMessage content starting from oldest.
+    
+    Args:
+        history: List of messages to truncate
+        tokenizer: Tokenizer to use for counting tokens
+        max_tokens: Maximum number of tokens allowed
+        
+    Returns:
+        New list of messages with ToolMessage content truncated when necessary
+    """
+    if not history:
+        return []
+    
+    result = []
+    current_tokens = 0
+    tool_message_indices = []
+    for i, msg in enumerate(history):
+        result.append(msg)
+        if isinstance(msg, ToolMessage):
+            str_content = to_str_content(msg.content)
+            current_tokens += len(tokenizer.encode(str_content))
+            tool_message_indices.append(i)
+        else:
+            current_tokens += count_message_tokens(msg, tokenizer)
+    
+    if current_tokens <= max_tokens:
+        return result
+    
+    # Process ToolMessages from oldest to newest
+    for i in tool_message_indices:
+        if current_tokens <= max_tokens:
+            break
+            
+        original_msg = result[i]
+        if isinstance(original_msg, ToolMessage):
+            old_tokens = len(tokenizer.encode(to_str_content(original_msg.content)))
+            
+            truncated_msg = ToolMessage(
+                content=_truncated_str,
+                tool_call_id=original_msg.tool_call_id,
+                status=original_msg.status
+            )
+            
+            # Calculate token savings, just estimate for a new string
+            token_savings = old_tokens - (len(_truncated_str) / 4)
+            
+            # Update the result and current token count
+            result[i] = truncated_msg
+            current_tokens -= token_savings
+    
+    # Log warning if still over the limit after processing all ToolMessages
+    if current_tokens > max_tokens:
+        _log.warning(s_("History still exceeds max_tokens after truncating all ToolMessages",
+                        current_tokens=current_tokens,
+                        max_tokens=max_tokens,
+                        tool_messages_processed=len(tool_message_indices)))
+    
+    return result
 
 
 def clean_tools(

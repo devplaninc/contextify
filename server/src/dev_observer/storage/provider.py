@@ -72,7 +72,10 @@ class StorageProvider(Protocol):
         ...
 
     async def set_next_processing_time(
-            self, key: ProcessingItemKey, next_time: Optional[datetime.datetime], error: Optional[str] = None,
+            self,
+            key: ProcessingItemKey,
+            next_time: Optional[datetime.datetime],
+            error: Optional[str] = None,
             processing_started_at: Optional[datetime.datetime] = None,
     ):
         ...

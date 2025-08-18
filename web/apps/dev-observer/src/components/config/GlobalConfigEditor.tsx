@@ -41,6 +41,11 @@ const repoAnalysisConfigFlattenSchema = z.object({
   maxFileSizeBytes: z.coerce.number(),
 })
 
+const researchHistoryLimitsSchema = z.object({
+  plan: z.coerce.number(),
+  summarize: z.coerce.number(),
+})
+
 const repoAnalysisConfigResearchSchema = z.object({
   maxRepoSizeMb: z.coerce.number(),
   maxIterations: z.coerce.number(),
@@ -48,6 +53,7 @@ const repoAnalysisConfigResearchSchema = z.object({
   analyzers: z.array(analyzerSchema),
   reportChunkSize: z.coerce.number(),
   maxToolContentTokens: z.coerce.number(),
+  historyLimits: researchHistoryLimitsSchema,
 })
 
 const repoAnalysisConfigSchema = z.object({
@@ -224,6 +230,33 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
           render={({field}) => (
             <FormItem className="flex items-center gap-4">
               <FormLabel className="w-[200px]">Max tool content in tokens before truncate:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="repoAnalysis.research.historyLimits.plan"
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[200px]">History limit for Plan (tokens):</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="repoAnalysis.research.historyLimits.summarize"
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[200px]">History limit for Summarize (tokens):</FormLabel>
               <FormControl className="w-[200px]">
                 <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/>
               </FormControl>

@@ -11,8 +11,9 @@ from langgraph.types import Command
 from dev_observer.analysis.code.tools import bash_tools, bash_tool_names, execute_bash_command
 from dev_observer.analysis.util import models
 from dev_observer.analysis.util.models import extract_xml, chunk_messages, count_messages_tokens, \
-    to_tool_result, clean_tools, to_str_content
+    to_tool_result, clean_tools, to_str_content, Truncate
 from dev_observer.analysis.util.usage import extract_usage, sum_usage
+from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.repo_pb2 import ResearchLog, ResearchLogItem, ToolCallResult
 from dev_observer.log import s_
 from dev_observer.prompts.provider import PromptsProvider, PrefixedPromptsFetcher, FormattedPrompt
@@ -125,7 +126,7 @@ class CodeResearchNodes:
                     repo_name=state["repo_name"],
                     history=clean_tools(messages, self._tokenizer, 4, max_tool_content),
                 )
-                step_result = await self._do_research_iteration(state, config, step, max_tool_content)
+                step_result = await self._do_research_iteration(state, config, step, max_tool_content, global_config)
                 if step_result.plan_response:
                     messages.append(step_result.plan_response)
                 if step_result.tool_messages:
@@ -183,11 +184,12 @@ class CodeResearchNodes:
             config: RunnableConfig,
             step: ResearchStep,
             max_tool_content: int,
+            global_config: GlobalConfig,
     ) -> ResearchStepResult:
         p = {"op": "code_research", "node": "research_iteration", "iteration": step.iteration, **_st(state)}
         _log.debug(s_("Entering", **p))
 
-        plan_response = await self._do_plan(state, config, step)
+        plan_response = await self._do_plan(state, config, step, global_config)
         log_item = ResearchLogItem(
             started_at=self._clock.now(),
             usage=extract_usage(plan_response)
@@ -212,8 +214,11 @@ class CodeResearchNodes:
 
         sum_prompt = await self._get_prompt(state, step, "summarize")
         updated_history = [*step.history, plan_response, *tool_messages]
+        sum_tokens_limit = global_config.repo_analysis.research.history_limits.summarize
+        sum_truncate = None if sum_tokens_limit <= 0 else Truncate(tokenizer=self._tokenizer, limit=sum_tokens_limit)
         sum_response = await models.ainvoke(config, sum_prompt, models.InvokeParams(
             history=clean_tools(updated_history, self._tokenizer, -1, max_tool_content),
+            history_truncate=sum_truncate,
         ), log_params=p)
         sum_response.response_metadata["iteration"] = step.iteration
         log_item.usage.CopyFrom(sum_usage(log_item.usage, extract_usage(sum_response)))
@@ -225,12 +230,19 @@ class CodeResearchNodes:
 
         return step_result
 
-    async def _do_plan(self, state: AnalysisState, config: RunnableConfig, step: ResearchStep, ) -> BaseMessage:
+    async def _do_plan(self,
+                       state: AnalysisState,
+                       config: RunnableConfig,
+                       step: ResearchStep,
+                       global_config: GlobalConfig,
+                       ) -> BaseMessage:
         p = {"op": "code_research", "node": "do_plan", "iteration": step.iteration, **_st(state)}
         plan_prompt = await self._get_prompt(state, step, "plan")
+        tokens_limit = global_config.repo_analysis.research.history_limits.plan
         invoke_params = models.InvokeParams(
             tools=bash_tools(),
             history=step.history,
+            history_truncate=None if tokens_limit <= 0 else Truncate(tokenizer=self._tokenizer, limit=tokens_limit),
         )
         plan_response = await models.ainvoke(config, plan_prompt, invoke_params, log_params=p)
         retry = 3
