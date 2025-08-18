@@ -13,7 +13,7 @@ _log = logging.getLogger(__name__)
 
 # Allowed readonly commands for bash tool security
 ALLOWED_BASH_COMMANDS = {
-    'ls', 'cat', 'head', 'tail', 'grep', 'find', 'tree', 'wc', 'sort', 'uniq', 'cut'
+    'ls', 'cat', 'head', 'tail', 'grep', 'find', 'tree', 'wc', 'sort', 'uniq', 'cut', 'true',
 }
 
 @dataclasses.dataclass
@@ -21,6 +21,15 @@ class BashResult:
     result: str
     success: bool = True
 
+async def execute_bash_command(command: str, repo_path: str) -> BashResult:
+    """Execute a bash command with validation and pipeline support."""
+    if not _validate_bash_command(command):
+        return BashResult(
+            result="Error: Command contains disallowed commands or headless execution patterns",
+            success=False
+        )
+
+    return await _execute_bash_pipeline(command, repo_path)
 
 def _validate_bash_command(command_string: str) -> bool:
     """Validate that a command string only contains allowed commands and is not headless."""
@@ -46,7 +55,7 @@ def _validate_bash_command(command_string: str) -> bool:
         # Invalid shell syntax (unclosed quotes, etc.)
         return False
     
-    # Split by pipes using a more sophisticated approach that respects quotes
+    # Split by pipes and logical OR operators while respecting quotes
     pipe_parts = []
     current_part = ""
     in_quote = False
@@ -69,8 +78,16 @@ def _validate_bash_command(command_string: str) -> bool:
                 quote_char = None
                 current_part += char
         elif not in_quote and char == '|':
-            pipe_parts.append(current_part.strip())
-            current_part = ""
+            # Check if it's || (logical OR) or just | (pipe)
+            if i + 1 < len(command_string) and command_string[i + 1] == '|':
+                # It's ||, treat as logical OR - split the command parts
+                pipe_parts.append(current_part.strip())
+                current_part = ""
+                i += 1  # Skip the second |
+            else:
+                # It's a single |, treat as pipe
+                pipe_parts.append(current_part.strip())
+                current_part = ""
         else:
             current_part += char
         

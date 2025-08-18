@@ -8,14 +8,16 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.constants import END
 from langgraph.types import Command
 
-from dev_observer.analysis.code.tools import bash_tools, bash_tool_names, _validate_bash_command, \
-    _execute_bash_pipeline, BashResult
+from dev_observer.analysis.code.tools import bash_tools, bash_tool_names, execute_bash_command
 from dev_observer.analysis.util import models
-from dev_observer.analysis.util.models import extract_xml, to_str_content
+from dev_observer.analysis.util.models import extract_xml, chunk_messages, count_messages_tokens, \
+    to_tool_result, clean_tools, to_str_content
 from dev_observer.analysis.util.usage import extract_usage, sum_usage
 from dev_observer.api.types.repo_pb2 import ResearchLog, ResearchLogItem, ToolCallResult
 from dev_observer.log import s_
 from dev_observer.prompts.provider import PromptsProvider, PrefixedPromptsFetcher, FormattedPrompt
+from dev_observer.storage.provider import StorageProvider
+from dev_observer.tokenizer.provider import TokenizerProvider
 from dev_observer.util import Clock, RealClock, pb_to_dict
 
 _log = logging.getLogger(__name__)
@@ -48,6 +50,8 @@ class AnalysisResult:
     summary: str
     response: BaseMessage
 
+    chunk_responses: Optional[List[BaseMessage]] = None
+
 
 @dataclasses.dataclass
 class ResearchStep:
@@ -73,12 +77,27 @@ class ToolCallResponse:
     tool_message: ToolMessage
 
 
+@dataclasses.dataclass
+class ChunkResponse:
+    index: int
+    response: BaseMessage
+
+
 class CodeResearchNodes:
     _prompts: PrefixedPromptsFetcher
+    _tokenizer: TokenizerProvider
+    _storage: StorageProvider
     _clock: Clock
 
-    def __init__(self, prompts: PromptsProvider, clock: Clock = RealClock()):
+    def __init__(self,
+                 prompts: PromptsProvider,
+                 tokenizer: TokenizerProvider,
+                 storage: StorageProvider,
+                 clock: Clock = RealClock(),
+                 ):
         self._prompts = PrefixedPromptsFetcher(prompts)
+        self._tokenizer = tokenizer
+        self._storage = storage
         self._clock = clock
 
     async def analyze_node(
@@ -87,6 +106,8 @@ class CodeResearchNodes:
         p = {"op": "code_research", "node": "analyze", **_st(state)}
         messages: List[BaseMessage] = []
         try:
+            global_config = await self._storage.get_global_config()
+            max_tool_content = global_config.repo_analysis.research.max_tool_content_tokens
             iteration = 0
             max_iterations = state.get("max_iterations", 1)
 
@@ -102,9 +123,9 @@ class CodeResearchNodes:
                     max_iterations=max_iterations,
                     repo_url=state["repo_url"],
                     repo_name=state["repo_name"],
-                    history=_clean_tools(messages, 4, threshold=2000),
+                    history=clean_tools(messages, self._tokenizer, 4, max_tool_content),
                 )
-                step_result = await self._do_research_iteration(state, config, step)
+                step_result = await self._do_research_iteration(state, config, step, max_tool_content)
                 if step_result.plan_response:
                     messages.append(step_result.plan_response)
                 if step_result.tool_messages:
@@ -132,11 +153,16 @@ class CodeResearchNodes:
                 max_iterations=max_iterations,
                 repo_url=state["repo_url"],
                 repo_name=state["repo_name"],
-                history=_clean_tools(messages, threshold=2000),
+                history=clean_tools(messages, self._tokenizer, -1, max_tool_content),
             )
 
-            result = await self._produce_analysis(state, config, step)
+            chunks_size = global_config.repo_analysis.research.report_chunk_size
+
+            result = await self._produce_analysis(state, config, step, chunks_size)
             summary_usage = extract_usage(result.response)
+            if result.chunk_responses:
+                for resp in result.chunk_responses:
+                    summary_usage = sum_usage(summary_usage, extract_usage(resp))
             research_log.total_usage.CopyFrom(sum_usage(research_log.total_usage, summary_usage))
             _log.info(s_("Research compiled", total_usage=research_log.total_usage, report_usage=summary_usage, **p))
             return Command(
@@ -156,6 +182,7 @@ class CodeResearchNodes:
             state: AnalysisState,
             config: RunnableConfig,
             step: ResearchStep,
+            max_tool_content: int,
     ) -> ResearchStepResult:
         p = {"op": "code_research", "node": "research_iteration", "iteration": step.iteration, **_st(state)}
         _log.debug(s_("Entering", **p))
@@ -165,6 +192,7 @@ class CodeResearchNodes:
             started_at=self._clock.now(),
             usage=extract_usage(plan_response)
         )
+        plan_response.response_metadata["iteration"] = step.iteration
         step_result = ResearchStepResult(log_item=log_item)
         step_result.plan_response = plan_response
 
@@ -177,12 +205,17 @@ class CodeResearchNodes:
         responses: List[ToolCallResponse] = await self._handle_tools(state, plan_response.tool_calls)
         tool_messages = [r.tool_message for r in responses]
         step_result.tool_messages = tool_messages
+        for m in tool_messages:
+            m.response_metadata["iteration"] = step.iteration
 
         log_item.tool_calls.extend([r.result for r in responses])
 
         sum_prompt = await self._get_prompt(state, step, "summarize")
         updated_history = [*step.history, plan_response, *tool_messages]
-        sum_response = await models.ainvoke(config, sum_prompt, models.InvokeParams(history=updated_history))
+        sum_response = await models.ainvoke(config, sum_prompt, models.InvokeParams(
+            history=clean_tools(updated_history, self._tokenizer, -1, max_tool_content),
+        ), log_params=p)
+        sum_response.response_metadata["iteration"] = step.iteration
         log_item.usage.CopyFrom(sum_usage(log_item.usage, extract_usage(sum_response)))
 
         _log.debug(s_("Summary response received", **p, response=sum_response))
@@ -195,8 +228,11 @@ class CodeResearchNodes:
     async def _do_plan(self, state: AnalysisState, config: RunnableConfig, step: ResearchStep, ) -> BaseMessage:
         p = {"op": "code_research", "node": "do_plan", "iteration": step.iteration, **_st(state)}
         plan_prompt = await self._get_prompt(state, step, "plan")
-        invoke_params = models.InvokeParams(tools=bash_tools(), history=step.history)
-        plan_response = await models.ainvoke(config, plan_prompt, invoke_params)
+        invoke_params = models.InvokeParams(
+            tools=bash_tools(),
+            history=step.history,
+        )
+        plan_response = await models.ainvoke(config, plan_prompt, invoke_params, log_params=p)
         retry = 3
         while retry > 0:
             if plan_response.response_metadata.get('finish_reason', None) == 'MALFORMED_FUNCTION_CALL':
@@ -204,37 +240,95 @@ class CodeResearchNodes:
                 await asyncio.sleep(1)
                 retry -= 1
                 _log.debug(s_("Retrying due to MALFORMED_FUNCTION_CALL", retries_left=retry, **p))
-                plan_response = await models.ainvoke(config, plan_prompt, invoke_params)
+                plan_response = await models.ainvoke(config, plan_prompt, invoke_params, log_params=p)
             else:
                 break
         _log.debug(s_("Plan response received", **p, response=plan_response))
         return plan_response
-
-    async def _execute_bash_command(self, command: str, repo_path: str) -> BashResult:
-        """Execute a bash command with validation and pipeline support."""
-        if not _validate_bash_command(command):
-            return BashResult(
-                result="Error: Command contains disallowed commands or headless execution patterns",
-                success=False
-            )
-
-        return await _execute_bash_pipeline(command, repo_path)
 
     async def _produce_analysis(
             self,
             state: AnalysisState,
             config: RunnableConfig,
             step: ResearchStep,
+            chunk_threshold_tokens,
     ) -> AnalysisResult:
         p = {"op": "code_research", "node": "produce_analysis", "iteration": step.iteration, **_st(state)}
-        prompt = await self._get_prompt(state, step, "produce")
-        response = await models.ainvoke(config, prompt, models.InvokeParams(history=step.history))
-        _log.debug(s_("Analysis response received", **p, response=response))
-        return AnalysisResult(
-            full=extract_xml(response.content, "full_analysis"),
-            summary=extract_xml(response.content, "analysis_summary"),
-            response=response,
+        # Check if history needs chunking
+        total_tokens = count_messages_tokens(step.history, self._tokenizer)
+        _log.debug(s_("History token count", total_tokens=total_tokens, **p))
+
+        # no need to chunk if total size is under 1.5 chunk size
+        if total_tokens <= 1.5*chunk_threshold_tokens:
+            # Process normally if under token limit
+            prompt = await self._get_prompt(state, step, "produce")
+            response = await models.ainvoke(config, prompt, models.InvokeParams(history=step.history), log_params=p)
+            _log.debug(s_("Analysis response received", **p, response=response))
+            full = extract_xml(response.content, "full_analysis")
+            if not full or len(full.strip()) < 50:
+                # If the model didn't reply with a proper structured response, return the entire response as
+                # a full report
+                full = to_str_content(response.content)
+            return AnalysisResult(
+                full=full,
+                summary=extract_xml(response.content, "analysis_summary"),
+                response=response,
+            )
+
+        _log.info(s_("History exceeds token limit, chunking", total_tokens=total_tokens, **p))
+        chunks = chunk_messages(step.history, self._tokenizer, chunk_threshold_tokens)
+        chunk_responses: List[ChunkResponse] = await asyncio.gather(
+            *[self._process_chunk(state, config, step, i, chunk) for i, chunk in enumerate(chunks)]
         )
+        chunk_responses.sort(key=lambda x: x.index)
+
+        # Combine all chunk results
+        _log.debug(s_("Combining chunk analyses", num_chunks=len(chunks), **p))
+        combined_step = ResearchStep(
+            iteration=step.iteration,
+            max_iterations=step.max_iterations,
+            repo_url=step.repo_url,
+            repo_name=step.repo_name,
+            history=[]  # Empty history for combining step
+        )
+
+        chunk_summaries = "\n".join([f"## Chunk {i + 1} Analysis:\n{resp.response.content}\n"
+                                     for i, resp in enumerate(chunk_responses)])
+
+        combine_prompt = await self._get_prompt(state, combined_step, "produce-from-chunks",
+                                                extra_params={"analsysis_chunks": chunk_summaries})
+
+        final_response = await models.ainvoke(config, combine_prompt, models.InvokeParams(history=[]), log_params=p)
+
+        _log.debug(s_("Final combined analysis received", **p, response=final_response))
+        return AnalysisResult(
+            full=extract_xml(final_response.content, "full_analysis"),
+            summary=extract_xml(final_response.content, "analysis_summary"),
+            response=final_response,
+            chunk_responses=[r.response for r in chunk_responses],
+        )
+
+    async def _process_chunk(
+            self,
+            state: AnalysisState,
+            config: RunnableConfig,
+            step: ResearchStep,
+            chunk_index: int,
+            chunk: List[BaseMessage]) -> ChunkResponse:
+        p = {"op": "code_research", "node": "process_chunk", "chunk_index": chunk_index, "iteration": step.iteration,
+             **_st(state)}
+        chunk_step = ResearchStep(
+            iteration=step.iteration,
+            max_iterations=step.max_iterations,
+            repo_url=step.repo_url,
+            repo_name=step.repo_name,
+            history=chunk,
+        )
+
+        _log.debug(s_("Processing chunk", chunk_size=len(chunk), **p))
+        chunk_prompt = await self._get_prompt(state, chunk_step, "produce-chunk")
+        response = await models.ainvoke(config, chunk_prompt, models.InvokeParams(history=chunk), log_params=p)
+        return ChunkResponse(index=chunk_index, response=response)
 
     async def _get_prompt(
             self, state: AnalysisState, step: ResearchStep, suffix: str, extra_params: Optional[dict] = None,
@@ -294,7 +388,7 @@ class CodeResearchNodes:
             tool_args = tool_call.get("args", {})
             command = tool_args.get("command", "")
             bash_result = await asyncio.wait_for(
-                self._execute_bash_command(command, repo_path),
+                execute_bash_command(command, repo_path),
                 timeout=45.0
             )
             set_msg(bash_result.result, bash_result.success)
@@ -325,7 +419,7 @@ class CodeResearchNodes:
                 )
                 responses.append(ToolCallResponse(
                     tool_message=msg,
-                    result=_to_tool_result(tool_call, msg),
+                    result=to_tool_result(tool_call, msg),
                 ))
                 continue
             tool_args = tool_call.get("args", {})
@@ -340,72 +434,7 @@ class CodeResearchNodes:
 
 def _st(state: AnalysisState) -> dict:
     try:
-        return {k: state.get(k) for k in ["max_iterations", "task_prompt_prefix"]}
+        return {k: state.get(k) for k in ["max_iterations", "task_prompt_prefix", "repo_url"]}
     except BaseException as e:
         _log.exception(s_("Failed to get state params", error=e))
         return {}
-
-
-def _to_tool_result(tool_call: ToolCall, tool_msg: ToolMessage) -> ToolCallResult:
-    tool_name = tool_call["name"]
-    status = ToolCallResult.ToolCallStatus.SUCCESS if tool_msg.status == "success" \
-        else ToolCallResult.ToolCallStatus.FAILURE
-    return ToolCallResult(
-        requested_tool_call=f"{tool_name}: {tool_call.get('args', {})}",
-        result=tool_msg.content,
-        status=status,
-    )
-
-def _clean_tool_msg(msg: ToolMessage, threshold: int = 0) -> ToolMessage:
-    str_content = to_str_content(msg.content)
-    if len(str_content) > threshold:
-        return ToolMessage(content="[REDACTED]", tool_call_id=msg.tool_call_id, status=msg.status)
-    return msg
-
-def _clean_tools(messages: List[BaseMessage], depth: int = 0, threshold: int = 0) -> List[BaseMessage]:
-    """
-    Create a new copy of messages where ToolMessage "content" is replaced with [REDACTED].
-
-    Args:
-        messages: List of messages to clean
-        depth: If not 0, only clean ToolMessages before the latest AIMessage at the specified depth
-
-    Returns:
-        New list of messages with ToolMessage content redacted
-    """
-    if not messages:
-        return []
-
-    result = []
-
-    # If depth is 0, clean all ToolMessages
-    if depth == 0:
-        for msg in messages:
-            if isinstance(msg, ToolMessage):
-                result.append(_clean_tool_msg(msg, threshold))
-            else:
-                result.append(msg)
-        return result
-
-    # Find the latest AIMessage at the specified depth
-    ai_message_indices = []
-    for i, msg in enumerate(messages):
-        if isinstance(msg, AIMessage):
-            ai_message_indices.append(i)
-
-    # If we don't have enough AIMessages for the specified depth, clean nothing
-    if len(ai_message_indices) < depth:
-        return messages[:]  # Return a shallow copy
-
-    # Get the index of the latest AIMessage at the specified depth
-    # depth=1 means the latest AIMessage, depth=2 means the second-to-latest, etc.
-    latest_ai_index = ai_message_indices[-depth]
-
-    # Clean ToolMessages only before this AIMessage
-    for i, msg in enumerate(messages):
-        if i < latest_ai_index and isinstance(msg, ToolMessage):
-            result.append(_clean_tool_msg(msg, threshold))
-        else:
-            result.append(msg)
-
-    return result

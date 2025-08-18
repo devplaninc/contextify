@@ -51,6 +51,8 @@ message RepoAnalysisConfig {
     int32 max_iterations = 2;
     optional string general_prefix = 3;
     repeated dev_observer.api.types.observations.Analyzer analyzers = 4;
+    int32 report_chunk_size = 5;
+    int32 max_tool_content_tokens = 6;
   }
 }
 

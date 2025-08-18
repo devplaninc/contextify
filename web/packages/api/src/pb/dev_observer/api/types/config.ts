@@ -56,6 +56,8 @@ export interface RepoAnalysisConfig_Research {
   maxIterations: number;
   generalPrefix?: string | undefined;
   analyzers: Analyzer[];
+  reportChunkSize: number;
+  maxToolContentTokens: number;
 }
 
 export interface WebsiteCrawlingConfig {
@@ -713,7 +715,14 @@ export const RepoAnalysisConfig_Flatten: MessageFns<RepoAnalysisConfig_Flatten> 
 };
 
 function createBaseRepoAnalysisConfig_Research(): RepoAnalysisConfig_Research {
-  return { maxRepoSizeMb: 0, maxIterations: 0, generalPrefix: undefined, analyzers: [] };
+  return {
+    maxRepoSizeMb: 0,
+    maxIterations: 0,
+    generalPrefix: undefined,
+    analyzers: [],
+    reportChunkSize: 0,
+    maxToolContentTokens: 0,
+  };
 }
 
 export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research> = {
@@ -729,6 +738,12 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     }
     for (const v of message.analyzers) {
       Analyzer.encode(v!, writer.uint32(34).fork()).join();
+    }
+    if (message.reportChunkSize !== 0) {
+      writer.uint32(40).int32(message.reportChunkSize);
+    }
+    if (message.maxToolContentTokens !== 0) {
+      writer.uint32(48).int32(message.maxToolContentTokens);
     }
     return writer;
   },
@@ -772,6 +787,22 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
           message.analyzers.push(Analyzer.decode(reader, reader.uint32()));
           continue;
         }
+        case 5: {
+          if (tag !== 40) {
+            break;
+          }
+
+          message.reportChunkSize = reader.int32();
+          continue;
+        }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.maxToolContentTokens = reader.int32();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -787,6 +818,8 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
       maxIterations: isSet(object.maxIterations) ? gt.Number(object.maxIterations) : 0,
       generalPrefix: isSet(object.generalPrefix) ? gt.String(object.generalPrefix) : undefined,
       analyzers: gt.Array.isArray(object?.analyzers) ? object.analyzers.map((e: any) => Analyzer.fromJSON(e)) : [],
+      reportChunkSize: isSet(object.reportChunkSize) ? gt.Number(object.reportChunkSize) : 0,
+      maxToolContentTokens: isSet(object.maxToolContentTokens) ? gt.Number(object.maxToolContentTokens) : 0,
     };
   },
 
@@ -804,6 +837,12 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     if (message.analyzers?.length) {
       obj.analyzers = message.analyzers.map((e) => Analyzer.toJSON(e));
     }
+    if (message.reportChunkSize !== 0) {
+      obj.reportChunkSize = Math.round(message.reportChunkSize);
+    }
+    if (message.maxToolContentTokens !== 0) {
+      obj.maxToolContentTokens = Math.round(message.maxToolContentTokens);
+    }
     return obj;
   },
 
@@ -816,6 +855,8 @@ export const RepoAnalysisConfig_Research: MessageFns<RepoAnalysisConfig_Research
     message.maxIterations = object.maxIterations ?? 0;
     message.generalPrefix = object.generalPrefix ?? undefined;
     message.analyzers = object.analyzers?.map((e) => Analyzer.fromPartial(e)) || [];
+    message.reportChunkSize = object.reportChunkSize ?? 0;
+    message.maxToolContentTokens = object.maxToolContentTokens ?? 0;
     return message;
   },
 };

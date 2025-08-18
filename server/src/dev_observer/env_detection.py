@@ -227,7 +227,7 @@ def detect_server_env(settings: Settings) -> ServerEnv:
     bg_agg_summary_processor = AggregatedSummaryProcessor(
         bg_analysis, bg_repository, prompts, observations, tokenizer, bg_git_changes_handler, bg_storage)
     users = detect_users_provider(settings)
-    research_graph = create_code_research_graph(prompts)
+    research_graph = create_code_research_graph(prompts, tokenizer, bg_storage)
 
     bg_research_processor = CodeResearchProcessor(
         research_graph, bg_repository, bg_storage, observations

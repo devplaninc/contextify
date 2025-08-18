@@ -213,3 +213,67 @@ class TestValidateBashCommand(unittest.TestCase):
                 assert result, f"Command '{command}' should be valid"
             else:
                 assert not result, f"Command '{command}' should be invalid (case sensitive)"
+
+    def test_logical_or_valid_commands(self):
+        """Test that valid logical OR commands are accepted."""
+        valid_or_commands = [
+            "ls || true",
+            "grep pattern file.txt || true",
+            "cat file.txt || ls",
+            "head file.py || tail file.py",
+            "find . -name '*.py' || grep -r 'pattern' .",
+            "ls -la || tree",
+            "cat nonexistent.txt || head default.txt",
+        ]
+        
+        for command in valid_or_commands:
+            assert _validate_bash_command(command), f"Valid OR command should be accepted: {command}"
+
+    def test_logical_or_invalid_commands(self):
+        """Test that logical OR commands with invalid parts are rejected."""
+        invalid_or_commands = [
+            "ls || echo 'not found'",  # echo not allowed
+            "grep pattern file.txt || rm file.txt",  # rm not allowed
+            "cat file.txt || python script.py",  # python not allowed
+            "find . -name '*.py' || sudo ls",  # sudo not allowed
+            "ls || mkdir newdir",  # mkdir not allowed
+            "head file.txt || wget http://example.com",  # wget not allowed
+        ]
+        
+        for command in invalid_or_commands:
+            assert not _validate_bash_command(command), f"Invalid OR command should be rejected: {command}"
+
+    def test_logical_or_edge_cases(self):
+        """Test edge cases with logical OR operators."""
+        edge_case_tests = [
+            ("|| true", True),  # leading ||
+            ("ls ||", True),    # trailing ||
+            ("|| || ls", True), # multiple leading ||
+            ("ls || || true", True), # multiple || in middle
+            ("ls |||", True),  # triple ||| is treated as || + | (valid: empty parts are skipped)
+            ("'ls || true'", False), # quoted command treated as literal (not in whitelist)
+            ('"ls || echo test"', False), # quoted command treated as literal (not in whitelist)
+        ]
+        
+        for command, should_be_valid in edge_case_tests:
+            result = _validate_bash_command(command)
+            if should_be_valid:
+                assert result, f"Edge case command should be valid: {command}"
+            else:
+                assert not result, f"Edge case command should be invalid: {command}"
+
+    def test_mixed_pipes_and_logical_or(self):
+        """Test commands that mix pipes (|) and logical OR (||)."""
+        mixed_commands = [
+            "ls | head -10 || true",  # pipe then logical OR
+            "cat file.txt || grep pattern | sort",  # logical OR then pipe
+            "find . -name '*.py' | head -5 || tail -5",  # pipe, then logical OR
+        ]
+        
+        for command in mixed_commands:
+            assert _validate_bash_command(command), f"Mixed pipe/OR command should be valid: {command}"
+
+    def test_true_command_in_whitelist(self):
+        """Test that 'true' command is now in the whitelist."""
+        assert "true" in ALLOWED_BASH_COMMANDS, "'true' should be in ALLOWED_BASH_COMMANDS"
+        assert _validate_bash_command("true"), "'true' command should be valid"

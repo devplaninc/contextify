@@ -46,6 +46,8 @@ const repoAnalysisConfigResearchSchema = z.object({
   maxIterations: z.coerce.number(),
   generalPrefix: z.string().optional(),
   analyzers: z.array(analyzerSchema),
+  reportChunkSize: z.coerce.number(),
+  maxToolContentTokens: z.coerce.number(),
 })
 
 const repoAnalysisConfigSchema = z.object({
@@ -195,6 +197,33 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
           render={({field}) => (
             <FormItem className="flex items-center gap-4">
               <FormLabel className="w-[200px]">Max Iterations:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="repoAnalysis.research.reportChunkSize"
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[200px]">Report Chunk Size:</FormLabel>
+              <FormControl className="w-[200px]">
+                <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/>
+              </FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="repoAnalysis.research.maxToolContentTokens"
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[200px]">Max tool content in tokens before truncate:</FormLabel>
               <FormControl className="w-[200px]">
                 <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))}/>
               </FormControl>

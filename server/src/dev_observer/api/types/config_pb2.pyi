@@ -65,16 +65,20 @@ class RepoAnalysisConfig(_message.Message):
         max_file_size_bytes: int
         def __init__(self, compress: bool = ..., remove_empty_lines: bool = ..., out_style: _Optional[str] = ..., max_tokens_per_chunk: _Optional[int] = ..., max_repo_size_mb: _Optional[int] = ..., ignore_pattern: _Optional[str] = ..., large_repo_threshold_mb: _Optional[int] = ..., large_repo_ignore_pattern: _Optional[str] = ..., compress_large: bool = ..., max_file_size_bytes: _Optional[int] = ...) -> None: ...
     class Research(_message.Message):
-        __slots__ = ("max_repo_size_mb", "max_iterations", "general_prefix", "analyzers")
+        __slots__ = ("max_repo_size_mb", "max_iterations", "general_prefix", "analyzers", "report_chunk_size", "max_tool_content_tokens")
         MAX_REPO_SIZE_MB_FIELD_NUMBER: _ClassVar[int]
         MAX_ITERATIONS_FIELD_NUMBER: _ClassVar[int]
         GENERAL_PREFIX_FIELD_NUMBER: _ClassVar[int]
         ANALYZERS_FIELD_NUMBER: _ClassVar[int]
+        REPORT_CHUNK_SIZE_FIELD_NUMBER: _ClassVar[int]
+        MAX_TOOL_CONTENT_TOKENS_FIELD_NUMBER: _ClassVar[int]
         max_repo_size_mb: int
         max_iterations: int
         general_prefix: str
         analyzers: _containers.RepeatedCompositeFieldContainer[_observations_pb2.Analyzer]
-        def __init__(self, max_repo_size_mb: _Optional[int] = ..., max_iterations: _Optional[int] = ..., general_prefix: _Optional[str] = ..., analyzers: _Optional[_Iterable[_Union[_observations_pb2.Analyzer, _Mapping]]] = ...) -> None: ...
+        report_chunk_size: int
+        max_tool_content_tokens: int
+        def __init__(self, max_repo_size_mb: _Optional[int] = ..., max_iterations: _Optional[int] = ..., general_prefix: _Optional[str] = ..., analyzers: _Optional[_Iterable[_Union[_observations_pb2.Analyzer, _Mapping]]] = ..., report_chunk_size: _Optional[int] = ..., max_tool_content_tokens: _Optional[int] = ...) -> None: ...
     FLATTEN_FIELD_NUMBER: _ClassVar[int]
     PROCESSING_INTERVAL_SEC_FIELD_NUMBER: _ClassVar[int]
     DISABLED_FIELD_NUMBER: _ClassVar[int]

@@ -12,7 +12,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^5.31.9",
     "@clerk/themes": "^2.2.49",
-    "@devplan/contextify-api": "^0.0.30",
+    "@devplan/contextify-api": "^0.0.31",
     "@hookform/resolvers": "^5.0.1",
     "@openapitools/openapi-generator-cli": "^2.20.2",
     "@radix-ui/react-accordion": "^1.2.3",
