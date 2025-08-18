@@ -8,6 +8,7 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { Timestamp } from "../../../google/protobuf/timestamp";
 import { UsageMetadata } from "./ai";
+import { ObservationKey } from "./observations";
 
 export const protobufPackage = "dev_observer.api.types.repo";
 
@@ -79,6 +80,18 @@ export interface ReposFilter {
 export interface CodeResearchMeta {
   summary: string;
   createdAt: Date | undefined;
+  repoFullName: string;
+  repoUrl: string;
+  areaTitle: string;
+}
+
+export interface CodeResearchAreaMeta {
+  researchKey: ObservationKey | undefined;
+  meta: CodeResearchMeta | undefined;
+}
+
+export interface CodeResearchOrganizationMeta {
+  areaMetas: CodeResearchAreaMeta[];
 }
 
 export interface ResearchLog {
@@ -695,7 +708,7 @@ export const ReposFilter: MessageFns<ReposFilter> = {
 };
 
 function createBaseCodeResearchMeta(): CodeResearchMeta {
-  return { summary: "", createdAt: undefined };
+  return { summary: "", createdAt: undefined, repoFullName: "", repoUrl: "", areaTitle: "" };
 }
 
 export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
@@ -705,6 +718,15 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
     }
     if (message.createdAt !== undefined) {
       Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(18).fork()).join();
+    }
+    if (message.repoFullName !== "") {
+      writer.uint32(26).string(message.repoFullName);
+    }
+    if (message.repoUrl !== "") {
+      writer.uint32(34).string(message.repoUrl);
+    }
+    if (message.areaTitle !== "") {
+      writer.uint32(42).string(message.areaTitle);
     }
     return writer;
   },
@@ -732,6 +754,30 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
           message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
           continue;
         }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.repoFullName = reader.string();
+          continue;
+        }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.repoUrl = reader.string();
+          continue;
+        }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.areaTitle = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -745,6 +791,9 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
     return {
       summary: isSet(object.summary) ? gt.String(object.summary) : "",
       createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
+      repoFullName: isSet(object.repoFullName) ? gt.String(object.repoFullName) : "",
+      repoUrl: isSet(object.repoUrl) ? gt.String(object.repoUrl) : "",
+      areaTitle: isSet(object.areaTitle) ? gt.String(object.areaTitle) : "",
     };
   },
 
@@ -756,6 +805,15 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
     if (message.createdAt !== undefined) {
       obj.createdAt = message.createdAt.toISOString();
     }
+    if (message.repoFullName !== "") {
+      obj.repoFullName = message.repoFullName;
+    }
+    if (message.repoUrl !== "") {
+      obj.repoUrl = message.repoUrl;
+    }
+    if (message.areaTitle !== "") {
+      obj.areaTitle = message.areaTitle;
+    }
     return obj;
   },
 
@@ -766,6 +824,151 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
     const message = createBaseCodeResearchMeta();
     message.summary = object.summary ?? "";
     message.createdAt = object.createdAt ?? undefined;
+    message.repoFullName = object.repoFullName ?? "";
+    message.repoUrl = object.repoUrl ?? "";
+    message.areaTitle = object.areaTitle ?? "";
+    return message;
+  },
+};
+
+function createBaseCodeResearchAreaMeta(): CodeResearchAreaMeta {
+  return { researchKey: undefined, meta: undefined };
+}
+
+export const CodeResearchAreaMeta: MessageFns<CodeResearchAreaMeta> = {
+  encode(message: CodeResearchAreaMeta, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.researchKey !== undefined) {
+      ObservationKey.encode(message.researchKey, writer.uint32(10).fork()).join();
+    }
+    if (message.meta !== undefined) {
+      CodeResearchMeta.encode(message.meta, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CodeResearchAreaMeta {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCodeResearchAreaMeta();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.researchKey = ObservationKey.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.meta = CodeResearchMeta.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CodeResearchAreaMeta {
+    return {
+      researchKey: isSet(object.researchKey) ? ObservationKey.fromJSON(object.researchKey) : undefined,
+      meta: isSet(object.meta) ? CodeResearchMeta.fromJSON(object.meta) : undefined,
+    };
+  },
+
+  toJSON(message: CodeResearchAreaMeta): unknown {
+    const obj: any = {};
+    if (message.researchKey !== undefined) {
+      obj.researchKey = ObservationKey.toJSON(message.researchKey);
+    }
+    if (message.meta !== undefined) {
+      obj.meta = CodeResearchMeta.toJSON(message.meta);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CodeResearchAreaMeta>): CodeResearchAreaMeta {
+    return CodeResearchAreaMeta.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CodeResearchAreaMeta>): CodeResearchAreaMeta {
+    const message = createBaseCodeResearchAreaMeta();
+    message.researchKey = (object.researchKey !== undefined && object.researchKey !== null)
+      ? ObservationKey.fromPartial(object.researchKey)
+      : undefined;
+    message.meta = (object.meta !== undefined && object.meta !== null)
+      ? CodeResearchMeta.fromPartial(object.meta)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseCodeResearchOrganizationMeta(): CodeResearchOrganizationMeta {
+  return { areaMetas: [] };
+}
+
+export const CodeResearchOrganizationMeta: MessageFns<CodeResearchOrganizationMeta> = {
+  encode(message: CodeResearchOrganizationMeta, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.areaMetas) {
+      CodeResearchAreaMeta.encode(v!, writer.uint32(10).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): CodeResearchOrganizationMeta {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseCodeResearchOrganizationMeta();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.areaMetas.push(CodeResearchAreaMeta.decode(reader, reader.uint32()));
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): CodeResearchOrganizationMeta {
+    return {
+      areaMetas: gt.Array.isArray(object?.areaMetas)
+        ? object.areaMetas.map((e: any) => CodeResearchAreaMeta.fromJSON(e))
+        : [],
+    };
+  },
+
+  toJSON(message: CodeResearchOrganizationMeta): unknown {
+    const obj: any = {};
+    if (message.areaMetas?.length) {
+      obj.areaMetas = message.areaMetas.map((e) => CodeResearchAreaMeta.toJSON(e));
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<CodeResearchOrganizationMeta>): CodeResearchOrganizationMeta {
+    return CodeResearchOrganizationMeta.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<CodeResearchOrganizationMeta>): CodeResearchOrganizationMeta {
+    const message = createBaseCodeResearchOrganizationMeta();
+    message.areaMetas = object.areaMetas?.map((e) => CodeResearchAreaMeta.fromPartial(e)) || [];
     return message;
   },
 };

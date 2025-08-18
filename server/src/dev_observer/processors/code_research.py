@@ -1,6 +1,5 @@
 import asyncio
 import dataclasses
-import json
 import logging
 import os
 import shutil
@@ -12,14 +11,17 @@ from langgraph.utils.config import ensure_config
 from dev_observer.analysis.code.nodes import AnalysisState
 from dev_observer.api.types.observations_pb2 import ObservationKey, Observation
 from dev_observer.api.types.processing_pb2 import ProcessingItemResultData
-from dev_observer.api.types.repo_pb2 import CodeResearchMeta
+from dev_observer.api.types.repo_pb2 import CodeResearchMeta, GitProvider, CodeResearchAreaMeta, \
+    CodeResearchOrganizationMeta
 from dev_observer.observations.provider import ObservationsProvider
-from dev_observer.processors.observations import get_repo_key_pref
+from dev_observer.processors.observations import get_repo_key_pref, get_repo_owner_key_pref
 from dev_observer.repository.cloner import clone_repository
 from dev_observer.repository.provider import GitRepositoryProvider
 from dev_observer.repository.types import ObservedRepo
 from dev_observer.storage.provider import StorageProvider
-from dev_observer.util import Clock, RealClock, pb_to_json
+from dev_observer.util import Clock, RealClock, pb_to_json, parse_json_pb
+
+REPO_RESEARCH_KIND = "repo_research"
 
 _log = logging.getLogger(__name__)
 
@@ -31,8 +33,10 @@ class CodeResearchTask:
     repo_path: str
     repo_url: str
     repo_name: str
+    repo_full_name: str
     max_iterations: int
     dir_key: ObservationKey
+    area_title: str
 
 
 class CodeResearchProcessor:
@@ -88,13 +92,20 @@ class CodeResearchProcessor:
                     task_prompt_prefix=analyzer.prompt_prefix,
                     repo_path=repo_path,
                     max_iterations=conf.max_iterations or 1,
-                    dir_key=ObservationKey(kind="repo_research", name=analyzer.file_name, key=key),
+                    dir_key=ObservationKey(kind=REPO_RESEARCH_KIND, name=analyzer.file_name, key=key),
                     repo_url=repo.url,
                     repo_name=repo.git_repo.name,
+                    repo_full_name=repo.git_repo.full_name,
+                    area_title=analyzer.name,
                 ))
 
             coro_tasks = [self._process_task(t) for t in tasks]
             await asyncio.gather(*coro_tasks, return_exceptions=True)
+
+            # Update aggregated summaries for the owner after completing all research tasks
+            owner = repo.git_repo.full_name.split('/')[0]
+            await self._update_aggregated_summaries(repo.git_repo.provider, owner)
+
             return ProcessingItemResultData(
                 observations=[t.dir_key for t in tasks]
             )
@@ -118,8 +129,11 @@ class CodeResearchProcessor:
 
         dir_key = task.dir_key
         meta = CodeResearchMeta(
-            summary=response["analysis_summary"],
+            summary=response.get("analysis_summary", ""),
             created_at=self._clock.now(),
+            repo_full_name=task.repo_full_name,
+            repo_url=task.repo_url,
+            area_title=task.area_title,
         )
         meta_obs = Observation(
             key=ObservationKey(kind=dir_key.kind, name="meta.json", key=f"{dir_key.key}/meta.json"),
@@ -127,12 +141,65 @@ class CodeResearchProcessor:
         )
         research_obs = Observation(
             key=ObservationKey(kind=dir_key.kind, name="research.md", key=f"{dir_key.key}/research.md"),
-            content=response["full_analysis"],
+            content=response.get("full_analysis"),
         )
-        log_obs = Observation(
-            key=ObservationKey(kind=dir_key.kind, name="research_log.json", key=f"{dir_key.key}/research_log.json"),
-            content=json.dumps(response["research_log"], indent=2),
-        )
+        # log_obs = Observation(
+        #     key=ObservationKey(kind=dir_key.kind, name="research_log.json", key=f"{dir_key.key}/research_log.json"),
+        #     content=json.dumps(response["research_log"], indent=2),
+        # )
         await self._observations.store(research_obs)
         await self._observations.store(meta_obs)
-        await self._observations.store(log_obs)
+        # await self._observations.store(log_obs)
+
+    async def _update_aggregated_summaries(self, provider: GitProvider, repo_owner: str):
+        # Get the owner prefix for filtering observations
+        owner_prefix = get_repo_owner_key_pref(provider, repo_owner)
+
+        observation_keys = await self._observations.list(REPO_RESEARCH_KIND, owner_prefix)
+
+        # Filter for meta.json files only
+        meta_keys = [key for key in observation_keys if key.name == "meta.json"]
+
+        # Collect all area metas
+        area_metas = []
+        for meta_key in meta_keys:
+            try:
+                research_key = _find_corresponding_key(observation_keys, meta_key, "research.md")
+                if not research_key:
+                    continue
+                observation = await self._observations.get(meta_key)
+                meta = parse_json_pb(observation.content, CodeResearchMeta())
+                area_meta = CodeResearchAreaMeta(research_key=research_key, meta=meta)
+                area_metas.append(area_meta)
+            except Exception as e:
+                _log.warning(f"Failed to process meta observation {meta_key.key}: {e}")
+                continue
+
+        org_meta = CodeResearchOrganizationMeta(area_metas=area_metas)
+
+        # Store the aggregated summary as summaries.json at the owner level
+        summary_key = ObservationKey(
+            kind=REPO_RESEARCH_KIND,
+            name="org_meta.json",
+            key=f"{owner_prefix}org_meta.json"
+        )
+
+        summary_obs = Observation(
+            key=summary_key,
+            content=pb_to_json(org_meta, indent=2)
+        )
+
+        await self._observations.store(summary_obs)
+        _log.info(
+            f"Updated aggregated summaries for {repo_owner} with {len(area_metas)} research areas")
+
+
+def _find_corresponding_key(
+        observation_keys: List[ObservationKey], key: ObservationKey, name: str,
+) -> Optional[ObservationKey]:
+    key_base = '/'.join(key.key.split('/')[:-1])  # Get path without last part
+    expected_key = f"{key_base}/{name}"
+    for obs_key in observation_keys:
+        if obs_key.key == expected_key:
+            return obs_key
+    return None

@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 
 from dev_observer.api.types.observations_pb2 import Observation, ObservationKey
 from dev_observer.observations.provider import ObservationsProvider
@@ -17,12 +17,15 @@ class LocalObservationsProvider(ObservationsProvider):
         with open(file_path, 'w') as out_file:
             out_file.write(o.content)
 
-    async def list(self, kind: str) -> List[ObservationKey]:
+    async def list(self, kind: str, path: Optional[str] = None) -> List[ObservationKey]:
         result: List[ObservationKey] = []
         kind_root = self._get_root(kind)
         for dirpath, _, files in os.walk(kind_root):
             for file in files:
                 key = self._get_key(dirpath, file, kind_root)
+                # If path is specified, only include keys that start with the specified path
+                if path is not None and not key.startswith(path):
+                    continue
                 result.append(ObservationKey(kind=kind, key=key, name=file))
 
         return result

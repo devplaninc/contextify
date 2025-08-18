@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Protocol, List
+from typing import Protocol, List, Optional
 
 from dev_observer.api.types.observations_pb2 import Observation, ObservationKey
 
@@ -10,7 +10,7 @@ class ObservationsProvider(Protocol):
         ...
 
     @abstractmethod
-    async def list(self, kind: str) -> List[ObservationKey]:
+    async def list(self, kind: str, path: Optional[str] = None) -> List[ObservationKey]:
         ...
 
     @abstractmethod

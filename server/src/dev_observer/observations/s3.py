@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import List
+from typing import List, Optional
 from botocore.exceptions import ClientError
 from types_aiobotocore_s3 import S3Client
 
@@ -88,12 +88,13 @@ class S3ObservationsProvider(ObservationsProvider):
             _log.error(error_msg)
             raise RuntimeError(error_msg) from e
     
-    async def list(self, kind: str) -> List[ObservationKey]:
+    async def list(self, kind: str, path: Optional[str] = None) -> List[ObservationKey]:
         """
-        List all observations of a specific kind.
+        List all observations of a specific kind, optionally filtered by path.
         
         Args:
             kind: The kind of observations to list
+            path: Optional path filter - only return keys that start with this path
             
         Returns:
             A list of ObservationKey objects
@@ -102,7 +103,10 @@ class S3ObservationsProvider(ObservationsProvider):
             RuntimeError: If there's an error listing the observations
         """
         result: List[ObservationKey] = []
+        # Build prefix - if path is specified, include it in the S3 prefix for efficiency
         prefix = f"{kind}/"
+        if path is not None:
+            prefix = f"{kind}/{path}"
         
         try:
             session = get_session()
@@ -116,12 +120,13 @@ class S3ObservationsProvider(ObservationsProvider):
                 client: S3Client
                 # List all objects with the given prefix
                 paginator = client.get_paginator('list_objects_v2')
+                kind_prefix = f"{kind}/"
                 async for page in paginator.paginate(Bucket=self._bucket, Prefix=prefix):
                     for obj in page.get('Contents', []):
                         # Extract the key part after the kind prefix
                         full_key = obj['Key']
-                        if full_key.startswith(prefix):
-                            key_part = full_key[len(prefix):]
+                        if full_key.startswith(kind_prefix):
+                            key_part = full_key[len(kind_prefix):]
                             # Use the last part of the path as the name
                             name = os.path.basename(key_part)
                             result.append(ObservationKey(kind=kind, key=key_part, name=name))
