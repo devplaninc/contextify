@@ -1,4 +1,4 @@
-# dev-observer
+# contextify
 Standalone context building application that performs in-depth 
 github repository analysis and website crawl. Output is a summary 
 that can be used for context in AI applications like Devplan or 
