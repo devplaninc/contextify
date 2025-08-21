@@ -22,7 +22,26 @@ export {
   PeriodicAggregationResult,
   RepoObservation,
 } from './pb/dev_observer/api/types/processing';
-export {GitRepository, GitProvider} from './pb/dev_observer/api/types/repo';
+export {
+  GitRepository,
+  GitProvider,
+  GitMeta,
+  GitProperties,
+  GitAppInfo,
+  BitBucketInfo,
+  CodeResearchMeta,
+  CodeResearchAreaMeta,
+  CodeResearchOrganizationMeta,
+  ResearchLog,
+  ResearchLogItem,
+  ReposFilter,
+  ToolCallResult,
+  ToolCallResult_ToolCallStatus,
+  gitProviderToJSON,
+  gitProviderFromJSON,
+  toolCallResult_ToolCallStatusFromJSON,
+  toolCallResult_ToolCallStatusToJSON
+} from './pb/dev_observer/api/types/repo';
 export {AuthToken, AuthTokenProvider, TokensFilter} from './pb/dev_observer/api/types/tokens';
 export {WebSite} from './pb/dev_observer/api/types/sites';
 export {
