@@ -1,15 +1,17 @@
 import type {StateCreator} from "zustand";
-import {repoAPI, repoRescanAPI, reposAPI} from "@/store/apiPaths.tsx";
+import {repoAPI, repoBackfillSummariesAPI, repoRescanAPI, reposAPI} from "@/store/apiPaths.tsx";
+import type {GitRepository} from "@devplan/contextify-api";
 import {
   AddRepositoryRequest,
   AddRepositoryResponse,
   DeleteRepositoryResponse,
   GetRepositoryResponse,
-  ListRepositoriesResponse,
   GitProvider,
+  ListRepositoriesResponse,
+  RescanAnalysisSummaryRequest,
+  RescanAnalysisSummaryResponse,
   RescanRepositoryRequest
 } from "@devplan/contextify-api";
-import type {GitRepository} from "@devplan/contextify-api";
 import {fetchWithAuth, VoidParser} from "@/store/api.tsx";
 import {detectGitProvider} from "@/utils/repositoryUtils.ts";
 
@@ -21,6 +23,7 @@ export interface RepositoryState {
   addRepository: (url: string) => Promise<void>;
   deleteRepository: (id: string) => Promise<void>;
   rescanRepository: (id: string, req?: RescanRepositoryRequest) => Promise<void>;
+  backfillSummaries: (req: RescanAnalysisSummaryRequest) => Promise<void>;
 }
 
 export const createRepositoriesSlice: StateCreator<
@@ -67,5 +70,10 @@ export const createRepositoriesSlice: StateCreator<
     }),
   rescanRepository: async (id, req) => fetchWithAuth(repoRescanAPI(id), new VoidParser(), {
     method: "POST", body: JSON.stringify(RescanRepositoryRequest.toJSON(req ?? {}))
+  }),
+  backfillSummaries: async req => fetchWithAuth(repoBackfillSummariesAPI(), RescanAnalysisSummaryResponse, {
+    method: "POST", body: JSON.stringify(RescanAnalysisSummaryRequest.toJSON(req))
+  }).then(() => {
+    return
   }),
 }));

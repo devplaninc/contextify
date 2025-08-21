@@ -5,6 +5,7 @@ import RepositoryDetailsPage from './pages/RepositoryDetailsPage.tsx';
 import WebSitesListPage from './pages/WebSitesListPage.tsx';
 import WebSiteDetailsPage from './pages/WebSiteDetailsPage.tsx';
 import GlobalConfigEditorPage from "@/pages/config/GlobalConfigEditorPage.tsx";
+import AdminActionsPage from "@/pages/admin/AdminActionsPage.tsx";
 import {SidebarInset, SidebarProvider} from "@/components/ui/sidebar.tsx";
 import {SiteHeader} from "@/components/layout/SiteHeader.tsx";
 import {AppSidebar} from "@/components/layout/AppSidebar.tsx";
@@ -76,6 +77,7 @@ function AppRoutes() {
     <Route path="/repo_tokens" element={<TokensPage/>}/>
 
     <Route path="/admin/config-editor" element={<GlobalConfigEditorPage/>}/>
+    <Route path="/admin/actions" element={<AdminActionsPage/>}/>
     <Route path="/" element={<Navigate to="/repositories" replace/>}/>
     <Route path="*" element={<Navigate to="/repositories" replace/>}/>
   </Routes>

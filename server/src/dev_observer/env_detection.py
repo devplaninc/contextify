@@ -216,6 +216,7 @@ def detect_server_env(settings: Settings) -> ServerEnv:
     observations = detect_observer(settings)
     tokenizer = detect_tokenizer(settings)
     storage = detect_storage_provider(settings)
+    analysis = detect_analysis_provider(settings, storage)
     bg_storage = detect_storage_provider(settings)
     bg_analysis = detect_analysis_provider(settings, bg_storage)
     bg_repository = detect_git_provider(settings, bg_storage)
@@ -243,6 +244,8 @@ def detect_server_env(settings: Settings) -> ServerEnv:
     env = ServerEnv(
         observations=observations,
         storage=storage,
+        prompts=prompts,
+        analysis=analysis,
         repos_processor=bg_repos_processor,
         periodic_processor=PeriodicProcessor(
             bg_storage,

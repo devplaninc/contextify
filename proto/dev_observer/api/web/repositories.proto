@@ -39,3 +39,11 @@ message FilterRepositoriesRequest {
 message FilterRepositoriesResponse {
   repeated dev_observer.api.types.repo.GitRepository repos = 1;
 }
+
+message RescanAnalysisSummaryRequest {
+  bool force = 1;
+}
+
+message RescanAnalysisSummaryResponse {
+}
+
