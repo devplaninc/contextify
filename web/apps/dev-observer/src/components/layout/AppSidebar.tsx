@@ -55,6 +55,10 @@ const data = {
           title: "Config",
           url: "/admin/config-editor",
         },
+        {
+          title: "Actions",
+          url: "/admin/actions",
+        }
       ],
     },
   ],

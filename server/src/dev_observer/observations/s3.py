@@ -82,9 +82,9 @@ class S3ObservationsProvider(ObservationsProvider):
                     Key=object_key,
                     Body=o.content
                 )
-            _log.debug(f"Stored observation {o.key.kind}/{o.key.name} in S3")
+            _log.debug(f"Stored observation {o.key.kind}/{o.key.key} in S3")
         except ClientError as e:
-            error_msg = f"Error storing observation {o.key.kind}/{o.key.name} in S3: {str(e)}"
+            error_msg = f"Error storing observation {o.key.kind}/{o.key.key} in S3: {str(e)}"
             _log.error(error_msg)
             raise RuntimeError(error_msg) from e
     
@@ -168,10 +168,10 @@ class S3ObservationsProvider(ObservationsProvider):
                 return Observation(key=key, content=content)
         except ClientError as e:
             if _is_not_found_err(e):
-                error_msg = f"Observation {key.kind}/{key.name} not found in S3"
+                error_msg = f"Observation {key.kind}/{key.key} not found in S3"
                 _log.error(error_msg)
                 raise RuntimeError(error_msg) from e
-            error_msg = f"Error getting observation {key.kind}/{key.name} from S3: {str(e)}"
+            error_msg = f"Error getting observation {key.kind}/{key.key} from S3: {str(e)}"
             _log.error(error_msg)
             raise RuntimeError(error_msg) from e
 

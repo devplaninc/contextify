@@ -47,6 +47,13 @@ export interface FilterRepositoriesResponse {
   repos: GitRepository[];
 }
 
+export interface RescanAnalysisSummaryRequest {
+  force: boolean;
+}
+
+export interface RescanAnalysisSummaryResponse {
+}
+
 function createBaseListRepositoriesResponse(): ListRepositoriesResponse {
   return { repos: [] };
 }
@@ -592,6 +599,107 @@ export const FilterRepositoriesResponse: MessageFns<FilterRepositoriesResponse> 
   fromPartial(object: DeepPartial<FilterRepositoriesResponse>): FilterRepositoriesResponse {
     const message = createBaseFilterRepositoriesResponse();
     message.repos = object.repos?.map((e) => GitRepository.fromPartial(e)) || [];
+    return message;
+  },
+};
+
+function createBaseRescanAnalysisSummaryRequest(): RescanAnalysisSummaryRequest {
+  return { force: false };
+}
+
+export const RescanAnalysisSummaryRequest: MessageFns<RescanAnalysisSummaryRequest> = {
+  encode(message: RescanAnalysisSummaryRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.force !== false) {
+      writer.uint32(8).bool(message.force);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RescanAnalysisSummaryRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRescanAnalysisSummaryRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.force = reader.bool();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RescanAnalysisSummaryRequest {
+    return { force: isSet(object.force) ? gt.Boolean(object.force) : false };
+  },
+
+  toJSON(message: RescanAnalysisSummaryRequest): unknown {
+    const obj: any = {};
+    if (message.force !== false) {
+      obj.force = message.force;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<RescanAnalysisSummaryRequest>): RescanAnalysisSummaryRequest {
+    return RescanAnalysisSummaryRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<RescanAnalysisSummaryRequest>): RescanAnalysisSummaryRequest {
+    const message = createBaseRescanAnalysisSummaryRequest();
+    message.force = object.force ?? false;
+    return message;
+  },
+};
+
+function createBaseRescanAnalysisSummaryResponse(): RescanAnalysisSummaryResponse {
+  return {};
+}
+
+export const RescanAnalysisSummaryResponse: MessageFns<RescanAnalysisSummaryResponse> = {
+  encode(_: RescanAnalysisSummaryResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): RescanAnalysisSummaryResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseRescanAnalysisSummaryResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(_: any): RescanAnalysisSummaryResponse {
+    return {};
+  },
+
+  toJSON(_: RescanAnalysisSummaryResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  create(base?: DeepPartial<RescanAnalysisSummaryResponse>): RescanAnalysisSummaryResponse {
+    return RescanAnalysisSummaryResponse.fromPartial(base ?? {});
+  },
+  fromPartial(_: DeepPartial<RescanAnalysisSummaryResponse>): RescanAnalysisSummaryResponse {
+    const message = createBaseRescanAnalysisSummaryResponse();
     return message;
   },
 };

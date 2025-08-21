@@ -62,3 +62,13 @@ class FilterRepositoriesResponse(_message.Message):
     REPOS_FIELD_NUMBER: _ClassVar[int]
     repos: _containers.RepeatedCompositeFieldContainer[_repo_pb2.GitRepository]
     def __init__(self, repos: _Optional[_Iterable[_Union[_repo_pb2.GitRepository, _Mapping]]] = ...) -> None: ...
+
+class RescanAnalysisSummaryRequest(_message.Message):
+    __slots__ = ("force",)
+    FORCE_FIELD_NUMBER: _ClassVar[int]
+    force: bool
+    def __init__(self, force: bool = ...) -> None: ...
+
+class RescanAnalysisSummaryResponse(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...

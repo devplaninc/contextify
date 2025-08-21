@@ -24,6 +24,10 @@ export function repoRescanAPI<R extends string>(repoId: R) {
   return `${repoAPI(repoId)}/rescan` as const;
 }
 
+export function repoBackfillSummariesAPI() {
+  return `${reposAPI()}/actions/backfill-summaries` as const;
+}
+
 export function observationsAPI<K extends string>(kind: K) {
   return `${baseAPI()}/observations/kind/${kind}` as const;
 }
