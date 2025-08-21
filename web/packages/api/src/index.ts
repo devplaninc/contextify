@@ -85,4 +85,6 @@ export {ObservationsClient} from './client/observations';
 export {RepositoriesClient} from './client/repositories';
 export {WebsitesClient} from './client/websites';
 export {normalizeDomain, normalizeName} from './client/sitesUtils';
-export {getRepoKeyPrefix, detectGitProvider} from './client/repositoryUtils';
+export {
+  getRepoKeyPrefix, detectGitProvider, getRepoOwnerKeyPrefix, getProviderName, getGitProviderKeyPrefix
+} from './client/repositoryUtils';
