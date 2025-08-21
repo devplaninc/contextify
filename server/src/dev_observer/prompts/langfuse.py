@@ -3,6 +3,7 @@ import logging
 from typing import Optional, Dict, cast
 
 from langfuse import Langfuse
+from langfuse.api.core import ApiError
 from langfuse.model import ChatPromptClient
 
 from dev_observer.api.types.ai_pb2 import PromptConfig, SystemMessage, UserMessage
@@ -28,9 +29,21 @@ class LangfusePromptsProvider(PromptsProvider):
         self._langfuse = Langfuse(secret_key=auth.secret_key, public_key=auth.public_key, host=auth.host)
 
     async def get_formatted(self, name: str, params: Optional[Dict[str, str]] = None) -> FormattedPrompt:
+        res = await self.get_optional(name, params)
+        if res is None:
+            raise ValueError(f"Prompt '{name}' not found")
+        return res
+
+    async def get_optional(self, name: str, params: Optional[Dict[str, str]] = None) -> Optional[FormattedPrompt]:
         label = self._default_label
         _log.debug(s_("Retrieving Langfuse prompt template", template=name, label=label))
-        prompt = self._fetch_prompt(name)
+        try:
+            prompt = self._fetch_prompt(name)
+        except ApiError as e:
+            if e.status_code == 404:
+                return None
+            raise
+
         config: Optional[PromptConfig] = None
         if prompt.config is not None:
             parsed: PromptConfig = parse_dict_pb(cast(dict, prompt.config), PromptConfig())

@@ -21,6 +21,10 @@ class PromptsProvider(Protocol):
     async def get_formatted(self, name: str, params: Optional[Dict[str, str]] = None) -> FormattedPrompt:
         ...
 
+    @abstractmethod
+    async def get_optional(self, name: str, params: Optional[Dict[str, str]] = None) -> Optional[FormattedPrompt]:
+        ...
+
 
 class PrefixedPromptsFetcher:
     provider: PromptsProvider

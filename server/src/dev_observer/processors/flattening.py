@@ -2,7 +2,8 @@ import abc
 import dataclasses
 import logging
 from abc import abstractmethod
-from typing import TypeVar, Generic, List
+from datetime import date
+from typing import TypeVar, Generic, List, Optional
 
 from dev_observer.analysis.provider import AnalysisProvider
 from dev_observer.api.types.config_pb2 import GlobalConfig
@@ -23,6 +24,7 @@ _log = logging.getLogger(__name__)
 class ObservationRequest:
     prompt_prefix: str
     key: ObservationKey
+    summary_key: Optional[ObservationKey] = None  # If set, instructs to also produce a summary for the observation.
 
 
 class FlatteningProcessor(abc.ABC, Generic[E]):
@@ -56,6 +58,9 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
                     content = await analyzer.analyze_flatten(res)
                     await self.observations.store(Observation(key=key, content=content))
                     keys.append(key)
+                    sum_key = await self._summarize(request, content, res)
+                    if sum_key:
+                        keys.append(sum_key)
                 except Exception as e:
                     _log.exception(s_("Analysis failed.", request=request), exc_info=e)
             result_data = res.result_data
@@ -66,6 +71,26 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
         finally:
             if clean:
                 res.clean_up()
+
+    async def _summarize(
+            self, request: ObservationRequest, content: str, flatten_result: FlattenResult,
+    ) -> Optional[ObservationKey]:
+        sum_key = request.summary_key
+        if not sum_key:
+            return None
+        try:
+            prompt_name = f"{request.prompt_prefix}_summarize_analysis"
+            prompt = await self.prompts.get_optional(prompt_name, {"content": content})
+            if prompt is None:
+                _log.debug(s_("No analysis summary configured", prompt_name=prompt_name))
+                return None
+            session_id = f"{date.today().strftime("%Y-%m-%d")}.{flatten_result.full_file_path}"
+            result = await self.analysis.analyze(prompt, session_id)
+            await self.observations.store(Observation(key=sum_key, content=result.analysis))
+            return sum_key
+        except Exception as e:
+            _log.exception(s_("Summarization failed.", request=request), exc_info=e)
+            return None
 
     @abstractmethod
     async def get_flatten(self, entity: E, config: GlobalConfig) -> FlattenResult:

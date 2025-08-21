@@ -11,3 +11,8 @@ class StubPromptsProvider(PromptsProvider):
             user=UserMessage(text="Stub user message"),
             config=PromptConfig(model=ModelConfig(provider="openai", model_name="test", temperature=0)),
         )
+
+    async def get_optional(self, name: str, params: Optional[Dict[str, str]] = None) -> Optional[FormattedPrompt]:
+        return await self.get_formatted(name, params)
+
+

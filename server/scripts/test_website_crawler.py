@@ -17,7 +17,7 @@ import asyncio
 import logging
 import os
 import sys
-from typing import List
+from typing import List, Optional, Dict
 
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.website.cloner import normalize_domain, normalize_name
@@ -55,6 +55,9 @@ class StubPromptsProvider(PromptsProvider):
             system=SystemMessage(text="You are a helpful assistant."),
             user=UserMessage(text="Analyze this website."),
         )
+
+    async def get_optional(self, name: str, params: Optional[Dict[str, str]] = None) -> Optional[FormattedPrompt]:
+        return await self.get_formatted(name, params)
 
 
 async def main():

@@ -166,9 +166,12 @@ class PeriodicProcessor:
         requests: List[ObservationRequest] = []
         for analyzer in config.analysis.repo_analyzers:
             key = f"{get_repo_key_pref(repo)}/{analyzer.file_name}"
+            sum_file = f"__summary__{analyzer.file_name}"
+            sum_key = f"{get_repo_key_pref(repo)}/{sum_file}"
             requests.append(ObservationRequest(
                 prompt_prefix=analyzer.prompt_prefix,
                 key=ObservationKey(kind="repos", name=analyzer.file_name, key=key),
+                summary_key=ObservationKey(kind="repos", name=sum_file, key=sum_key),
             ))
         if len(requests) == 0:
             _log.debug(s_("No analyzers configured, skipping", repo=repo))

@@ -59,7 +59,15 @@ class LocalPromptsProvider(PromptsProvider):
         self.parser = parser
 
     async def get_formatted(self, name: str, params: Optional[Dict[str, str]] = None) -> FormattedPrompt:
-        file_path = os.path.join(self.prompts_path, f"{name}{self.extension}")
+        res = await self.get_optional(name, params)
+        if res is None:
+            raise ValueError(f"Prompt template '{name}' not found")
+        return res
+
+    async def get_optional(self, name: str, params: Optional[Dict[str, str]] = None) -> Optional[FormattedPrompt]:
+        file_path = self._get_file_path(name)
+        if not file_path:
+            return None
         with open(file_path, 'rb') as f:
             content = f.read()
 
@@ -78,3 +86,9 @@ class LocalPromptsProvider(PromptsProvider):
             config=template.config,
             prompt_name=name,
         )
+
+    def _get_file_path(self, name: str) -> Optional[str]:
+        file_path = os.path.join(self.prompts_path, f"{name}{self.extension}")
+        if os.path.exists(file_path):
+            return file_path
+        return None
