@@ -22,11 +22,19 @@ export const detectGitProvider = (url: string): GitProvider | null => {
 };
 
 export function getRepoKeyPrefix(provider: GitProvider, fullName: string): string {
+  return `${getGitProviderKeyPrefix(provider)}${fullName}`
+}
+
+export function getRepoOwnerKeyPrefix(provider: GitProvider, owner: string): string {
+  return `${getGitProviderKeyPrefix(provider)}${owner}/`
+}
+
+export function getGitProviderKeyPrefix(provider: GitProvider): string {
   switch (provider) {
     case GitProvider.GITHUB:
-      return fullName;
+      return "";
     default:
-      return `__${getProviderName(provider)}/${fullName}`;
+      return `__${getProviderName(provider)}/`;
   }
 }
 
