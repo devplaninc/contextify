@@ -80,18 +80,20 @@ class ReposFilter(_message.Message):
     def __init__(self, provider: _Optional[_Union[GitProvider, str]] = ..., owner: _Optional[str] = ...) -> None: ...
 
 class CodeResearchMeta(_message.Message):
-    __slots__ = ("summary", "created_at", "repo_full_name", "repo_url", "area_title")
+    __slots__ = ("summary", "created_at", "repo_full_name", "repo_url", "area_title", "dir_key")
     SUMMARY_FIELD_NUMBER: _ClassVar[int]
     CREATED_AT_FIELD_NUMBER: _ClassVar[int]
     REPO_FULL_NAME_FIELD_NUMBER: _ClassVar[int]
     REPO_URL_FIELD_NUMBER: _ClassVar[int]
     AREA_TITLE_FIELD_NUMBER: _ClassVar[int]
+    DIR_KEY_FIELD_NUMBER: _ClassVar[int]
     summary: str
     created_at: _timestamp_pb2.Timestamp
     repo_full_name: str
     repo_url: str
     area_title: str
-    def __init__(self, summary: _Optional[str] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., repo_full_name: _Optional[str] = ..., repo_url: _Optional[str] = ..., area_title: _Optional[str] = ...) -> None: ...
+    dir_key: _observations_pb2.ObservationKey
+    def __init__(self, summary: _Optional[str] = ..., created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., repo_full_name: _Optional[str] = ..., repo_url: _Optional[str] = ..., area_title: _Optional[str] = ..., dir_key: _Optional[_Union[_observations_pb2.ObservationKey, _Mapping]] = ...) -> None: ...
 
 class CodeResearchAreaMeta(_message.Message):
     __slots__ = ("research_key", "meta")

@@ -53,10 +53,11 @@ message CodeResearchMeta {
   string repo_full_name = 3;
   string repo_url = 4;
   string area_title = 5;
+  api.types.observations.ObservationKey dir_key = 6;
 }
 
 message CodeResearchAreaMeta {
-  dev_observer.api.types.observations.ObservationKey research_key = 1;
+  api.types.observations.ObservationKey research_key = 1;
   CodeResearchMeta meta = 2;
 }
 

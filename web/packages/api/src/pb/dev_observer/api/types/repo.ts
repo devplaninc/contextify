@@ -83,6 +83,7 @@ export interface CodeResearchMeta {
   repoFullName: string;
   repoUrl: string;
   areaTitle: string;
+  dirKey: ObservationKey | undefined;
 }
 
 export interface CodeResearchAreaMeta {
@@ -708,7 +709,7 @@ export const ReposFilter: MessageFns<ReposFilter> = {
 };
 
 function createBaseCodeResearchMeta(): CodeResearchMeta {
-  return { summary: "", createdAt: undefined, repoFullName: "", repoUrl: "", areaTitle: "" };
+  return { summary: "", createdAt: undefined, repoFullName: "", repoUrl: "", areaTitle: "", dirKey: undefined };
 }
 
 export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
@@ -727,6 +728,9 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
     }
     if (message.areaTitle !== "") {
       writer.uint32(42).string(message.areaTitle);
+    }
+    if (message.dirKey !== undefined) {
+      ObservationKey.encode(message.dirKey, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -778,6 +782,14 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
           message.areaTitle = reader.string();
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.dirKey = ObservationKey.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -794,6 +806,7 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
       repoFullName: isSet(object.repoFullName) ? gt.String(object.repoFullName) : "",
       repoUrl: isSet(object.repoUrl) ? gt.String(object.repoUrl) : "",
       areaTitle: isSet(object.areaTitle) ? gt.String(object.areaTitle) : "",
+      dirKey: isSet(object.dirKey) ? ObservationKey.fromJSON(object.dirKey) : undefined,
     };
   },
 
@@ -814,6 +827,9 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
     if (message.areaTitle !== "") {
       obj.areaTitle = message.areaTitle;
     }
+    if (message.dirKey !== undefined) {
+      obj.dirKey = ObservationKey.toJSON(message.dirKey);
+    }
     return obj;
   },
 
@@ -827,6 +843,9 @@ export const CodeResearchMeta: MessageFns<CodeResearchMeta> = {
     message.repoFullName = object.repoFullName ?? "";
     message.repoUrl = object.repoUrl ?? "";
     message.areaTitle = object.areaTitle ?? "";
+    message.dirKey = (object.dirKey !== undefined && object.dirKey !== null)
+      ? ObservationKey.fromPartial(object.dirKey)
+      : undefined;
     return message;
   },
 };

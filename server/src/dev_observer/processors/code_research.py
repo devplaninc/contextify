@@ -134,6 +134,7 @@ class CodeResearchProcessor:
             repo_full_name=task.repo_full_name,
             repo_url=task.repo_url,
             area_title=task.area_title,
+            dir_key=task.dir_key,
         )
         meta_obs = Observation(
             key=ObservationKey(kind=dir_key.kind, name="meta.json", key=f"{dir_key.key}/meta.json"),
