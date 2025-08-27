@@ -1,9 +1,10 @@
 import logging
 from typing import Optional, Tuple, Literal, ClassVar, List
 
-from dev_observer.log import s_
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource, TomlConfigSettingsSource
+
+from dev_observer.log import s_
 
 _log = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class LangfusePrompts(BaseModel):
     auth: LangfuseAuth
     host: str
     default_label: Optional[str] = None
+    mask_traces: bool = True
 
 
 class LocalPrompts(BaseModel):
@@ -44,7 +46,7 @@ class Prompts(BaseModel):
 
 
 class LanggraphAnalysis(BaseModel):
-    mask_traces: bool = True
+    ...
 
 
 class Analysis(BaseModel):
@@ -109,12 +111,15 @@ class Clerk(BaseModel):
 class ApiKeys(BaseModel):
     keys: Optional[List[str]] = None
 
+
 class UserManagement(BaseModel):
     provider: Literal["clerk", "none"] = "none"
     clerk: Optional[Clerk] = None
 
+
 class WebScraping(BaseModel):
     provider: Literal["scrapy"] = "scrapy"
+
 
 class Crypto(BaseModel):
     secret: str

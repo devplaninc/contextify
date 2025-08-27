@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 
 from langchain_core.runnables import RunnableConfig
-from langfuse.callback import CallbackHandler
+from langfuse.langchain import CallbackHandler
 from langgraph.constants import END
 from langgraph.graph.state import CompiledStateGraph, StateGraph
 from langgraph.store.memory import InMemoryStore
@@ -45,43 +45,25 @@ class AnalysisInfo:
         return info
 
 
-def _masking_function(data):
-    return "[REDACTED]"
-
-
 class LanggraphAnalysisProvider(AnalysisProvider):
     _lf_auth: Optional[LangfuseAuthProps] = None
-    _mask: bool
     _storage: StorageProvider
 
-    def __init__(self, storage: StorageProvider, langfuse_auth: Optional[LangfuseAuthProps] = None, mask: bool = True):
+    def __init__(self, storage: StorageProvider, langfuse_auth: Optional[LangfuseAuthProps] = None):
         self._lf_auth = langfuse_auth
-        self._mask = mask
         self._storage = storage
 
     async def analyze(self, prompt: FormattedPrompt, session_id: Optional[str] = None) -> AnalysisResult:
         g = await _get_graph()
         info = AnalysisInfo(prompt=prompt)
         config = info.append(ensure_config())
-        global_config = await self._storage.get_global_config()
-        disable_masking = global_config.HasField("analysis") and global_config.analysis.disable_masking
-        should_mask = self._mask and not disable_masking
+        config["metadata"]["langfuse_session_id"] = session_id
         if self._lf_auth is not None:
-            public_key = self._lf_auth.public_key
-            secret_key = self._lf_auth.secret_key
             _log.debug(s_("Initializing Langfuse CallbackHandler",
                           host=self._lf_auth.host,
-                          public_key=public_key,
-                          secret_key=f"{secret_key[:5]}****",
                           session_id=session_id,
                           ))
-            callbacks = [CallbackHandler(
-                mask=_masking_function if should_mask else None,
-                public_key=public_key,
-                secret_key=secret_key,
-                host=self._lf_auth.host,
-                session_id=session_id,
-            )]
+            callbacks = [CallbackHandler(public_key=self._lf_auth.public_key, )]
             config["callbacks"] = callbacks
         result = await g.ainvoke({}, config, output_keys=["response"])
         analysis = result.get("response", "")

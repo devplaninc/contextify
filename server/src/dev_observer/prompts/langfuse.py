@@ -13,6 +13,7 @@ from dev_observer.util import parse_dict_pb
 
 _log = logging.getLogger(__name__)
 
+
 @dataclasses.dataclass
 class LangfuseAuthProps:
     secret_key: str
@@ -20,13 +21,22 @@ class LangfuseAuthProps:
     host: str
 
 
+def _masking_function(data):
+    return "[REDACTED]"
+
+
 class LangfusePromptsProvider(PromptsProvider):
     _langfuse: Langfuse
     _default_label: Optional[str] = None
 
-    def __init__(self, auth: LangfuseAuthProps, default_label: Optional[str] = None):
+    def __init__(self, auth: LangfuseAuthProps, default_label: Optional[str] = None, mask_traces: bool = True):
         self._default_label = default_label
-        self._langfuse = Langfuse(secret_key=auth.secret_key, public_key=auth.public_key, host=auth.host)
+        self._langfuse = Langfuse(
+            secret_key=auth.secret_key,
+            public_key=auth.public_key,
+            host=auth.host,
+            mask=_masking_function if mask_traces else None,
+        )
 
     async def get_formatted(self, name: str, params: Optional[Dict[str, str]] = None) -> FormattedPrompt:
         res = await self.get_optional(name, params)

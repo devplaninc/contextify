@@ -31,7 +31,7 @@ from dev_observer.repository.federated import FederatedGitProvider
 from dev_observer.repository.github import GithubProvider, GithubAuthProvider
 from dev_observer.repository.provider import GitRepositoryProvider
 from dev_observer.server.env import ServerEnv
-from dev_observer.settings import Settings, LocalPrompts, Github, LangfusePrompts, LanggraphAnalysis, Git
+from dev_observer.settings import Settings, LocalPrompts, Github, LangfusePrompts, Git
 from dev_observer.storage.local import LocalStorageProvider
 from dev_observer.storage.memory import MemoryStorageProvider
 from dev_observer.storage.postgresql.provider import PostgresqlStorageProvider
@@ -63,6 +63,7 @@ def detect_git_provider(settings: Settings, storage: StorageProvider) -> GitRepo
             return create_federated_git_provider(git_sett, storage)
     raise ValueError(f"Unsupported git provider: {git_sett.provider}")
 
+
 def create_github_provider(gh_sett: Github, storage: StorageProvider) -> GithubProvider:
     return GithubProvider(detect_github_auth(gh_sett, storage), storage)
 
@@ -74,6 +75,7 @@ def create_federated_git_provider(git_sett: Git, storage: StorageProvider) -> Fe
     if git_sett.github is not None:
         providers[GitProvider.GITHUB] = create_github_provider(git_sett.github, storage)
     return FederatedGitProvider(providers)
+
 
 def detect_github_auth(gh: Optional[Github], storage: StorageProvider) -> GithubAuthProvider:
     if gh is None:
@@ -96,11 +98,10 @@ def detect_analysis_provider(settings: Settings, storage: StorageProvider) -> An
         raise ValueError("Analysis settings are not defined")
     match a.provider:
         case "langgraph":
-            lg = a.langgrpah if a.langgrpah is not None else LanggraphAnalysis()
             lf_auth: Optional[LangfuseAuthProps] = None
             if settings.prompts is not None and settings.prompts.langfuse is not None:
                 lf_auth = _get_lf_auth(settings.prompts.langfuse)
-            return LanggraphAnalysisProvider(storage, lf_auth, mask=lg.mask_traces)
+            return LanggraphAnalysisProvider(storage, lf_auth)
         case "stub":
             return StubAnalysisProvider()
     raise ValueError(f"Unsupported analysis provider: {a.provider}")
@@ -115,7 +116,7 @@ def detect_prompts_provider(settings: Settings) -> PromptsProvider:
             lf = p.langfuse
             if lf is None:
                 raise ValueError("Missing langfuse config for langfuse prompts provider")
-            return LangfusePromptsProvider(_get_lf_auth(lf), lf.default_label)
+            return LangfusePromptsProvider(_get_lf_auth(lf), lf.default_label, lf.mask_traces)
         case "local":
             parser, ext = detect_prompts_parser(p.local)
             return LocalPromptsProvider(p.local.dir, ext, parser)
