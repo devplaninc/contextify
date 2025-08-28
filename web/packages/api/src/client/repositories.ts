@@ -4,7 +4,7 @@ import {
   AddRepositoryResponse,
   DeleteRepositoryResponse, FilterRepositoriesRequest, FilterRepositoriesResponse,
   GetRepositoryResponse,
-  ListRepositoriesResponse,
+  ListRepositoriesResponse, RescanRepositoryRequest,
   RescanRepositoryResponse
 } from '../pb/dev_observer/api/web/repositories';
 
@@ -55,9 +55,13 @@ export class RepositoriesClient extends BaseClient {
   /**
    * Trigger a rescan of a specific repository
    * @param repoId - The repository ID
+   * @param request - Optional request parameters
    * @returns The rescan repository response
    */
-  async rescan(repoId: string): Promise<RescanRepositoryResponse> {
-    return this._post(`/api/v1/repositories/${repoId}/rescan`, RescanRepositoryResponse);
+  async rescan(repoId: string, request?: RescanRepositoryRequest): Promise<RescanRepositoryResponse> {
+    return this._post(
+      `/api/v1/repositories/${repoId}/rescan`,
+      RescanRepositoryResponse,
+      RescanRepositoryRequest.toJSON(request ?? RescanRepositoryRequest.create({})));
   }
 }
