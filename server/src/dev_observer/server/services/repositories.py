@@ -12,6 +12,7 @@ from dev_observer.api.web.repositories_pb2 import AddRepositoryRequest, AddRepos
     RescanAnalysisSummaryRequest
 from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
+from dev_observer.processors.code_research import mark_forced_research
 from dev_observer.prompts.provider import PromptsProvider
 from dev_observer.repository.parser import parse_repository_url
 from dev_observer.server.services.actions.backfill_summaries import backfill_analysis_summaries
@@ -91,6 +92,9 @@ class RepositoriesService:
                 ProcessingItemKey(github_repo_id=repo_id), self._clock.now(),
             )
         if request.research:
+            if request.force_research:
+                repo = await self._store.get_git_repo(repo_id)
+                await mark_forced_research(repo, self._observations)
             await self._store.set_next_processing_time(
                 ProcessingItemKey(research_git_repo_id=repo_id), self._clock.now(),
             )

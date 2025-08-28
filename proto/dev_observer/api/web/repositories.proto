@@ -20,6 +20,7 @@ message AddRepositoryResponse {
 message RescanRepositoryRequest{
   optional bool research = 1;
   optional bool skip_summary = 2;
+  optional bool force_research = 3;
 }
 
 message RescanRepositoryResponse{}

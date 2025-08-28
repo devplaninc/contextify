@@ -26,6 +26,7 @@ export interface AddRepositoryResponse {
 export interface RescanRepositoryRequest {
   research?: boolean | undefined;
   skipSummary?: boolean | undefined;
+  forceResearch?: boolean | undefined;
 }
 
 export interface RescanRepositoryResponse {
@@ -249,7 +250,7 @@ export const AddRepositoryResponse: MessageFns<AddRepositoryResponse> = {
 };
 
 function createBaseRescanRepositoryRequest(): RescanRepositoryRequest {
-  return { research: undefined, skipSummary: undefined };
+  return { research: undefined, skipSummary: undefined, forceResearch: undefined };
 }
 
 export const RescanRepositoryRequest: MessageFns<RescanRepositoryRequest> = {
@@ -259,6 +260,9 @@ export const RescanRepositoryRequest: MessageFns<RescanRepositoryRequest> = {
     }
     if (message.skipSummary !== undefined) {
       writer.uint32(16).bool(message.skipSummary);
+    }
+    if (message.forceResearch !== undefined) {
+      writer.uint32(24).bool(message.forceResearch);
     }
     return writer;
   },
@@ -286,6 +290,14 @@ export const RescanRepositoryRequest: MessageFns<RescanRepositoryRequest> = {
           message.skipSummary = reader.bool();
           continue;
         }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.forceResearch = reader.bool();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -299,6 +311,7 @@ export const RescanRepositoryRequest: MessageFns<RescanRepositoryRequest> = {
     return {
       research: isSet(object.research) ? gt.Boolean(object.research) : undefined,
       skipSummary: isSet(object.skipSummary) ? gt.Boolean(object.skipSummary) : undefined,
+      forceResearch: isSet(object.forceResearch) ? gt.Boolean(object.forceResearch) : undefined,
     };
   },
 
@@ -310,6 +323,9 @@ export const RescanRepositoryRequest: MessageFns<RescanRepositoryRequest> = {
     if (message.skipSummary !== undefined) {
       obj.skipSummary = message.skipSummary;
     }
+    if (message.forceResearch !== undefined) {
+      obj.forceResearch = message.forceResearch;
+    }
     return obj;
   },
 
@@ -320,6 +336,7 @@ export const RescanRepositoryRequest: MessageFns<RescanRepositoryRequest> = {
     const message = createBaseRescanRepositoryRequest();
     message.research = object.research ?? undefined;
     message.skipSummary = object.skipSummary ?? undefined;
+    message.forceResearch = object.forceResearch ?? undefined;
     return message;
   },
 };

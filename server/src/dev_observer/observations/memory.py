@@ -34,3 +34,10 @@ class MemoryObservationsProvider(ObservationsProvider):
             if o.key == key:
                 return True
         return False
+
+    async def delete(self, key: ObservationKey) -> bool:
+        for i, o in enumerate(self._observations):
+            if o.key == key:
+                del self._observations[i]
+                return True
+        return False

@@ -12,7 +12,7 @@ from dev_observer.analysis.code.nodes import AnalysisState
 from dev_observer.api.types.observations_pb2 import ObservationKey, Observation
 from dev_observer.api.types.processing_pb2 import ProcessingItemResultData
 from dev_observer.api.types.repo_pb2 import CodeResearchMeta, GitProvider, CodeResearchAreaMeta, \
-    CodeResearchOrganizationMeta
+    CodeResearchOrganizationMeta, GitRepository
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.processors.observations import get_repo_key_pref, get_repo_owner_key_pref
 from dev_observer.repository.cloner import clone_repository
@@ -70,6 +70,9 @@ class CodeResearchProcessor:
         if not general_prefix or len(general_prefix) == 0:
             return None
 
+        force_key = get_force_key(repo.git_repo)
+        force_research = await self._observations.exists(force_key)
+
         conf = config.repo_analysis.research
         clone_result = await clone_repository(
             repo, self._git,
@@ -82,11 +85,31 @@ class CodeResearchProcessor:
             if os.path.exists(repo_path):
                 # noinspection PyTypeChecker
                 await asyncio.to_thread(shutil.rmtree, repo_path, False)
+            # Delete force file after research completion if it was present
+            if force_research:
+                try:
+                    deleted = await self._observations.delete(force_key)
+                    if deleted:
+                        _log.info(f"Research completed with force flag - deleted force file: {force_key.key}")
+                    else:
+                        _log.warning(f"Force file not found during cleanup: {force_key.key}")
+                except Exception as e:
+                    _log.warning(f"Could not delete force file: {e}")
 
         try:
             tasks: List[CodeResearchTask] = []
             for analyzer in analyzers:
                 key = f"{get_repo_key_pref(repo.git_repo)}/{analyzer.file_name}"
+                
+                # Check if research already exists for this analyzer
+                research_key = ObservationKey(kind=REPO_RESEARCH_KIND, name="research.md", key=f"{key}/research.md")
+                research_exists = await self._observations.exists(research_key)
+                
+                # Skip if research exists and no force flag
+                if research_exists and not force_research:
+                    _log.info(f"Skipping research for {analyzer.name} - already exists and no force flag")
+                    continue
+                
                 tasks.append(CodeResearchTask(
                     general_prompt_prefix=general_prefix,
                     task_prompt_prefix=analyzer.prompt_prefix,
@@ -99,9 +122,11 @@ class CodeResearchProcessor:
                     area_title=analyzer.name,
                 ))
 
-            coro_tasks = [self._process_task(t) for t in tasks]
-            await asyncio.gather(*coro_tasks, return_exceptions=True)
-
+            # Only proceed with processing if there are tasks to run
+            if tasks:
+                coro_tasks = [self._process_task(t) for t in tasks]
+                await asyncio.gather(*coro_tasks, return_exceptions=True)
+            
             # Update aggregated summaries for the owner after completing all research tasks
             owner = repo.git_repo.full_name.split('/')[0]
             await self._update_aggregated_summaries(repo.git_repo.provider, owner)
@@ -204,3 +229,12 @@ def _find_corresponding_key(
         if obs_key.key == expected_key:
             return obs_key
     return None
+
+
+def get_force_key(repo: GitRepository) -> ObservationKey:
+    return ObservationKey(kind=REPO_RESEARCH_KIND, name="__force__", key=f"{get_repo_key_pref(repo)}/__force__")
+
+
+async def mark_forced_research(repo: GitRepository, observations: ObservationsProvider):
+    key = get_force_key(repo)
+    await observations.store(Observation(key=key, content="FORCE"))

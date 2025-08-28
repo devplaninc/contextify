@@ -37,6 +37,16 @@ class LocalObservationsProvider(ObservationsProvider):
         file_path = self._get_key_path(key)
         return os.path.exists(file_path)
 
+    async def delete(self, key: ObservationKey) -> bool:
+        file_path = self._get_key_path(key)
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+                return True
+            except OSError:
+                return False
+        return False
+
     def _get_root(self, kind: str) -> str:
         return os.path.join(self._dir, kind)
 

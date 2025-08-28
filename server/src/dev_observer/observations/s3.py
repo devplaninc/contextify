@@ -175,6 +175,31 @@ class S3ObservationsProvider(ObservationsProvider):
             _log.error(error_msg)
             raise RuntimeError(error_msg) from e
 
+    async def delete(self, key: ObservationKey) -> bool:
+        object_key = self._get_object_key(key)
+        
+        try:
+            session = get_session()
+            async with session.create_client(
+                    's3',
+                    region_name=self._region,
+                    endpoint_url=self._endpoint,
+                    aws_access_key_id=self._access_key,
+                    aws_secret_access_key=self._secret_key,
+            ) as client:
+                client: S3Client
+                # Check if object exists first
+                if not await self.exists(key):
+                    return False
+                
+                await client.delete_object(Bucket=self._bucket, Key=object_key)
+                _log.debug(f"Deleted observation {key.kind}/{key.key} from S3")
+                return True
+        except ClientError as e:
+            error_msg = f"Error deleting observation {key.kind}/{key.key} from S3: {str(e)}"
+            _log.error(error_msg)
+            raise RuntimeError(error_msg) from e
+
 
 def _is_not_found_err(err: ClientError) -> bool:
     code = err.response.get('Error', {}).get('Code', 'Unknown')

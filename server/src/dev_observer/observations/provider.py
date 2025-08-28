@@ -20,3 +20,7 @@ class ObservationsProvider(Protocol):
     @abstractmethod
     async def exists(self, key: ObservationKey) -> bool:
         ...
+
+    @abstractmethod
+    async def delete(self, key: ObservationKey) -> bool:
+        ...
