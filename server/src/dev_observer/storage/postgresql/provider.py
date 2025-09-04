@@ -136,19 +136,33 @@ class PostgresqlStorageProvider(StorageProvider):
                     created=True,
                 )
 
-    async def next_processing_item(self) -> Optional[ProcessingItem]:
+    async def next_processing_item(
+            self, delay: datetime.timedelta = datetime.timedelta(minutes=30)) -> Optional[ProcessingItem]:
         next_processing_time = self._clock.now()
         async with AsyncSession(self._engine) as session:
-            res = await session.execute(
-                select(ProcessingItemEntity)
-                .where(
-                    ProcessingItemEntity.next_processing != None,
-                    ProcessingItemEntity.next_processing < next_processing_time,
+            async with session.begin():
+                res = await session.execute(
+                    select(ProcessingItemEntity)
+                    .where(
+                        ProcessingItemEntity.next_processing != None,
+                        ProcessingItemEntity.next_processing < next_processing_time,
+                    )
+                    .order_by(ProcessingItemEntity.next_processing)
                 )
-                .order_by(ProcessingItemEntity.next_processing)
-            )
-            item = res.first()
-            return _to_optional_item(item[0] if item is not None else None)
+                item = res.first()
+                if item is None:
+                    return None
+                i: ProcessingItemEntity = item[0]
+                retry_time = self._clock.now() + datetime.timedelta(minutes=30)
+                await session.execute(
+                    update(ProcessingItemEntity)
+                    .where(ProcessingItemEntity.key == i.key)
+                    .values(
+                        next_processing=retry_time,
+                        processing_started_at=self._clock.now(),
+                    )
+                )
+                return _to_item(i)
 
     async def set_next_processing_time(
             self, key: ProcessingItemKey,

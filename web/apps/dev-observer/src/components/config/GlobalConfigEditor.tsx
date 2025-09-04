@@ -70,10 +70,15 @@ const websiteCrawlingConfigSchema = z.object({
   timeoutWithoutDataSeconds: z.coerce.number(),
 })
 
+const periodicConfigSchema = z.object({
+  concurrency: z.coerce.number(),
+})
+
 const globalConfigSchema = z.object({
   analysis: analysisConfigSchema,
   repoAnalysis: repoAnalysisConfigSchema,
   websiteCrawling: websiteCrawlingConfigSchema.optional(),
+  periodic: periodicConfigSchema,
 })
 
 export type globalConfigType = z.infer<typeof globalConfigSchema>
@@ -115,6 +120,17 @@ function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
     {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
       <div className="space-y-4">
+        <FormField
+          control={form.control}
+          name="periodic.concurrency"
+          render={({field}) => (
+            <FormItem className="flex items-center gap-4">
+              <FormLabel className="w-[100px]">Concurrency:</FormLabel>
+              <FormControl className="w-[200px]"><Input {...field}/></FormControl>
+              <FormMessage/>
+            </FormItem>
+          )}
+        />
         <h2 className="font-semibold text-lg">Repo Analyzers:</h2>
         {repoAnalyzers.map((f, i) => (
           <div key={f.id} className="border rounded-md p-4 space-y-4">

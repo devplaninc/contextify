@@ -130,14 +130,18 @@ class SingleBlobStorageProvider(abc.ABC, StorageProvider):
 
         raise ValueError(f"Site with url {site.url} not found after creation")
 
-    async def next_processing_item(self) -> Optional[ProcessingItem]:
+    async def next_processing_item(
+            self, delay: datetime.timedelta = datetime.timedelta(minutes=30)) -> Optional[ProcessingItem]:
         now = self._clock.now()
         items = [i for i in self._get().processing_items if
                  i.HasField("next_processing") and pb_to_datetime(i.next_processing) < now]
         if len(items) == 0:
             return None
         items.sort(key=lambda item: pb_to_datetime(item.next_processing))
-        return items[0]
+        i = items[0]
+        i.next_processing = now + delay
+        i.processing_started_at = now
+        return i
 
     async def get_processing_items(self, filter: ProcessingItemsFilter) -> Sequence[ProcessingItem]:
         items = []

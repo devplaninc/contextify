@@ -14,6 +14,11 @@ export interface GlobalConfig {
   analysis: AnalysisConfig | undefined;
   repoAnalysis: RepoAnalysisConfig | undefined;
   websiteCrawling: WebsiteCrawlingConfig | undefined;
+  periodic: PeriodicConfig | undefined;
+}
+
+export interface PeriodicConfig {
+  concurrency: number;
 }
 
 export interface AnalysisConfig {
@@ -74,7 +79,7 @@ export interface WebsiteCrawlingConfig {
 }
 
 function createBaseGlobalConfig(): GlobalConfig {
-  return { analysis: undefined, repoAnalysis: undefined, websiteCrawling: undefined };
+  return { analysis: undefined, repoAnalysis: undefined, websiteCrawling: undefined, periodic: undefined };
 }
 
 export const GlobalConfig: MessageFns<GlobalConfig> = {
@@ -87,6 +92,9 @@ export const GlobalConfig: MessageFns<GlobalConfig> = {
     }
     if (message.websiteCrawling !== undefined) {
       WebsiteCrawlingConfig.encode(message.websiteCrawling, writer.uint32(26).fork()).join();
+    }
+    if (message.periodic !== undefined) {
+      PeriodicConfig.encode(message.periodic, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -122,6 +130,14 @@ export const GlobalConfig: MessageFns<GlobalConfig> = {
           message.websiteCrawling = WebsiteCrawlingConfig.decode(reader, reader.uint32());
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.periodic = PeriodicConfig.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -138,6 +154,7 @@ export const GlobalConfig: MessageFns<GlobalConfig> = {
       websiteCrawling: isSet(object.websiteCrawling)
         ? WebsiteCrawlingConfig.fromJSON(object.websiteCrawling)
         : undefined,
+      periodic: isSet(object.periodic) ? PeriodicConfig.fromJSON(object.periodic) : undefined,
     };
   },
 
@@ -151,6 +168,9 @@ export const GlobalConfig: MessageFns<GlobalConfig> = {
     }
     if (message.websiteCrawling !== undefined) {
       obj.websiteCrawling = WebsiteCrawlingConfig.toJSON(message.websiteCrawling);
+    }
+    if (message.periodic !== undefined) {
+      obj.periodic = PeriodicConfig.toJSON(message.periodic);
     }
     return obj;
   },
@@ -169,6 +189,67 @@ export const GlobalConfig: MessageFns<GlobalConfig> = {
     message.websiteCrawling = (object.websiteCrawling !== undefined && object.websiteCrawling !== null)
       ? WebsiteCrawlingConfig.fromPartial(object.websiteCrawling)
       : undefined;
+    message.periodic = (object.periodic !== undefined && object.periodic !== null)
+      ? PeriodicConfig.fromPartial(object.periodic)
+      : undefined;
+    return message;
+  },
+};
+
+function createBasePeriodicConfig(): PeriodicConfig {
+  return { concurrency: 0 };
+}
+
+export const PeriodicConfig: MessageFns<PeriodicConfig> = {
+  encode(message: PeriodicConfig, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.concurrency !== 0) {
+      writer.uint32(8).int32(message.concurrency);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): PeriodicConfig {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBasePeriodicConfig();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 8) {
+            break;
+          }
+
+          message.concurrency = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PeriodicConfig {
+    return { concurrency: isSet(object.concurrency) ? gt.Number(object.concurrency) : 0 };
+  },
+
+  toJSON(message: PeriodicConfig): unknown {
+    const obj: any = {};
+    if (message.concurrency !== 0) {
+      obj.concurrency = Math.round(message.concurrency);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<PeriodicConfig>): PeriodicConfig {
+    return PeriodicConfig.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<PeriodicConfig>): PeriodicConfig {
+    const message = createBasePeriodicConfig();
+    message.concurrency = object.concurrency ?? 0;
     return message;
   },
 };

@@ -33,6 +33,9 @@ class PeriodicProcessor:
     _research_processor: Optional[CodeResearchProcessor]
     _clock: Clock
 
+    _lock: asyncio.Lock = asyncio.Lock()
+    _running: int = 0
+
     def __init__(self,
                  storage: StorageProvider,
                  repos_processor: ReposProcessor,
@@ -51,23 +54,34 @@ class PeriodicProcessor:
         self._clock = clock
 
     async def run(self):
-        # TODO: add proper background processing
-        _log.info("Starting periodic processor")
-        while True:
+
+        _log.info(s_("Starting periodic processor"))
+
+        async def process_item():
             try:
                 await self.process_next()
             except Exception as e:
                 _log.error(s_("Failed to process next item"), exc_info=e)
+            finally:
+                async with self._lock:
+                    self._running -= 1
+
+        while True:
             await asyncio.sleep(2)
+            config = await self._storage.get_global_config()
+            concurrency = config.periodic.concurrency
+            async with self._lock:
+                _log.debug(s_("Checking periodic processing", running=self._running, concurrency=concurrency))
+                if self._running >= concurrency:
+                    continue
+                asyncio.create_task(process_item())
+                self._running += 1
 
     async def process_next(self) -> Optional[ProcessingItem]:
         item = await self._storage.next_processing_item()
         if item is None:
             return None
         _log.info(s_("Processing item", item=item))
-        retry_time = self._clock.now() + timedelta(minutes=30)
-        # prevent from running again right away.
-        await self._storage.set_next_processing_time(item.key, retry_time, processing_started_at=self._clock.now())
         try:
             result = await self._process_item(item)
             _log.info(s_("Item processed", item=item))

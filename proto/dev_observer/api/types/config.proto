@@ -8,6 +8,11 @@ message GlobalConfig {
   AnalysisConfig analysis = 1;
   RepoAnalysisConfig repo_analysis = 2;
   WebsiteCrawlingConfig website_crawling = 3;
+  PeriodicConfig periodic = 4;
+}
+
+message PeriodicConfig {
+  int32 concurrency = 1;
 }
 
 message AnalysisConfig {

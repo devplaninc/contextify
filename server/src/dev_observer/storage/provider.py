@@ -48,7 +48,8 @@ class StorageProvider(Protocol):
     async def add_web_site(self, site: WebSite) -> AddWebSiteData:
         ...
 
-    async def next_processing_item(self) -> Optional[ProcessingItem]:
+    async def next_processing_item(
+            self, delay: datetime.timedelta = datetime.timedelta(minutes=30)) -> Optional[ProcessingItem]:
         ...
 
     async def create_processing_time(

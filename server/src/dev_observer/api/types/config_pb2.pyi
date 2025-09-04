@@ -8,14 +8,22 @@ from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class GlobalConfig(_message.Message):
-    __slots__ = ("analysis", "repo_analysis", "website_crawling")
+    __slots__ = ("analysis", "repo_analysis", "website_crawling", "periodic")
     ANALYSIS_FIELD_NUMBER: _ClassVar[int]
     REPO_ANALYSIS_FIELD_NUMBER: _ClassVar[int]
     WEBSITE_CRAWLING_FIELD_NUMBER: _ClassVar[int]
+    PERIODIC_FIELD_NUMBER: _ClassVar[int]
     analysis: AnalysisConfig
     repo_analysis: RepoAnalysisConfig
     website_crawling: WebsiteCrawlingConfig
-    def __init__(self, analysis: _Optional[_Union[AnalysisConfig, _Mapping]] = ..., repo_analysis: _Optional[_Union[RepoAnalysisConfig, _Mapping]] = ..., website_crawling: _Optional[_Union[WebsiteCrawlingConfig, _Mapping]] = ...) -> None: ...
+    periodic: PeriodicConfig
+    def __init__(self, analysis: _Optional[_Union[AnalysisConfig, _Mapping]] = ..., repo_analysis: _Optional[_Union[RepoAnalysisConfig, _Mapping]] = ..., website_crawling: _Optional[_Union[WebsiteCrawlingConfig, _Mapping]] = ..., periodic: _Optional[_Union[PeriodicConfig, _Mapping]] = ...) -> None: ...
+
+class PeriodicConfig(_message.Message):
+    __slots__ = ("concurrency",)
+    CONCURRENCY_FIELD_NUMBER: _ClassVar[int]
+    concurrency: int
+    def __init__(self, concurrency: _Optional[int] = ...) -> None: ...
 
 class AnalysisConfig(_message.Message):
     __slots__ = ("repo_analyzers", "site_analyzers", "disable_masking", "default_git_changes_analyzer", "default_aggregated_summary_analyzer")
