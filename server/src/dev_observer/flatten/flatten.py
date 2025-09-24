@@ -286,7 +286,7 @@ async def combine_commits(repo_path: str, from_date: datetime, to_date: datetime
     # Run repomix to combine the repository into a single file
     from_str = format_datetime_for_git(from_date)
     to_str = format_datetime_for_git(to_date)
-    cmd = f'git log --oneline --since="{from_str}" --until="{to_str}" -p'
+    cmd = f'git log --pretty=format:"%h %an <%ae> %s" --since="{from_str}" --until="{to_str}" -p'
     _log.debug(s_("Executing git log...", output_file=output_file, cmd=cmd))
     out, err, code = await run_shell_command_async(cmd, cwd=repo_path)
     if code != 0:
