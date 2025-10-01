@@ -289,14 +289,15 @@ async def combine_commits(repo_path: str, from_date: datetime, to_date: datetime
     cmd = f'git log --pretty=format:"%h %an <%ae> %s" --since="{from_str}" --until="{to_str}" -p'
     _log.debug(s_("Executing git log...", output_file=output_file, cmd=cmd))
     out, err, code = await run_shell_command_async(cmd, cwd=repo_path)
-    if code != 0:
+    if code == 0:
+        with open(output_file, "w") as f:
+            f.write(out.decode("utf-8"))
+    else:
         _log.error(s_("Failed to get log for repository.", out=out, code=code))
-        raise RuntimeError(f"Failed to combine repository: {err}")
+        with open(output_file, "w") as f:
+            f.write(f"Failed to get commits: {err}")
 
-    with open(output_file, "w") as f:
-        f.write(out.decode("utf-8"))
-
-    _log.debug(s_("Done.", output_file=output_file))
+    _log.debug(s_("Done.", output_file=output_file, code=code))
 
     # Get the size of the combined file
     size_bytes = os.path.getsize(output_file)
