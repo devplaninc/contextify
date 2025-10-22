@@ -94,6 +94,8 @@ class RepositoriesService:
         if request.research:
             if request.force_research:
                 repo = await self._store.get_git_repo(repo_id)
+                if repo is None:
+                    raise ValueError(f"Repo with id [{repo_id}] is not found")
                 await mark_forced_research(repo, self._observations)
             await self._store.set_next_processing_time(
                 ProcessingItemKey(research_git_repo_id=repo_id), self._clock.now(),
