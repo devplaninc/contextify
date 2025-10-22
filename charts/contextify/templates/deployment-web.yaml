@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "contextify.web.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "contextify.web.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "contextify.web.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: contextify-web
+        {{- include "contextify.web.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: web
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.web.repository }}:{{ .Values.image.web.tag }}"
+          imagePullPolicy: {{ .Values.image.web.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.web.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          env:
+            {{- range $key, $value := .Values.env.web }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- if or .Values.web.secrets.envFromNames .Values.web.configMapName }}
+          envFrom:
+            {{- range .Values.web.secrets.envFromNames }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- if .Values.web.configMapName }}
+            - configMapRef:
+                name: {{ .Values.web.configMapName }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.web.secrets.mount }}
+          volumeMounts:
+            {{- range .Values.web.secrets.mount }}
+            - name: {{ .name | replace "." "-" }}
+              mountPath: {{ .mountPath }}
+              readOnly: true
+            {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources.web | nindent 12 }}
+      {{- if .Values.web.secrets.mount }}
+      volumes:
+        {{- range .Values.web.secrets.mount }}
+        - name: {{ .name | replace "." "-" }}
+          secret:
+            secretName: {{ .name }}
+            {{- if .items }}
+            items:
+              {{- range .items }}
+              - key: {{ .key }}
+                path: {{ .path }}
+              {{- end }}
+            {{- end }}
+        {{- end }}
+      {{- end }}

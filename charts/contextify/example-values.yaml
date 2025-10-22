@@ -1,0 +1,57 @@
+# Example values for local testing/development
+# This demonstrates a minimal configuration without ingress
+
+image:
+  web:
+    tag: "1.2.3"  # Set to actual image tag
+  server:
+    tag: "1.2.3"  # Set to actual image tag
+
+# Single replica for development
+replicaCount:
+  web: 1
+  server: 1
+
+# No ingress configured - access via port-forward
+ingress:
+  host: ""  # Empty means no ingress will be created
+
+# Simple environment variables
+env:
+  web:
+    NODE_ENV: "development"
+    LOG_LEVEL: "info"
+  server:
+    PYTHON_ENV: "development"
+    LOG_LEVEL: "debug"
+
+# No secrets configured for this example
+# (Secrets arrays are empty, so no prechecks will fail)
+web:
+  secrets:
+    envFromNames: []
+    mount: []
+  configMapName: ""
+
+server:
+  secrets:
+    envFromNames: []
+    mount: []
+  configMapName: ""
+
+# Use default resource limits
+resources:
+  web:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "250m"
+      memory: "512Mi"
+  server:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "1024Mi"

@@ -1,0 +1,53 @@
+1. Get the application URL by running these commands:
+{{- if .Values.ingress.host }}
+  The application has been deployed and configured with Ingress.
+
+  You can access the contextify application at:
+  http{{ if .Values.tls }}s{{ end }}://{{ .Values.ingress.host }}
+
+  Web frontend: http{{ if .Values.tls }}s{{ end }}://{{ .Values.ingress.host }}
+  API endpoints: http{{ if .Values.tls }}s{{ end }}://{{ .Values.ingress.host }}{{ .Values.ingress.pathPrefixApi }}
+
+  Note: Make sure your nginx ingress controller is properly configured and DNS is pointing to your cluster.
+{{- else }}
+  WARNING: No Ingress host configured!
+
+  No ingress was created because .Values.ingress.host is not set.
+
+  To access your application, you have several options:
+
+  1. Set ingress.host in values.yaml and upgrade:
+     helm upgrade {{ .Release.Name }} ./charts/contextify -n {{ .Release.Namespace }} --set ingress.host=your-domain.com
+
+  2. Use kubectl port-forward to access services directly:
+
+     For web frontend:
+     kubectl port-forward -n {{ .Release.Namespace }} service/{{ include "contextify.web.serviceName" . }} 3000:{{ .Values.service.web.port }}
+     Then access: http://localhost:3000
+
+     For server API:
+     kubectl port-forward -n {{ .Release.Namespace }} service/{{ include "contextify.server.serviceName" . }} 8090:{{ .Values.service.server.port }}
+     Then access: http://localhost:8090
+
+  3. Create an external ingress resource manually to expose the services.
+{{- end }}
+
+2. Check the deployment status:
+   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+3. View application logs:
+   kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }} -l app.kubernetes.io/component=web
+   kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }} -l app.kubernetes.io/component=server
+
+4. To upgrade the application with new image tags:
+   helm upgrade {{ .Release.Name }} ./charts/contextify -n {{ .Release.Namespace }} \
+     --set image.web.tag=NEW_WEB_TAG \
+     --set image.server.tag=NEW_SERVER_TAG
+
+{{- if and .Values.web.secrets.envFromNames .Values.server.secrets.envFromNames }}
+
+5. Remember to update your application secrets separately from this chart.
+   This chart only references existing secrets - it does not create or manage them.
+{{- end }}
+
+For more information about configuration options, see the chart's README.md file.
