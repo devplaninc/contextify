@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import dev_observer
 from dev_observer.log import s_
+from dev_observer.server.services.health import HealthService
 
 dev_observer.log.encoder = dev_observer.log.PlainTextEncoder()
 logging.basicConfig(level=logging.DEBUG)
@@ -57,6 +58,7 @@ repos_service = RepositoriesService(env.storage, env.observations, env.prompts, 
 observations_service = ObservationsService(env.observations, env.storage)
 websites_service = WebSitesService(env.storage)
 tokens_service = TokensService(env.storage)
+health_service = HealthService(env.storage)
 
 # Include routers with authentication
 app.include_router(
@@ -83,6 +85,10 @@ app.include_router(
     tokens_service.router,
     prefix="/api/v1",
     dependencies=[Depends(auth_middleware.verify_token)]
+)
+app.include_router(
+    health_service.router,
+    prefix="/api/v1",
 )
 
 origins = [
