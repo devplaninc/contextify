@@ -33,5 +33,8 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Setup Repomix
+        run: npm install -g repomix
+
       - name: Run tests
         run: make test
