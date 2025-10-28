@@ -35,6 +35,12 @@ message GitMeta {
   google.protobuf.Timestamp last_refresh = 1;
   optional string clone_url = 2;
   optional int32 size_kb = 3;
+  optional TokensInfo tokens_info = 4;
+}
+
+message TokensInfo {
+  google.protobuf.Timestamp created_at = 1;
+  int32 tokens_count = 2;
 }
 
 message GitAppInfo {

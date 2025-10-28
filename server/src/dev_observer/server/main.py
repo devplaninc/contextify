@@ -54,7 +54,7 @@ auth_middleware = AuthMiddleware(env.users, env.api_keys)
 
 # Create services
 config_service = ConfigService(env.storage, env.users)
-repos_service = RepositoriesService(env.storage, env.observations, env.prompts, env.analysis)
+repos_service = RepositoriesService(env.storage, env.observations, env.prompts, env.analysis, env.git_repository, env.tokenizer)
 observations_service = ObservationsService(env.observations, env.storage)
 websites_service = WebSitesService(env.storage)
 tokens_service = TokensService(env.storage)

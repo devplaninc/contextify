@@ -54,14 +54,24 @@ class BitBucketInfo(_message.Message):
     def __init__(self, workspace_uuid: _Optional[str] = ...) -> None: ...
 
 class GitMeta(_message.Message):
-    __slots__ = ("last_refresh", "clone_url", "size_kb")
+    __slots__ = ("last_refresh", "clone_url", "size_kb", "tokens_info")
     LAST_REFRESH_FIELD_NUMBER: _ClassVar[int]
     CLONE_URL_FIELD_NUMBER: _ClassVar[int]
     SIZE_KB_FIELD_NUMBER: _ClassVar[int]
+    TOKENS_INFO_FIELD_NUMBER: _ClassVar[int]
     last_refresh: _timestamp_pb2.Timestamp
     clone_url: str
     size_kb: int
-    def __init__(self, last_refresh: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., clone_url: _Optional[str] = ..., size_kb: _Optional[int] = ...) -> None: ...
+    tokens_info: TokensInfo
+    def __init__(self, last_refresh: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., clone_url: _Optional[str] = ..., size_kb: _Optional[int] = ..., tokens_info: _Optional[_Union[TokensInfo, _Mapping]] = ...) -> None: ...
+
+class TokensInfo(_message.Message):
+    __slots__ = ("created_at", "tokens_count")
+    CREATED_AT_FIELD_NUMBER: _ClassVar[int]
+    TOKENS_COUNT_FIELD_NUMBER: _ClassVar[int]
+    created_at: _timestamp_pb2.Timestamp
+    tokens_count: int
+    def __init__(self, created_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., tokens_count: _Optional[int] = ...) -> None: ...
 
 class GitAppInfo(_message.Message):
     __slots__ = ("last_refresh", "installation_id")

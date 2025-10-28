@@ -65,6 +65,12 @@ export interface GitMeta {
   lastRefresh: Date | undefined;
   cloneUrl?: string | undefined;
   sizeKb?: number | undefined;
+  tokensInfo?: TokensInfo | undefined;
+}
+
+export interface TokensInfo {
+  createdAt: Date | undefined;
+  tokensCount: number;
 }
 
 export interface GitAppInfo {
@@ -465,7 +471,7 @@ export const BitBucketInfo: MessageFns<BitBucketInfo> = {
 };
 
 function createBaseGitMeta(): GitMeta {
-  return { lastRefresh: undefined, cloneUrl: undefined, sizeKb: undefined };
+  return { lastRefresh: undefined, cloneUrl: undefined, sizeKb: undefined, tokensInfo: undefined };
 }
 
 export const GitMeta: MessageFns<GitMeta> = {
@@ -478,6 +484,9 @@ export const GitMeta: MessageFns<GitMeta> = {
     }
     if (message.sizeKb !== undefined) {
       writer.uint32(24).int32(message.sizeKb);
+    }
+    if (message.tokensInfo !== undefined) {
+      TokensInfo.encode(message.tokensInfo, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -513,6 +522,14 @@ export const GitMeta: MessageFns<GitMeta> = {
           message.sizeKb = reader.int32();
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.tokensInfo = TokensInfo.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -527,6 +544,7 @@ export const GitMeta: MessageFns<GitMeta> = {
       lastRefresh: isSet(object.lastRefresh) ? fromJsonTimestamp(object.lastRefresh) : undefined,
       cloneUrl: isSet(object.cloneUrl) ? gt.String(object.cloneUrl) : undefined,
       sizeKb: isSet(object.sizeKb) ? gt.Number(object.sizeKb) : undefined,
+      tokensInfo: isSet(object.tokensInfo) ? TokensInfo.fromJSON(object.tokensInfo) : undefined,
     };
   },
 
@@ -541,6 +559,9 @@ export const GitMeta: MessageFns<GitMeta> = {
     if (message.sizeKb !== undefined) {
       obj.sizeKb = Math.round(message.sizeKb);
     }
+    if (message.tokensInfo !== undefined) {
+      obj.tokensInfo = TokensInfo.toJSON(message.tokensInfo);
+    }
     return obj;
   },
 
@@ -552,6 +573,85 @@ export const GitMeta: MessageFns<GitMeta> = {
     message.lastRefresh = object.lastRefresh ?? undefined;
     message.cloneUrl = object.cloneUrl ?? undefined;
     message.sizeKb = object.sizeKb ?? undefined;
+    message.tokensInfo = (object.tokensInfo !== undefined && object.tokensInfo !== null)
+      ? TokensInfo.fromPartial(object.tokensInfo)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseTokensInfo(): TokensInfo {
+  return { createdAt: undefined, tokensCount: 0 };
+}
+
+export const TokensInfo: MessageFns<TokensInfo> = {
+  encode(message: TokensInfo, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.createdAt !== undefined) {
+      Timestamp.encode(toTimestamp(message.createdAt), writer.uint32(10).fork()).join();
+    }
+    if (message.tokensCount !== 0) {
+      writer.uint32(16).int32(message.tokensCount);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): TokensInfo {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTokensInfo();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.createdAt = fromTimestamp(Timestamp.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.tokensCount = reader.int32();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): TokensInfo {
+    return {
+      createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
+      tokensCount: isSet(object.tokensCount) ? gt.Number(object.tokensCount) : 0,
+    };
+  },
+
+  toJSON(message: TokensInfo): unknown {
+    const obj: any = {};
+    if (message.createdAt !== undefined) {
+      obj.createdAt = message.createdAt.toISOString();
+    }
+    if (message.tokensCount !== 0) {
+      obj.tokensCount = Math.round(message.tokensCount);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<TokensInfo>): TokensInfo {
+    return TokensInfo.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<TokensInfo>): TokensInfo {
+    const message = createBaseTokensInfo();
+    message.createdAt = object.createdAt ?? undefined;
+    message.tokensCount = object.tokensCount ?? 0;
     return message;
   },
 };

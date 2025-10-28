@@ -15,9 +15,14 @@ from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.processors.code_research import mark_forced_research
 from dev_observer.prompts.provider import PromptsProvider
 from dev_observer.repository.parser import parse_repository_url
+from dev_observer.repository.tokens import persist_repo_tokens_info_async
 from dev_observer.server.services.actions.backfill_summaries import backfill_analysis_summaries
 from dev_observer.storage.provider import StorageProvider
 from dev_observer.util import parse_dict_pb, Clock, RealClock, pb_to_dict
+from dev_observer.tokenizer.provider import TokenizerProvider
+from dev_observer.repository.provider import GitRepositoryProvider
+from dev_observer.flatten.flatten import flatten_repository
+from dev_observer.repository.types import ObservedRepo
 
 _log = logging.getLogger(__name__)
 
@@ -28,6 +33,8 @@ class RepositoriesService:
     _prompts: PromptsProvider
     _analysis: AnalysisProvider
     _clock: Clock
+    _repository: GitRepositoryProvider
+    _tokenizer: TokenizerProvider
 
     router: APIRouter
 
@@ -37,11 +44,15 @@ class RepositoriesService:
             observations: ObservationsProvider,
             prompts: PromptsProvider,
             analysis: AnalysisProvider,
+            repository: GitRepositoryProvider,
+            tokenizer: TokenizerProvider,
             clock: Clock = RealClock()):
         self._store = store
         self._observations = observations
         self._prompts = prompts
         self._analysis = analysis
+        self._repository = repository
+        self._tokenizer = tokenizer
         self._clock = clock
         self.router = APIRouter()
 
@@ -51,6 +62,7 @@ class RepositoriesService:
         self.router.add_api_route("/repositories/{repo_id}", self.get, methods=["GET"])
         self.router.add_api_route("/repositories/{repo_id}", self.delete, methods=["DELETE"])
         self.router.add_api_route("/repositories/{repo_id}/rescan", self.rescan, methods=["POST"])
+        self.router.add_api_route("/repositories/{repo_id}/actions/analyze-tokens", self.analyze_tokens, methods=["POST"])
         self.router.add_api_route("/repositories/actions/backfill-summaries", self.backfill_summaries, methods=["POST"])
 
     async def add_repository(self, req: Request):
@@ -112,3 +124,16 @@ class RepositoriesService:
             self._analysis,
         )
         return pb_to_dict(RescanAnalysisSummaryResponse())
+
+    async def analyze_tokens(self, repo_id: str, _: Request):
+        # Trigger tokens count analysis by cloning + flattening the repository and persisting the tokens count
+        repo = await self._store.get_git_repo(repo_id)
+        if repo is None:
+            raise ValueError(f"Repo with id [{repo_id}] is not found")
+        config = await self._store.get_global_config()
+        observed = ObservedRepo(url=repo.url, git_repo=repo)
+        result = await flatten_repository(observed, self._repository, self._tokenizer, config)
+        result.flatten_result.clean_up()
+        persist_repo_tokens_info_async(self._store, repo, result.flatten_result.total_tokens)
+        updated = await self._store.get_git_repo(repo_id)
+        return pb_to_dict(GetRepositoryResponse(repo=updated))

@@ -8,6 +8,8 @@ from dev_observer.processors.repos import ReposProcessor
 from dev_observer.prompts.provider import PromptsProvider
 from dev_observer.storage.provider import StorageProvider
 from dev_observer.users.provider import UsersProvider
+from dev_observer.repository.provider import GitRepositoryProvider
+from dev_observer.tokenizer.provider import TokenizerProvider
 
 
 @dataclasses.dataclass
@@ -20,3 +22,5 @@ class ServerEnv:
     periodic_processor: PeriodicProcessor
     users: UsersProvider
     api_keys: List[str]
+    git_repository: GitRepositoryProvider
+    tokenizer: TokenizerProvider

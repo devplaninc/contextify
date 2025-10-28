@@ -24,6 +24,10 @@ export function repoRescanAPI<R extends string>(repoId: R) {
   return `${repoAPI(repoId)}/rescan` as const;
 }
 
+export function repoAnalyzeTokensAPI<R extends string>(repoId: R) {
+  return `${repoAPI(repoId)}/actions/analyze-tokens` as const;
+}
+
 export function repoBackfillSummariesAPI() {
   return `${reposAPI()}/actions/backfill-summaries` as const;
 }
@@ -58,10 +62,6 @@ export function processingRequestsAPI() {
 
 export function processingRequestRunsAPI() {
   return `${processingRequestsAPI()}/runs` as const;
-}
-
-export function processingRequestRunAPI<R extends string>(requestId: R) {
-  return `${processingRequestRunsAPI()}/${requestId}` as const;
 }
 
 export function tokensAPI() {

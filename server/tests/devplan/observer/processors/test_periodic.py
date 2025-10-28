@@ -36,6 +36,7 @@ class TestPeriodicProcessor(unittest.IsolatedAsyncioTestCase):
             prompts=prompts,
             observations=observations,
             tokenizer=StubTokenizerProvider(),
+            storage=storage,
         )
         changes_processor = GitChangesProcessor(
             analysis=analysis,
@@ -43,6 +44,7 @@ class TestPeriodicProcessor(unittest.IsolatedAsyncioTestCase):
             prompts=prompts,
             observations=observations,
             tokenizer=StubTokenizerProvider(),
+            storage=storage,
         )
         git_changes_handler = GitChangesHandler(
             git_changes_processor=changes_processor,
@@ -109,8 +111,6 @@ class TestPeriodicProcessor(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(items[1].HasField("next_processing"))
 
         obs = await observations.list("repos")
-        self.assertEqual(1, len(obs))
-        self.assertEqual(
-            ObservationKey(kind="repos", name="test.md", key="devplan/test1/test.md"),
-            obs[0],
-        )
+        self.assertEqual(2, len(obs), f"{obs}")
+        self.assertIn(ObservationKey(kind="repos", name="test.md", key="devplan/test1/test.md"), obs)
+        self.assertIn(ObservationKey(kind="repos", name="__summary__test.md", key="devplan/test1/__summary__test.md"), obs)

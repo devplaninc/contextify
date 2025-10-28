@@ -40,21 +40,30 @@ class GithubProvider(GitRepositoryProvider):
         full_name = repo.git_repo.full_name
         parts = full_name.split("/")
         owner = parts[0]
-        meta = get_valid_repo_meta(repo.git_repo)
-        if meta is None:
+        meta, expired = get_valid_repo_meta(repo.git_repo)
+        if meta is None or expired:
             auth = await self._auth_provider.get_auth(repo)
             with Github(auth=auth) as gh:
                 gh_repo = gh.get_repo(full_name)
-            meta = GitMeta(
-                last_refresh=self._clock.now(),
-                size_kb=gh_repo.size,
-                clone_url=gh_repo.clone_url,
-            )
+            updated_meta: GitMeta
+            if meta is None:
+                updated_meta = GitMeta(
+                    last_refresh=self._clock.now(),
+                    size_kb=gh_repo.size,
+                    clone_url=gh_repo.clone_url,
+                )
+            else:
+                updated_meta = GitMeta()
+                updated_meta.CopyFrom(meta)
+                updated_meta.last_refresh = self._clock.now()
+                updated_meta.size_kb = gh_repo.size
+                updated_meta.clone_url = gh_repo.clone_url
             stored_repo = repo.git_repo
             if not stored_repo.HasField("properties"):
                 stored_repo.properties.CopyFrom(GitProperties())
-            stored_repo.properties.meta.CopyFrom(meta)
+            stored_repo.properties.meta.CopyFrom(updated_meta)
             repo.git_repo = await self._storage.update_repo_properties(stored_repo.id, stored_repo.properties)
+            meta = updated_meta
 
         return RepositoryInfo(
             owner=owner,

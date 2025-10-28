@@ -28,7 +28,7 @@ const RepositoryDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const {repository, loading, error} = useRepositoryQuery(id ?? '');
   const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-  const {rescanRepository} = useBoundStore()
+  const {rescanRepository, analyzeTokens} = useBoundStore()
   const rescan = useCallback(() => {
     rescanRepository(id!)
       .then(() => toast.success(`Rescan started`))
@@ -45,8 +45,14 @@ const RepositoryDetailsPage: React.FC = () => {
       .then(() => toast.success(`Research started`))
       .catch(e => toast.error(`Failed to initialize research: ${e}`))
   }, [id, rescanRepository])
+  const runTokenAnalysis = useCallback(() => {
+    analyzeTokens(id!)
+      .then(() => toast.success(`Tokens processed`))
+      .catch(e => toast.error(`Failed to analyze tokens: ${e}`))
+  }, [analyzeTokens, id])
 
   const handleBack = () => navigate("/repositories");
+  const tokensInfo = repository?.properties?.meta?.tokensInfo
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -77,6 +83,8 @@ const RepositoryDetailsPage: React.FC = () => {
                 <RepoProp name="ID">{repository.id}</RepoProp>
                 <RepoProp name="Installation id">{repository.properties?.appInfo?.installationId}</RepoProp>
                 <RepoProp name="Size Kb">{repository.properties?.meta?.sizeKb}</RepoProp>
+                <RepoProp name="Tokens Count">{tokensInfo?.tokensCount}</RepoProp>
+                <RepoProp name="Tokens Updated At">{tokensInfo?.createdAt?.toLocaleString()}</RepoProp>
                 <div className="flex gap-2 items-center">
                   <DeleteRepoButton repoId={id!}/>
                 </div>
@@ -94,6 +102,7 @@ const RepositoryDetailsPage: React.FC = () => {
                   <Button onClick={rescan}>Rescan</Button>
                   <Button onClick={research}>Research</Button>
                   <Button onClick={forcedResearch}>Forced Research</Button>
+                  <Button onClick={runTokenAnalysis}>Analyze tokens</Button>
                 </div>
                 <RepoAnalysisList repo={repository}/>
               </div>

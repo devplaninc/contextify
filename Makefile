@@ -17,7 +17,7 @@ generate-protos: py-install npm-install
 
 generate: generate-protos
 
-test-py:
+test-py: py-install
 	uv --directory server run pytest
 
 new-migration: start-local-pg
@@ -50,7 +50,7 @@ dev-web: build-web-packages npm-install
 local-compose:
 	@scripts/compose-up.sh
 
-test-ts-api:
+test-ts-api: npm-install
 	@cd web/packages/api && npm run test
 
 test-ts: test-ts-api

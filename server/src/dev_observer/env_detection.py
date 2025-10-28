@@ -218,11 +218,12 @@ def detect_server_env(settings: Settings) -> ServerEnv:
     tokenizer = detect_tokenizer(settings)
     storage = detect_storage_provider(settings)
     analysis = detect_analysis_provider(settings, storage)
+    git_repository = detect_git_provider(settings, storage)
     bg_storage = detect_storage_provider(settings)
     bg_analysis = detect_analysis_provider(settings, bg_storage)
     bg_repository = detect_git_provider(settings, bg_storage)
-    bg_repos_processor = ReposProcessor(bg_analysis, bg_repository, prompts, observations, tokenizer)
-    bg_git_changes_processor = GitChangesProcessor(bg_analysis, bg_repository, prompts, observations, tokenizer)
+    bg_repos_processor = ReposProcessor(bg_analysis, bg_repository, prompts, observations, tokenizer, bg_storage)
+    bg_git_changes_processor = GitChangesProcessor(bg_analysis, bg_repository, prompts, observations, tokenizer, bg_storage)
     bg_web_scraping = detect_web_scraping(settings)
     bg_sites_processor = WebsitesProcessor(bg_analysis, bg_web_scraping, prompts, observations, tokenizer)
     bg_git_changes_handler = GitChangesHandler(bg_git_changes_processor, bg_storage, observations)
@@ -258,6 +259,8 @@ def detect_server_env(settings: Settings) -> ServerEnv:
         ),
         users=users,
         api_keys=api_keys or [],
+        git_repository=git_repository,
+        tokenizer=tokenizer,
     )
     _log.debug(s_("Detected environment",
                   bg_repository=bg_repository,
