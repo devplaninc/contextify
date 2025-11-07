@@ -4,6 +4,7 @@
 server/.env.*
 **/node_modules
 /web/**/dist/
+**/__pycache__/
 
 **/devplan_current_feature.md*
 !.windsurf/rules/devplan_*.md

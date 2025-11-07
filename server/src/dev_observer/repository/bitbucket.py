@@ -42,8 +42,8 @@ class BitBucketProvider(GitRepositoryProvider):
         parts = full_name.split("/")
         owner = parts[0]
 
-        meta = get_valid_repo_meta(repo.git_repo)
-        if meta is None:
+        meta, expired = get_valid_repo_meta(repo.git_repo)
+        if meta is None or expired:
             # Fetch repository metadata from BitBucket API
             auth_headers = await self._auth_provider.get_auth_headers(repo)
 
