@@ -11,10 +11,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar.tsx"
 import {NavMain} from "@/components/layout/NavMain.tsx";
-import {NavRepositories} from "@/components/layout/NavRepositories.tsx";
-import {useRepositories} from "@/hooks/useRepositoryQueries.ts";
-import {ErrorAlert} from "@/components/ErrorAlert.tsx";
-import {Loader} from "@/components/Loader.tsx";
 import {Link} from "react-router";
 import {processingPath} from "@/paths.tsx";
 
@@ -98,20 +94,8 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain}/>
-        <SidebarRepositories/>
         <NavSecondary items={data.navSecondary} className="mt-auto"/>
       </SidebarContent>
     </Sidebar>
   )
-}
-
-function SidebarRepositories() {
-  const {repositories, error} = useRepositories()
-  if (!repositories) {
-    if (error) {
-      return <ErrorAlert err={error}/>
-    }
-    return <Loader/>
-  }
-  return <NavRepositories repositories={repositories}/>
 }
