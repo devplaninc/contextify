@@ -31,7 +31,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.image.web.repository | default "ghcr.io/devplaninc/contextify-web" }}:{{ .Values.image.web.tag }}"
-          imagePullPolicy: {{ .Values.image.web.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.web.pullPolicy | default "IfNotPresent" }}
           ports:
             - name: http
               containerPort: {{ .Values.web.port | default 3000 }}
