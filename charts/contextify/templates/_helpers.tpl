@@ -42,6 +42,7 @@ Selector labels
 */}}
 {{- define "contextify.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "contextify.name" . }}
+app.kubernetes.io/instance: {{ include "contextify.name" . }}
 {{- end }}
 
 {{/*
