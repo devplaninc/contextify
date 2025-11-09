@@ -6,7 +6,6 @@ metadata:
   labels:
     {{- include "contextify.server.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount.server }}
   selector:
     matchLabels:
       {{- include "contextify.server.selectorLabels" . | nindent 6 }}
@@ -30,7 +29,7 @@ spec:
           imagePullPolicy: {{ .Values.image.server.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.server.port }}
+              containerPort: {{ .Values.server.port | default 8090 }}
               protocol: TCP
           livenessProbe:
             httpGet:

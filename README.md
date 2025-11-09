@@ -34,3 +34,8 @@ Then open http://localhost:5173.
 
 Add your repository or website, then navigate to it and click Rescan. After
 a few seconds repo/site analysis should appear.
+
+## Helm:
+
+1. Add repo `helm repo add contextify https://devplaninc.github.io/contextify/`
+2. Generate yaml `helm template contextify/contextify --show-only templates/deployment-server.yaml -f <values filesa>`
