@@ -25,8 +25,8 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.image.server.repository }}:{{ .Values.image.server.tag }}"
-          imagePullPolicy: {{ .Values.image.server.pullPolicy }}
+          image: "{{ .Values.image.server.repository | default "ghcr.io/devplaninc/contextify-server" }}:{{ .Values.image.server.tag }}"
+          imagePullPolicy: {{ .Values.image.server.pullPolicy | default "IfNotPresent" }}
           ports:
             - name: http
               containerPort: {{ .Values.server.port | default 8090 }}
