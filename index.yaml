@@ -3,6 +3,28 @@ entries:
   contextify:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-11-09T17:32:42.220797627Z"
+    description: A Helm chart for deploying contextify web and server components on
+      Kubernetes
+    digest: a55500672da736225ca6f16637662bd55eb3ea83ef797548e3d1677a72c8f83d
+    home: https://github.com/devplaninc/contextify
+    keywords:
+    - contextify
+    - development
+    - observer
+    kubeVersion: '>=1.19.0'
+    maintainers:
+    - email: info@devplan.com
+      name: DevPlan Inc
+    name: contextify
+    sources:
+    - https://github.com/devplaninc/contextify
+    type: application
+    urls:
+    - https://github.com/devplaninc/contextify/releases/download/contextify-0.1.3/contextify-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-10-22T18:41:03.671782693Z"
     description: A Helm chart for deploying contextify web and server components on
       Kubernetes
@@ -45,4 +67,4 @@ entries:
     urls:
     - https://github.com/devplaninc/contextify/releases/download/contextify-0.1.1/contextify-0.1.1.tgz
     version: 0.1.1
-generated: "2025-10-22T18:41:03.671792672Z"
+generated: "2025-11-09T17:32:42.220814278Z"
