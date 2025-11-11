@@ -20,8 +20,7 @@ class WebsitesProcessor(FlatteningProcessor[ObservedWebsite]):
     """Processor for websites."""
     
     website_crawler: WebsiteCrawlerProvider
-    tokenizer: TokenizerProvider
-    
+
     def __init__(
             self,
             analysis: AnalysisProvider,
@@ -30,10 +29,9 @@ class WebsitesProcessor(FlatteningProcessor[ObservedWebsite]):
             observations: ObservationsProvider,
             tokenizer: TokenizerProvider,
     ):
-        super().__init__(analysis, prompts, observations)
+        super().__init__(analysis, prompts, observations, tokenizer)
         self.website_crawler = website_crawler
-        self.tokenizer = tokenizer
-    
+
     async def get_flatten(self, website: ObservedWebsite, config: GlobalConfig):
         result = await flatten_website(website.url, self.website_crawler, self.tokenizer, config.website_crawling)
         return result.flatten_result

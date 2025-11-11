@@ -13,7 +13,6 @@ from dev_observer.tokenizer.provider import TokenizerProvider
 
 class GitChangesProcessor(FlatteningProcessor[ObservedGitChanges]):
     repository: GitRepositoryProvider
-    tokenizer: TokenizerProvider
     storage: StorageProvider
 
     def __init__(
@@ -25,9 +24,8 @@ class GitChangesProcessor(FlatteningProcessor[ObservedGitChanges]):
             tokenizer: TokenizerProvider,
             storage: StorageProvider,
     ):
-        super().__init__(analysis, prompts, observations)
+        super().__init__(analysis, prompts, observations, tokenizer)
         self.repository = repository
-        self.tokenizer = tokenizer
         self.storage = storage
 
     async def get_flatten(self, params: ObservedGitChanges, config: GlobalConfig) -> FlattenResult:

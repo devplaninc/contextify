@@ -14,6 +14,7 @@ from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.processors.tokenized import TokenizedAnalyzer
 from dev_observer.prompts.provider import PromptsProvider
+from dev_observer.tokenizer.provider import TokenizerProvider
 
 E = TypeVar("E")
 
@@ -31,16 +32,19 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
     analysis: AnalysisProvider
     prompts: PromptsProvider
     observations: ObservationsProvider
+    tokenizer: TokenizerProvider
 
     def __init__(
             self,
             analysis: AnalysisProvider,
             prompts: PromptsProvider,
             observations: ObservationsProvider,
+            tokenizer: TokenizerProvider
     ):
         self.analysis = analysis
         self.prompts = prompts
         self.observations = observations
+        self.tokenizer = tokenizer
 
     async def process(
             self, entity: E, requests: List[ObservationRequest], config: GlobalConfig, clean: bool = True,
@@ -53,8 +57,14 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
                 try:
                     prompts_prefix = request.prompt_prefix
                     key = request.key
-                    analyzer = TokenizedAnalyzer(prompts_prefix=prompts_prefix, analysis=self.analysis,
-                                                 prompts=self.prompts)
+                    summary_tokens_limit = await self.get_summary_tokens_limit(config)
+                    analyzer = TokenizedAnalyzer(
+                        prompts_prefix=prompts_prefix,
+                        analysis=self.analysis,
+                        prompts=self.prompts,
+                        summary_tokens_limit=summary_tokens_limit,
+                        tokenizer=self.tokenizer,
+                    )
                     content = await analyzer.analyze_flatten(res)
                     await self.observations.store(Observation(key=key, content=content))
                     keys.append(key)
@@ -91,6 +101,9 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
         except Exception as e:
             _log.exception(s_("Summarization failed.", request=request), exc_info=e)
             return None
+
+    async def get_summary_tokens_limit(self, config: GlobalConfig) -> int:
+        return 800000
 
     @abstractmethod
     async def get_flatten(self, entity: E, config: GlobalConfig) -> FlattenResult:

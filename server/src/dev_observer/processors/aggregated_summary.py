@@ -34,7 +34,6 @@ _log = logging.getLogger(__name__)
 
 class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
     repository: GitRepositoryProvider
-    tokenizer: TokenizerProvider
     git_changes_handler: GitChangesHandler
     storage: StorageProvider
 
@@ -48,9 +47,8 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
             git_changes_handler: GitChangesHandler,
             storage: StorageProvider
     ):
-        super().__init__(analysis, prompts, observations)
+        super().__init__(analysis, prompts, observations, tokenizer)
         self.repository = repository
-        self.tokenizer = tokenizer
         self.git_changes_handler=git_changes_handler
         self.storage = storage
 

@@ -15,7 +15,6 @@ from dev_observer.tokenizer.provider import TokenizerProvider
 
 class ReposProcessor(FlatteningProcessor[ObservedRepo]):
     repository: GitRepositoryProvider
-    tokenizer: TokenizerProvider
     storage: Optional[StorageProvider]
 
     def __init__(
@@ -27,9 +26,8 @@ class ReposProcessor(FlatteningProcessor[ObservedRepo]):
             tokenizer: TokenizerProvider,
             storage: Optional[StorageProvider] = None,
     ):
-        super().__init__(analysis, prompts, observations)
+        super().__init__(analysis, prompts, observations, tokenizer)
         self.repository = repository
-        self.tokenizer = tokenizer
         self.storage = storage
 
     async def get_flatten(self, repo: ObservedRepo, config: GlobalConfig) -> FlattenResult:
