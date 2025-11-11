@@ -47,6 +47,7 @@ class TokenizedAnalyzer:
         summaries: List[str] = []
         total_tokens = 0
         batch_size = 10
+        included_files = 0
 
         for i in range(0, len(paths), batch_size):
             batch = paths[i:i + batch_size]
@@ -73,6 +74,7 @@ class TokenizedAnalyzer:
                                     ))
                     exceeded = True
                     break
+                included_files += 1
                 summaries.append(s)
                 total_tokens += tokens
 
@@ -81,11 +83,12 @@ class TokenizedAnalyzer:
 
         summary = "\n\n-------\n\n".join(summaries)
         _log.info(s_("Analysing combined summaries",
-                        total_tokens=total_tokens,
-                        limit=self.summary_tokens_limit,
-                        session_id=session_id,
-                        paths_len=len(paths),
-                        ))
+                     total_tokens=total_tokens,
+                     limit=self.summary_tokens_limit,
+                     session_id=session_id,
+                     paths_len=len(paths),
+                     included_files=included_files
+                     ))
         prompt = await self.prompts.get_formatted(f"{self.prompts_prefix}_analyze_combined_chunks", {
             "content": summary,
         })

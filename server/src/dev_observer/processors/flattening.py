@@ -103,7 +103,7 @@ class FlatteningProcessor(abc.ABC, Generic[E]):
             return None
 
     async def get_summary_tokens_limit(self, config: GlobalConfig) -> int:
-        return 800000
+        return 920000
 
     @abstractmethod
     async def get_flatten(self, entity: E, config: GlobalConfig) -> FlattenResult:
