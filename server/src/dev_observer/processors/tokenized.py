@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from datetime import date
 from typing import List
 
@@ -45,18 +46,38 @@ class TokenizedAnalyzer:
     async def _analyze_tokenized(self, paths: List[str], session_id: str) -> str:
         summaries: List[str] = []
         total_tokens = 0
-        for p in paths:
-            s = await self._analyze_file(p, f"{self.prompts_prefix}_analyze_chunk", session_id)
-            tokens = len(self.tokenizer.encode(s))
-            total_tokens += tokens
-            if total_tokens > self.summary_tokens_limit:
-                _log.warning(s_("Total summary exceeds limit, omitting some summaries",
-                                total_tokens=total_tokens,
-                                limit=self.summary_tokens_limit,
-                                paths=paths
-                                ))
+        batch_size = 10
+
+        for i in range(0, len(paths), batch_size):
+            batch = paths[i:i + batch_size]
+            # Analyze up to 10 paths in parallel per batch
+            batch_results = await asyncio.gather(
+                *(
+                    self._analyze_file(p, f"{self.prompts_prefix}_analyze_chunk", session_id)
+                    for p in batch
+                ),
+                return_exceptions=True,
+            )
+
+            exceeded = False
+            for p, s in zip(batch, batch_results):
+                if isinstance(s, BaseException):
+                    _log.error(s_("Failed to analyze file", path=p, err=s))
+                    raise s
+                tokens = len(self.tokenizer.encode(s))
+                if total_tokens + tokens > self.summary_tokens_limit:
+                    _log.warning(s_("Total summary exceeds limit, omitting some summaries",
+                                    total_tokens=total_tokens + tokens,
+                                    limit=self.summary_tokens_limit,
+                                    paths=paths
+                                    ))
+                    exceeded = True
+                    break
+                summaries.append(s)
+                total_tokens += tokens
+
+            if exceeded:
                 break
-            summaries.append(s)
 
         summary = "\n\n-------\n\n".join(summaries)
         _log.info(s_("Analysing combined summaries",
