@@ -67,15 +67,19 @@ class PeriodicProcessor:
                     self._running -= 1
 
         while True:
-            await asyncio.sleep(2)
-            config = await self._storage.get_global_config()
-            concurrency = config.periodic.concurrency
-            async with self._lock:
-                _log.debug(s_("Checking periodic processing", running=self._running, concurrency=concurrency))
-                if self._running >= concurrency:
-                    continue
-                asyncio.create_task(process_item())
-                self._running += 1
+            try:
+                await asyncio.sleep(2)
+                config = await self._storage.get_global_config()
+                concurrency = config.periodic.concurrency
+                async with self._lock:
+                    _log.debug(s_("Checking periodic processing", running=self._running, concurrency=concurrency))
+                    if self._running >= concurrency:
+                        continue
+                    asyncio.create_task(process_item())
+                    self._running += 1
+            except Exception as e:
+                _log.error(s_("Failed to process next item", err=e))
+                await asyncio.sleep(2)
 
     async def process_next(self) -> Optional[ProcessingItem]:
         item = await self._storage.next_processing_item()
