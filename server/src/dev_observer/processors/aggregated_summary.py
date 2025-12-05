@@ -57,22 +57,25 @@ class AggregatedSummaryProcessor(FlatteningProcessor[AggregatedSummaryParams]):
         end_date = pb_to_datetime(params.end_date)
         result = PeriodicAggregationResult()
         for repo_id in params.target.git_repo_ids:
-            repo = await self.storage.get_git_repo(repo_id)
-            if repo is None:
-                _log.warning(s_("Repo not found", repo_id=repo_id))
-                continue
-            git_result = await self.git_changes_handler.process_git_changes(ProcessGitChangesParams(
-                repo_id=repo_id,
-                end_date=end_date,
-                look_back_days=params.look_back_days,
-            ))
-            repo = git_result.repo
-            header = f"Changes for repository **{repo.full_name}**"
-            result.repo_observations.append(RepoObservation(
-                repo_id=repo_id,
-                observations=git_result.observation_keys,
-            ))
-            items.append(AggregatedItem(header=header, keys=git_result.observation_keys))
+            try:
+                repo = await self.storage.get_git_repo(repo_id)
+                if repo is None:
+                    _log.warning(s_("Repo not found", repo_id=repo_id))
+                    continue
+                git_result = await self.git_changes_handler.process_git_changes(ProcessGitChangesParams(
+                    repo_id=repo_id,
+                    end_date=end_date,
+                    look_back_days=params.look_back_days,
+                ))
+                repo = git_result.repo
+                header = f"Changes for repository **{repo.full_name}**"
+                result.repo_observations.append(RepoObservation(
+                    repo_id=repo_id,
+                    observations=git_result.observation_keys,
+                ))
+                items.append(AggregatedItem(header=header, keys=git_result.observation_keys))
+            except Exception as e:
+                _log.error(s_("Failed to process repo", repo_id=repo_id, exc_info=e))
 
         # Download all observations in parallel
         async def process_item(item: AggregatedItem):
