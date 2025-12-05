@@ -245,7 +245,10 @@ async def flatten_repo_changes(
         tokenizer: TokenizerProvider,
         config: GlobalConfig,
 ) -> FlattenRepoResult:
-    clone_result = await clone_repository(params.repo, provider)
+    clone_result = await clone_repository(
+        params.repo, provider,
+        max_size_mb=config.repo_analysis.flatten.max_repo_size_mb,
+    )
     repo_path = clone_result.path
     combined_file_path: Optional[str] = None
 
