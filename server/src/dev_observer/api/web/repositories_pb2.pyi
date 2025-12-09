@@ -74,3 +74,17 @@ class RescanAnalysisSummaryRequest(_message.Message):
 class RescanAnalysisSummaryResponse(_message.Message):
     __slots__ = ()
     def __init__(self) -> None: ...
+
+class GetAuthenticatedRepoRequest(_message.Message):
+    __slots__ = ("repo_full_name", "provider")
+    REPO_FULL_NAME_FIELD_NUMBER: _ClassVar[int]
+    PROVIDER_FIELD_NUMBER: _ClassVar[int]
+    repo_full_name: str
+    provider: _repo_pb2.GitProvider
+    def __init__(self, repo_full_name: _Optional[str] = ..., provider: _Optional[_Union[_repo_pb2.GitProvider, str]] = ...) -> None: ...
+
+class GetAuthenticatedRepoResponse(_message.Message):
+    __slots__ = ("authenticated_url",)
+    AUTHENTICATED_URL_FIELD_NUMBER: _ClassVar[int]
+    authenticated_url: str
+    def __init__(self, authenticated_url: _Optional[str] = ...) -> None: ...

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package dev_observer.api.types.ai;
 
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify";
+
 message PromptConfig {
   ModelConfig model = 1;
 }

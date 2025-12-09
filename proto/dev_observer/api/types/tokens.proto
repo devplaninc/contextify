@@ -4,6 +4,8 @@ package dev_observer.api.types.tokens;
 
 import "google/protobuf/timestamp.proto";
 
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify";
+
 enum AuthTokenProvider {
   UNKNOWN = 0;
   BIT_BUCKET = 1;

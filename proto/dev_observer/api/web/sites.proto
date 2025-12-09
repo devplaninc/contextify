@@ -4,6 +4,8 @@ package dev_observer.api.web.sites;
 
 import "dev_observer/api/types/sites.proto";
 
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify/service";
+
 message ListWebSitesResponse {
   repeated dev_observer.api.types.sites.WebSite sites = 1;
 }

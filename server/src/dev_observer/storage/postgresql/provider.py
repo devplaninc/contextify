@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSessio
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, \
     ProcessingItemResult, ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, ReposFilter
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, ReposFilter, GitProvider
 from dev_observer.api.types.sites_pb2 import WebSite
 from dev_observer.api.types.tokens_pb2 import AuthTokenProvider, AuthToken, TokensFilter
 from dev_observer.common.crypto import Encryptor
@@ -50,6 +50,16 @@ class PostgresqlStorageProvider(StorageProvider):
     async def get_git_repo(self, repo_id: str) -> Optional[GitRepository]:
         async with AsyncSession(self._engine) as session:
             return _to_optional_repo(await session.get(GitRepoEntity, repo_id))
+
+    async def find_git_repo(self, full_name: str, provider: GitProvider) -> Optional[GitRepository]:
+        async with AsyncSession(self._engine) as session:
+            async with session.begin():
+                existing = await session.execute(
+                    select(GitRepoEntity)
+                    .where((GitRepoEntity.full_name == full_name) & (GitRepoEntity.provider == provider))
+                )
+                ent = existing.first()
+                return None if ent is None else _to_repo(ent[0])
 
     async def delete_git_repo(self, repo_id: str):
         async with AsyncSession(self._engine) as session:

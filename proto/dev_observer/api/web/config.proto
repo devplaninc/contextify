@@ -4,6 +4,8 @@ package dev_observer.api.web.config;
 
 import "dev_observer/api/types/config.proto";
 
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify/service";
+
 message GetGlobalConfigResponse {
   dev_observer.api.types.config.GlobalConfig config = 1;
 }

@@ -25,13 +25,14 @@ _sym_db = _symbol_database.Default()
 from dev_observer.api.types import repo_pb2 as dev__observer_dot_api_dot_types_dot_repo__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'dev_observer/api/web/repositories.proto\x12!dev_observer.api.web.repositories\x1a!dev_observer/api/types/repo.proto\"U\n\x18ListRepositoriesResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"_\n\x14\x41\x64\x64RepositoryRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12:\n\x08provider\x18\x02 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\"Q\n\x15\x41\x64\x64RepositoryResponse\x12\x38\n\x04repo\x18\x01 \x01(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"\x99\x01\n\x17RescanRepositoryRequest\x12\x15\n\x08research\x18\x01 \x01(\x08H\x00\x88\x01\x01\x12\x19\n\x0cskip_summary\x18\x02 \x01(\x08H\x01\x88\x01\x01\x12\x1b\n\x0e\x66orce_research\x18\x03 \x01(\x08H\x02\x88\x01\x01\x42\x0b\n\t_researchB\x0f\n\r_skip_summaryB\x11\n\x0f_force_research\"\x1a\n\x18RescanRepositoryResponse\"Q\n\x15GetRepositoryResponse\x12\x38\n\x04repo\x18\x01 \x01(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"U\n\x18\x44\x65leteRepositoryResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"U\n\x19\x46ilterRepositoriesRequest\x12\x38\n\x06\x66ilter\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.repo.ReposFilter\"W\n\x1a\x46ilterRepositoriesResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"-\n\x1cRescanAnalysisSummaryRequest\x12\r\n\x05\x66orce\x18\x01 \x01(\x08\"\x1f\n\x1dRescanAnalysisSummaryResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'dev_observer/api/web/repositories.proto\x12!dev_observer.api.web.repositories\x1a!dev_observer/api/types/repo.proto\"U\n\x18ListRepositoriesResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"_\n\x14\x41\x64\x64RepositoryRequest\x12\x0b\n\x03url\x18\x01 \x01(\t\x12:\n\x08provider\x18\x02 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\"Q\n\x15\x41\x64\x64RepositoryResponse\x12\x38\n\x04repo\x18\x01 \x01(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"\x99\x01\n\x17RescanRepositoryRequest\x12\x15\n\x08research\x18\x01 \x01(\x08H\x00\x88\x01\x01\x12\x19\n\x0cskip_summary\x18\x02 \x01(\x08H\x01\x88\x01\x01\x12\x1b\n\x0e\x66orce_research\x18\x03 \x01(\x08H\x02\x88\x01\x01\x42\x0b\n\t_researchB\x0f\n\r_skip_summaryB\x11\n\x0f_force_research\"\x1a\n\x18RescanRepositoryResponse\"Q\n\x15GetRepositoryResponse\x12\x38\n\x04repo\x18\x01 \x01(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"U\n\x18\x44\x65leteRepositoryResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"U\n\x19\x46ilterRepositoriesRequest\x12\x38\n\x06\x66ilter\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.repo.ReposFilter\"W\n\x1a\x46ilterRepositoriesResponse\x12\x39\n\x05repos\x18\x01 \x03(\x0b\x32*.dev_observer.api.types.repo.GitRepository\"-\n\x1cRescanAnalysisSummaryRequest\x12\r\n\x05\x66orce\x18\x01 \x01(\x08\"\x1f\n\x1dRescanAnalysisSummaryResponse\"q\n\x1bGetAuthenticatedRepoRequest\x12\x16\n\x0erepo_full_name\x18\x01 \x01(\t\x12:\n\x08provider\x18\x02 \x01(\x0e\x32(.dev_observer.api.types.repo.GitProvider\"9\n\x1cGetAuthenticatedRepoResponse\x12\x19\n\x11\x61uthenticated_url\x18\x01 \x01(\tB@Z>github.com/devplaninc/contextify/clients/go/contextify/serviceb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.web.repositories_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
+  _globals['DESCRIPTOR']._loaded_options = None
+  _globals['DESCRIPTOR']._serialized_options = b'Z>github.com/devplaninc/contextify/clients/go/contextify/service'
   _globals['_LISTREPOSITORIESRESPONSE']._serialized_start=113
   _globals['_LISTREPOSITORIESRESPONSE']._serialized_end=198
   _globals['_ADDREPOSITORYREQUEST']._serialized_start=200
@@ -54,4 +55,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_RESCANANALYSISSUMMARYREQUEST']._serialized_end=955
   _globals['_RESCANANALYSISSUMMARYRESPONSE']._serialized_start=957
   _globals['_RESCANANALYSISSUMMARYRESPONSE']._serialized_end=988
+  _globals['_GETAUTHENTICATEDREPOREQUEST']._serialized_start=990
+  _globals['_GETAUTHENTICATEDREPOREQUEST']._serialized_end=1103
+  _globals['_GETAUTHENTICATEDREPORESPONSE']._serialized_start=1105
+  _globals['_GETAUTHENTICATEDREPORESPONSE']._serialized_end=1162
 # @@protoc_insertion_point(module_scope)

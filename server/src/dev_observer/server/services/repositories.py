@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
 
 from dev_observer.analysis.provider import AnalysisProvider
@@ -9,7 +9,7 @@ from dev_observer.api.types.repo_pb2 import GitRepository
 from dev_observer.api.web.repositories_pb2 import AddRepositoryRequest, AddRepositoryResponse, \
     ListRepositoriesResponse, RescanRepositoryResponse, GetRepositoryResponse, DeleteRepositoryResponse, \
     FilterRepositoriesRequest, FilterRepositoriesResponse, RescanRepositoryRequest, RescanAnalysisSummaryResponse, \
-    RescanAnalysisSummaryRequest
+    RescanAnalysisSummaryRequest, GetAuthenticatedRepoRequest, GetAuthenticatedRepoResponse
 from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.processors.code_research import mark_forced_research
@@ -59,6 +59,7 @@ class RepositoriesService:
         self.router.add_api_route("/repositories", self.add_repository, methods=["POST"])
         self.router.add_api_route("/repositories", self.list, methods=["GET"])
         self.router.add_api_route("/repositories/filter", self.filter, methods=["POST"])
+        self.router.add_api_route("/repositories/authenticated", self.get_authenticated, methods=["POST"])
         self.router.add_api_route("/repositories/{repo_id}", self.get, methods=["GET"])
         self.router.add_api_route("/repositories/{repo_id}", self.delete, methods=["DELETE"])
         self.router.add_api_route("/repositories/{repo_id}/rescan", self.rescan, methods=["POST"])
@@ -82,6 +83,15 @@ class RepositoriesService:
     async def get(self, repo_id: str):
         repo = await self._store.get_git_repo(repo_id)
         return pb_to_dict(GetRepositoryResponse(repo=repo))
+
+    async def get_authenticated(self, req: Request):
+        request = parse_dict_pb(await req.json(), GetAuthenticatedRepoRequest())
+        repo = await self._store.find_git_repo(request.repo_full_name, request.provider)
+        if not repo:
+            raise HTTPException(status_code=404, detail="Repo not found")
+        observed = ObservedRepo(url=repo.url, git_repo=repo)
+        auth_url = await self._repository.get_authenticated_url(observed)
+        return pb_to_dict(GetAuthenticatedRepoResponse(authenticated_url=auth_url))
 
     async def delete(self, repo_id: str):
         await self._store.delete_git_repo(repo_id)

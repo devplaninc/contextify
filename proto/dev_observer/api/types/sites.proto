@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package dev_observer.api.types.sites;
 
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify";
+
 message WebSite {
   string id = 1;
   string url = 2;

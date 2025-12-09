@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package dev_observer.api.types.schedule;
 
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify";
+
 message Schedule {
   Frequency frequency = 1;
 }

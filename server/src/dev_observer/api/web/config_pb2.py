@@ -25,13 +25,14 @@ _sym_db = _symbol_database.Default()
 from dev_observer.api.types import config_pb2 as dev__observer_dot_api_dot_types_dot_config__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/web/config.proto\x12\x1b\x64\x65v_observer.api.web.config\x1a#dev_observer/api/types/config.proto\"V\n\x17GetGlobalConfigResponse\x12;\n\x06\x63onfig\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.config.GlobalConfig\"X\n\x19UpdateGlobalConfigRequest\x12;\n\x06\x63onfig\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.config.GlobalConfig\"Y\n\x1aUpdateGlobalConfigResponse\x12;\n\x06\x63onfig\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.config.GlobalConfig\"f\n\x1fGetUserManagementStatusResponse\x12\x43\n\x06status\x18\x01 \x01(\x0b\x32\x33.dev_observer.api.types.config.UserManagementStatusb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/web/config.proto\x12\x1b\x64\x65v_observer.api.web.config\x1a#dev_observer/api/types/config.proto\"V\n\x17GetGlobalConfigResponse\x12;\n\x06\x63onfig\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.config.GlobalConfig\"X\n\x19UpdateGlobalConfigRequest\x12;\n\x06\x63onfig\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.config.GlobalConfig\"Y\n\x1aUpdateGlobalConfigResponse\x12;\n\x06\x63onfig\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.config.GlobalConfig\"f\n\x1fGetUserManagementStatusResponse\x12\x43\n\x06status\x18\x01 \x01(\x0b\x32\x33.dev_observer.api.types.config.UserManagementStatusB@Z>github.com/devplaninc/contextify/clients/go/contextify/serviceb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.web.config_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
+  _globals['DESCRIPTOR']._loaded_options = None
+  _globals['DESCRIPTOR']._serialized_options = b'Z>github.com/devplaninc/contextify/clients/go/contextify/service'
   _globals['_GETGLOBALCONFIGRESPONSE']._serialized_start=103
   _globals['_GETGLOBALCONFIGRESPONSE']._serialized_end=189
   _globals['_UPDATEGLOBALCONFIGREQUEST']._serialized_start=191

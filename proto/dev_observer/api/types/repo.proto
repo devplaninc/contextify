@@ -6,6 +6,8 @@ import "google/protobuf/timestamp.proto";
 import "dev_observer/api/types/ai.proto";
 import "dev_observer/api/types/observations.proto";
 
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify";
+
 enum GitProvider {
   GITHUB = 0;
   BIT_BUCKET = 1;

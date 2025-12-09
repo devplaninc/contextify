@@ -19,3 +19,4 @@ server/.env.*
 
 examples/quick-start/app_data/
 /web/packages/api/coverage/
+/clients/go/bin/

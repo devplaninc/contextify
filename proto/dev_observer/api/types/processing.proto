@@ -5,6 +5,7 @@ package dev_observer.api.types.processing;
 import "google/protobuf/timestamp.proto";
 import "dev_observer/api/types/observations.proto";
 import "dev_observer/api/types/schedule.proto";
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify";
 
 message ProcessingItemKey {
   oneof entity {

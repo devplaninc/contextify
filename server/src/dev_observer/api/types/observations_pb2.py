@@ -24,13 +24,14 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n)dev_observer/api/types/observations.proto\x12#dev_observer.api.types.observations\"9\n\x0eObservationKey\x12\x0c\n\x04kind\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0b\n\x03key\x18\x03 \x01(\t\"`\n\x0bObservation\x12@\n\x03key\x18\x01 \x01(\x0b\x32\x33.dev_observer.api.types.observations.ObservationKey\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\"B\n\x08\x41nalyzer\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x15\n\rprompt_prefix\x18\x02 \x01(\t\x12\x11\n\tfile_name\x18\x03 \x01(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n)dev_observer/api/types/observations.proto\x12#dev_observer.api.types.observations\"9\n\x0eObservationKey\x12\x0c\n\x04kind\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0b\n\x03key\x18\x03 \x01(\t\"`\n\x0bObservation\x12@\n\x03key\x18\x01 \x01(\x0b\x32\x33.dev_observer.api.types.observations.ObservationKey\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\"B\n\x08\x41nalyzer\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x15\n\rprompt_prefix\x18\x02 \x01(\t\x12\x11\n\tfile_name\x18\x03 \x01(\tB8Z6github.com/devplaninc/contextify/clients/go/contextifyb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.types.observations_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
+  _globals['DESCRIPTOR']._loaded_options = None
+  _globals['DESCRIPTOR']._serialized_options = b'Z6github.com/devplaninc/contextify/clients/go/contextify'
   _globals['_OBSERVATIONKEY']._serialized_start=82
   _globals['_OBSERVATIONKEY']._serialized_end=139
   _globals['_OBSERVATION']._serialized_start=141

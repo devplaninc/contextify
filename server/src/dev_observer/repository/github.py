@@ -3,8 +3,8 @@ import subprocess
 from abc import abstractmethod
 from typing import Protocol, Optional
 
-from github.Auth import Auth
 from github import Github
+from github.Auth import Auth
 
 from dev_observer.api.types.repo_pb2 import GitProperties, GitMeta
 from dev_observer.repository.provider import GitRepositoryProvider, RepositoryInfo
@@ -84,3 +84,8 @@ class GithubProvider(GitRepositoryProvider):
 
         if result.returncode != 0:
             raise RuntimeError(f"Failed to clone repository: {result.stderr}")
+
+    async def get_authenticated_url(self, repo: ObservedRepo) -> str:
+        info = await self.get_repo(repo)
+        token = await self._auth_provider.get_cli_token_prefix(repo)
+        return info.clone_url.replace("https://", f"https://{token}@")

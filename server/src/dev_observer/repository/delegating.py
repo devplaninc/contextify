@@ -29,6 +29,9 @@ class DelegatingGitRepositoryProvider(GitRepositoryProvider):
         if result.returncode != 0:
             raise RuntimeError(f"Failed to clone repository: {result.stderr}")
 
+    async def get_authenticated_url(self, repo: ObservedRepo) -> str:
+        return repo.url
+
 
 def _get_git_root() -> str:
     result = subprocess.run(

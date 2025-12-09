@@ -1,4 +1,5 @@
 from dev_observer.api.types import tokens_pb2 as _tokens_pb2
+from dev_observer.api.types import repo_pb2 as _repo_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message

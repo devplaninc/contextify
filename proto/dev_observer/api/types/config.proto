@@ -3,6 +3,7 @@ syntax = "proto3";
 package dev_observer.api.types.config;
 
 import "dev_observer/api/types/observations.proto";
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify";
 
 message GlobalConfig {
   AnalysisConfig analysis = 1;

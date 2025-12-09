@@ -21,3 +21,7 @@ class GitRepositoryProvider(Protocol):
     @abstractmethod
     async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str, depth: Optional[str] = None):
         ...
+
+    @abstractmethod
+    async def get_authenticated_url(self, repo: ObservedRepo) -> str:
+        ...

@@ -102,3 +102,8 @@ class BitBucketProvider(GitRepositoryProvider):
 
         if result.returncode != 0:
             raise RuntimeError(f"Failed to clone repository: {result.stderr}")
+
+    async def get_authenticated_url(self, repo: ObservedRepo) -> str:
+        info = await self.get_repo(repo)
+        token = await self._auth_provider.get_cli_token_prefix(repo)
+        return info.clone_url.replace("https://", f"https://{token}@")

@@ -23,29 +23,31 @@ _sym_db = _symbol_database.Default()
 
 
 from dev_observer.api.types import tokens_pb2 as dev__observer_dot_api_dot_types_dot_tokens__pb2
+from dev_observer.api.types import repo_pb2 as dev__observer_dot_api_dot_types_dot_repo__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/web/tokens.proto\x12\x1b\x64\x65v_observer.api.web.tokens\x1a#dev_observer/api/types/tokens.proto\"`\n\x11ListTokensRequest\x12@\n\x06\x66ilter\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.tokens.TokensFilterH\x00\x88\x01\x01\x42\t\n\x07_filter\"N\n\x12ListTokensResponse\x12\x38\n\x06tokens\x18\x01 \x03(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"x\n\x0f\x41\x64\x64TokenRequest\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\x12\x1a\n\rinstead_of_id\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x10\n\x0e_instead_of_id\"K\n\x10\x41\x64\x64TokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"K\n\x10GetTokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"#\n\x12UpdateTokenRequest\x12\r\n\x05token\x18\x01 \x01(\t\"N\n\x13UpdateTokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"\x15\n\x13\x44\x65leteTokenResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n!dev_observer/api/web/tokens.proto\x12\x1b\x64\x65v_observer.api.web.tokens\x1a#dev_observer/api/types/tokens.proto\x1a!dev_observer/api/types/repo.proto\"`\n\x11ListTokensRequest\x12@\n\x06\x66ilter\x18\x01 \x01(\x0b\x32+.dev_observer.api.types.tokens.TokensFilterH\x00\x88\x01\x01\x42\t\n\x07_filter\"N\n\x12ListTokensResponse\x12\x38\n\x06tokens\x18\x01 \x03(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"x\n\x0f\x41\x64\x64TokenRequest\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\x12\x1a\n\rinstead_of_id\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x10\n\x0e_instead_of_id\"K\n\x10\x41\x64\x64TokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"K\n\x10GetTokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"#\n\x12UpdateTokenRequest\x12\r\n\x05token\x18\x01 \x01(\t\"N\n\x13UpdateTokenResponse\x12\x37\n\x05token\x18\x01 \x01(\x0b\x32(.dev_observer.api.types.tokens.AuthToken\"\x15\n\x13\x44\x65leteTokenResponseB@Z>github.com/devplaninc/contextify/clients/go/contextify/serviceb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.web.tokens_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
-  _globals['_LISTTOKENSREQUEST']._serialized_start=103
-  _globals['_LISTTOKENSREQUEST']._serialized_end=199
-  _globals['_LISTTOKENSRESPONSE']._serialized_start=201
-  _globals['_LISTTOKENSRESPONSE']._serialized_end=279
-  _globals['_ADDTOKENREQUEST']._serialized_start=281
-  _globals['_ADDTOKENREQUEST']._serialized_end=401
-  _globals['_ADDTOKENRESPONSE']._serialized_start=403
-  _globals['_ADDTOKENRESPONSE']._serialized_end=478
-  _globals['_GETTOKENRESPONSE']._serialized_start=480
-  _globals['_GETTOKENRESPONSE']._serialized_end=555
-  _globals['_UPDATETOKENREQUEST']._serialized_start=557
-  _globals['_UPDATETOKENREQUEST']._serialized_end=592
-  _globals['_UPDATETOKENRESPONSE']._serialized_start=594
-  _globals['_UPDATETOKENRESPONSE']._serialized_end=672
-  _globals['_DELETETOKENRESPONSE']._serialized_start=674
-  _globals['_DELETETOKENRESPONSE']._serialized_end=695
+  _globals['DESCRIPTOR']._loaded_options = None
+  _globals['DESCRIPTOR']._serialized_options = b'Z>github.com/devplaninc/contextify/clients/go/contextify/service'
+  _globals['_LISTTOKENSREQUEST']._serialized_start=138
+  _globals['_LISTTOKENSREQUEST']._serialized_end=234
+  _globals['_LISTTOKENSRESPONSE']._serialized_start=236
+  _globals['_LISTTOKENSRESPONSE']._serialized_end=314
+  _globals['_ADDTOKENREQUEST']._serialized_start=316
+  _globals['_ADDTOKENREQUEST']._serialized_end=436
+  _globals['_ADDTOKENRESPONSE']._serialized_start=438
+  _globals['_ADDTOKENRESPONSE']._serialized_end=513
+  _globals['_GETTOKENRESPONSE']._serialized_start=515
+  _globals['_GETTOKENRESPONSE']._serialized_end=590
+  _globals['_UPDATETOKENREQUEST']._serialized_start=592
+  _globals['_UPDATETOKENREQUEST']._serialized_end=627
+  _globals['_UPDATETOKENRESPONSE']._serialized_start=629
+  _globals['_UPDATETOKENRESPONSE']._serialized_end=707
+  _globals['_DELETETOKENRESPONSE']._serialized_start=709
+  _globals['_DELETETOKENRESPONSE']._serialized_end=730
 # @@protoc_insertion_point(module_scope)

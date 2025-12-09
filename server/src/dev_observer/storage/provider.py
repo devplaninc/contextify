@@ -6,7 +6,7 @@ from typing import Protocol, Optional, MutableSequence, List, Sequence
 from dev_observer.api.types.config_pb2 import GlobalConfig
 from dev_observer.api.types.processing_pb2 import ProcessingItem, ProcessingItemKey, ProcessingItemResult, \
     ProcessingResultFilter, ProcessingItemsFilter, ProcessingItemData
-from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, ReposFilter
+from dev_observer.api.types.repo_pb2 import GitRepository, GitProperties, ReposFilter, GitProvider
 from dev_observer.api.types.sites_pb2 import WebSite
 from dev_observer.api.types.tokens_pb2 import AuthToken, AuthTokenProvider, TokensFilter
 
@@ -25,6 +25,9 @@ class StorageProvider(Protocol):
         ...
 
     async def get_git_repo(self, repo_id: str) -> Optional[GitRepository]:
+        ...
+
+    async def find_git_repo(self, full_name: str, provider: GitProvider) -> Optional[GitRepository]:
         ...
 
     async def delete_git_repo(self, repo_id: str):

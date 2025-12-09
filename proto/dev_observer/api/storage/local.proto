@@ -8,6 +8,8 @@ import "dev_observer/api/types/config.proto";
 import "dev_observer/api/types/sites.proto";
 import "dev_observer/api/types/tokens.proto";
 
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify/storage";
+
 message LocalStorageData {
   repeated dev_observer.api.types.repo.GitRepository git_repos = 1;
   repeated dev_observer.api.types.processing.ProcessingItem processing_items = 2;

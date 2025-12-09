@@ -24,13 +24,14 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"dev_observer/api/types/sites.proto\x12\x1c\x64\x65v_observer.api.types.sites\"\"\n\x07WebSite\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"dev_observer/api/types/sites.proto\x12\x1c\x64\x65v_observer.api.types.sites\"\"\n\x07WebSite\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\tB8Z6github.com/devplaninc/contextify/clients/go/contextifyb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'dev_observer.api.types.sites_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
+  _globals['DESCRIPTOR']._loaded_options = None
+  _globals['DESCRIPTOR']._serialized_options = b'Z6github.com/devplaninc/contextify/clients/go/contextify'
   _globals['_WEBSITE']._serialized_start=68
   _globals['_WEBSITE']._serialized_end=102
 # @@protoc_insertion_point(module_scope)

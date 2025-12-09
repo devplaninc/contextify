@@ -17,6 +17,9 @@ class FederatedGitProvider(GitRepositoryProvider):
     async def clone(self, repo: ObservedRepo, info: RepositoryInfo, dest: str, depth: Optional[str] = None):
         await self._get(repo.git_repo.provider).clone(repo, info, dest, depth)
 
+    async def get_authenticated_url(self, repo: ObservedRepo) -> str:
+        return await self._get(repo.git_repo.provider).get_authenticated_url(repo)
+
     def _get(self, provider_type: GitProvider) -> GitRepositoryProvider:
         if provider_type not in self._providers:
             raise ValueError(f"No repository provider registered for provider type: {provider_type}")

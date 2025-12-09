@@ -3,6 +3,9 @@ syntax = "proto3";
 package dev_observer.api.web.tokens;
 
 import "dev_observer/api/types/tokens.proto";
+import "dev_observer/api/types/repo.proto";
+
+option go_package = "github.com/devplaninc/contextify/clients/go/contextify/service";
 
 message ListTokensRequest {
   optional dev_observer.api.types.tokens.TokensFilter filter = 1;
