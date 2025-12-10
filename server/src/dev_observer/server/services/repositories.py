@@ -59,7 +59,7 @@ class RepositoriesService:
         self.router.add_api_route("/repositories", self.add_repository, methods=["POST"])
         self.router.add_api_route("/repositories", self.list, methods=["GET"])
         self.router.add_api_route("/repositories/filter", self.filter, methods=["POST"])
-        self.router.add_api_route("/repositories/authenticated", self.get_authenticated, methods=["POST"])
+        self.router.add_api_route("/repositories/fetch/authenticated", self.get_authenticated, methods=["POST"])
         self.router.add_api_route("/repositories/{repo_id}", self.get, methods=["GET"])
         self.router.add_api_route("/repositories/{repo_id}", self.delete, methods=["DELETE"])
         self.router.add_api_route("/repositories/{repo_id}/rescan", self.rescan, methods=["POST"])
