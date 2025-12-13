@@ -8,9 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: npm
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,5 +18,3 @@ jobs:
         working-directory: ./web
       - run: npm run build && npm publish --provenance --access public
         working-directory: ./web/packages/api
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
