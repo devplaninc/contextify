@@ -20,7 +20,8 @@ class GithubAppAuthProvider(GithubAuthProvider):
     _clock: Clock
 
     def __init__(self, app_id: str, private_key: str, storage: StorageProvider, clock: Clock = RealClock()):
-        self._private_key = private_key
+        # Handle escaped newlines in private key (common when passed via environment variables)
+        self._private_key = private_key.replace('\\n', '\n')
         self._app_id = app_id
         self._storage = storage
         self._clock = clock
