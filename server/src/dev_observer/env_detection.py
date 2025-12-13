@@ -11,6 +11,7 @@ from dev_observer.log import s_
 from dev_observer.observations.local import LocalObservationsProvider
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.observations.s3 import S3ObservationsProvider
+from dev_observer.observations.gcs import GCSObservationsProvider
 from dev_observer.processors.aggregated_summary import AggregatedSummaryProcessor
 from dev_observer.processors.code_research import CodeResearchProcessor
 from dev_observer.processors.git.changes import GitChangesHandler
@@ -163,6 +164,14 @@ def detect_observer(settings: Settings) -> ObservationsProvider:
             except ValueError as e:
                 # Re-raise with more context
                 raise ValueError(f"Failed to initialize S3 observations provider: {str(e)}") from e
+        case "gcs":
+            if o.gcs is None:
+                raise ValueError("Missing GCS config for GCS observations provider")
+            try:
+                return GCSObservationsProvider(bucket=o.gcs.bucket)
+            except ValueError as e:
+                # Re-raise with more context
+                raise ValueError(f"Failed to initialize GCS observations provider: {str(e)}") from e
     raise ValueError(f"Unsupported observations provider: {o.provider}")
 
 

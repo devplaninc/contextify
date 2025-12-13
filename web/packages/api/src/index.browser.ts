@@ -99,13 +99,6 @@ export {LocalStorageData} from './pb/dev_observer/api/storage/local';
 export {ApiClient} from './client/api';
 export {ParseableMessage, VoidParser, BaseClient} from './client/base';
 export {ConfigClient} from './client/config';
-export {
-  FetchResult,
-  ObservationsFetcher,
-  ObservationsFetcherConfig,
-  S3Config,
-  GCSConfig,
-} from './client/directFetcher';
 export {ObservationsClient} from './client/observations';
 export {RepositoriesClient} from './client/repositories';
 export {WebsitesClient} from './client/websites';

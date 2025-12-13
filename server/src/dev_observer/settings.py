@@ -67,11 +67,16 @@ class S3Observations(BaseModel):
     region: str
 
 
+class GCSObservations(BaseModel):
+    bucket: str
+
+
 class Observations(BaseModel):
-    provider: Literal["local", "s3"] = "local"
+    provider: Literal["local", "s3", "gcs"] = "local"
 
     local: Optional[LocalObservations] = None
     s3: Optional[S3Observations] = None
+    gcs: Optional[GCSObservations] = None
 
 
 class SettingsProps(BaseModel):

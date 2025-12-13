@@ -9,4 +9,12 @@ export default defineConfig({
       '@': '/src'
     }
   },
+  optimizeDeps: {
+    exclude: ['@google-cloud/storage', '@aws-sdk/client-s3']
+  },
+  build: {
+    rollupOptions: {
+      external: ['@google-cloud/storage', '@aws-sdk/client-s3']
+    }
+  }
 })

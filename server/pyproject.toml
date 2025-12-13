@@ -41,6 +41,7 @@ dependencies = [
     "beautifulsoup4>=4.13.4",
     "types-aiobotocore[essential]>=2.23.2",
     "aiobotocore>=2.23.2",
+    "gcloud-aio-storage>=9.3.0",
     "cryptography>=44.0.3",
 ]
 
