@@ -20,6 +20,9 @@ spec:
         app: contextify-server
         {{- include "contextify.server.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName | quote }}
+      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
