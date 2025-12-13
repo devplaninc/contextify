@@ -5,8 +5,8 @@ export interface S3ObservationsFetcherProps {
   bucket: string
   region: string
   endpoint: string
-  accessKeyId: string
-  secretAccessKey: string
+  accessKeyId?: string
+  secretAccessKey?: string
 }
 
 export interface FetchResult {
@@ -22,12 +22,16 @@ export class S3ObservationsFetcher {
 
   constructor(props: S3ObservationsFetcherProps) {
     const {accessKeyId, secretAccessKey, endpoint, region, bucket} = props
-    this.s3 = new S3Client({
-      endpoint,
-      region,
-      credentials: {accessKeyId, secretAccessKey},
-    })
     this.bucket = bucket
+    if (!accessKeyId || !secretAccessKey) {
+      this.s3 = new S3Client({endpoint, region})
+    } else {
+      this.s3 = new S3Client({
+        endpoint,
+        region,
+        credentials: {accessKeyId, secretAccessKey},
+      })
+    }
   }
 
   public async fetch(key: ObservationKey): Promise<FetchResult | undefined> {
