@@ -23,6 +23,7 @@ export interface FetchResult {
   metadata?: Record<string, string> | undefined;
   contentType?: string | undefined;
   etag?: string | undefined;
+  updatedAt?: Date | undefined;
 }
 
 export class ObservationsFetcher {
@@ -72,6 +73,7 @@ export class ObservationsFetcher {
         metadata: response.Metadata,
         contentType: response.ContentType,
         etag: response.ETag,
+        updatedAt: response.LastModified,
       };
     } catch (error) {
       if (isNamedError(error)) {
@@ -98,11 +100,13 @@ export class ObservationsFetcher {
         )
         : undefined
 
+      const updatedDateStr = metadata.updated ?? metadata?.timeCreated
       return {
         content: content.toString('utf-8'),
         metadata: stringMetadata,
         contentType: metadata.contentType,
         etag: metadata.etag,
+        updatedAt: updatedDateStr ? new Date(updatedDateStr) : undefined,
       }
     } catch (error) {
       if (isNamedError(error) && (error as any).code === 404) {
