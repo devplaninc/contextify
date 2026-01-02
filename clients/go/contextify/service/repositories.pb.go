@@ -879,6 +879,134 @@ func (b0 GetAuthenticatedRepoResponse_builder) Build() *GetAuthenticatedRepoResp
 	return m0
 }
 
+type GetRepoTokenRequest struct {
+	state                   protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_RepoFullName string                 `protobuf:"bytes,1,opt,name=repo_full_name,json=repoFullName,proto3"`
+	xxx_hidden_Provider     contextify.GitProvider `protobuf:"varint,2,opt,name=provider,proto3,enum=dev_observer.api.types.repo.GitProvider"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *GetRepoTokenRequest) Reset() {
+	*x = GetRepoTokenRequest{}
+	mi := &file_dev_observer_api_web_repositories_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRepoTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRepoTokenRequest) ProtoMessage() {}
+
+func (x *GetRepoTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dev_observer_api_web_repositories_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetRepoTokenRequest) GetRepoFullName() string {
+	if x != nil {
+		return x.xxx_hidden_RepoFullName
+	}
+	return ""
+}
+
+func (x *GetRepoTokenRequest) GetProvider() contextify.GitProvider {
+	if x != nil {
+		return x.xxx_hidden_Provider
+	}
+	return contextify.GitProvider(0)
+}
+
+func (x *GetRepoTokenRequest) SetRepoFullName(v string) {
+	x.xxx_hidden_RepoFullName = v
+}
+
+func (x *GetRepoTokenRequest) SetProvider(v contextify.GitProvider) {
+	x.xxx_hidden_Provider = v
+}
+
+type GetRepoTokenRequest_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	RepoFullName string
+	Provider     contextify.GitProvider
+}
+
+func (b0 GetRepoTokenRequest_builder) Build() *GetRepoTokenRequest {
+	m0 := &GetRepoTokenRequest{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_RepoFullName = b.RepoFullName
+	x.xxx_hidden_Provider = b.Provider
+	return m0
+}
+
+type GetRepoTokenResponse struct {
+	state            protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Token string                 `protobuf:"bytes,1,opt,name=token,proto3"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetRepoTokenResponse) Reset() {
+	*x = GetRepoTokenResponse{}
+	mi := &file_dev_observer_api_web_repositories_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRepoTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRepoTokenResponse) ProtoMessage() {}
+
+func (x *GetRepoTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dev_observer_api_web_repositories_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *GetRepoTokenResponse) GetToken() string {
+	if x != nil {
+		return x.xxx_hidden_Token
+	}
+	return ""
+}
+
+func (x *GetRepoTokenResponse) SetToken(v string) {
+	x.xxx_hidden_Token = v
+}
+
+type GetRepoTokenResponse_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	Token string
+}
+
+func (b0 GetRepoTokenResponse_builder) Build() *GetRepoTokenResponse {
+	m0 := &GetRepoTokenResponse{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Token = b.Token
+	return m0
+}
+
 var File_dev_observer_api_web_repositories_proto protoreflect.FileDescriptor
 
 const file_dev_observer_api_web_repositories_proto_rawDesc = "" +
@@ -914,9 +1042,14 @@ const file_dev_observer_api_web_repositories_proto_rawDesc = "" +
 	"\x0erepo_full_name\x18\x01 \x01(\tR\frepoFullName\x12D\n" +
 	"\bprovider\x18\x02 \x01(\x0e2(.dev_observer.api.types.repo.GitProviderR\bprovider\"K\n" +
 	"\x1cGetAuthenticatedRepoResponse\x12+\n" +
-	"\x11authenticated_url\x18\x01 \x01(\tR\x10authenticatedUrlB@Z>github.com/devplaninc/contextify/clients/go/contextify/serviceb\x06proto3"
+	"\x11authenticated_url\x18\x01 \x01(\tR\x10authenticatedUrl\"\x81\x01\n" +
+	"\x13GetRepoTokenRequest\x12$\n" +
+	"\x0erepo_full_name\x18\x01 \x01(\tR\frepoFullName\x12D\n" +
+	"\bprovider\x18\x02 \x01(\x0e2(.dev_observer.api.types.repo.GitProviderR\bprovider\",\n" +
+	"\x14GetRepoTokenResponse\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05tokenB@Z>github.com/devplaninc/contextify/clients/go/contextify/serviceb\x06proto3"
 
-var file_dev_observer_api_web_repositories_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_dev_observer_api_web_repositories_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_dev_observer_api_web_repositories_proto_goTypes = []any{
 	(*ListRepositoriesResponse)(nil),      // 0: dev_observer.api.web.repositories.ListRepositoriesResponse
 	(*AddRepositoryRequest)(nil),          // 1: dev_observer.api.web.repositories.AddRepositoryRequest
@@ -931,24 +1064,27 @@ var file_dev_observer_api_web_repositories_proto_goTypes = []any{
 	(*RescanAnalysisSummaryResponse)(nil), // 10: dev_observer.api.web.repositories.RescanAnalysisSummaryResponse
 	(*GetAuthenticatedRepoRequest)(nil),   // 11: dev_observer.api.web.repositories.GetAuthenticatedRepoRequest
 	(*GetAuthenticatedRepoResponse)(nil),  // 12: dev_observer.api.web.repositories.GetAuthenticatedRepoResponse
-	(*contextify.GitRepository)(nil),      // 13: dev_observer.api.types.repo.GitRepository
-	(contextify.GitProvider)(0),           // 14: dev_observer.api.types.repo.GitProvider
-	(*contextify.ReposFilter)(nil),        // 15: dev_observer.api.types.repo.ReposFilter
+	(*GetRepoTokenRequest)(nil),           // 13: dev_observer.api.web.repositories.GetRepoTokenRequest
+	(*GetRepoTokenResponse)(nil),          // 14: dev_observer.api.web.repositories.GetRepoTokenResponse
+	(*contextify.GitRepository)(nil),      // 15: dev_observer.api.types.repo.GitRepository
+	(contextify.GitProvider)(0),           // 16: dev_observer.api.types.repo.GitProvider
+	(*contextify.ReposFilter)(nil),        // 17: dev_observer.api.types.repo.ReposFilter
 }
 var file_dev_observer_api_web_repositories_proto_depIdxs = []int32{
-	13, // 0: dev_observer.api.web.repositories.ListRepositoriesResponse.repos:type_name -> dev_observer.api.types.repo.GitRepository
-	14, // 1: dev_observer.api.web.repositories.AddRepositoryRequest.provider:type_name -> dev_observer.api.types.repo.GitProvider
-	13, // 2: dev_observer.api.web.repositories.AddRepositoryResponse.repo:type_name -> dev_observer.api.types.repo.GitRepository
-	13, // 3: dev_observer.api.web.repositories.GetRepositoryResponse.repo:type_name -> dev_observer.api.types.repo.GitRepository
-	13, // 4: dev_observer.api.web.repositories.DeleteRepositoryResponse.repos:type_name -> dev_observer.api.types.repo.GitRepository
-	15, // 5: dev_observer.api.web.repositories.FilterRepositoriesRequest.filter:type_name -> dev_observer.api.types.repo.ReposFilter
-	13, // 6: dev_observer.api.web.repositories.FilterRepositoriesResponse.repos:type_name -> dev_observer.api.types.repo.GitRepository
-	14, // 7: dev_observer.api.web.repositories.GetAuthenticatedRepoRequest.provider:type_name -> dev_observer.api.types.repo.GitProvider
-	8,  // [8:8] is the sub-list for method output_type
-	8,  // [8:8] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	15, // 0: dev_observer.api.web.repositories.ListRepositoriesResponse.repos:type_name -> dev_observer.api.types.repo.GitRepository
+	16, // 1: dev_observer.api.web.repositories.AddRepositoryRequest.provider:type_name -> dev_observer.api.types.repo.GitProvider
+	15, // 2: dev_observer.api.web.repositories.AddRepositoryResponse.repo:type_name -> dev_observer.api.types.repo.GitRepository
+	15, // 3: dev_observer.api.web.repositories.GetRepositoryResponse.repo:type_name -> dev_observer.api.types.repo.GitRepository
+	15, // 4: dev_observer.api.web.repositories.DeleteRepositoryResponse.repos:type_name -> dev_observer.api.types.repo.GitRepository
+	17, // 5: dev_observer.api.web.repositories.FilterRepositoriesRequest.filter:type_name -> dev_observer.api.types.repo.ReposFilter
+	15, // 6: dev_observer.api.web.repositories.FilterRepositoriesResponse.repos:type_name -> dev_observer.api.types.repo.GitRepository
+	16, // 7: dev_observer.api.web.repositories.GetAuthenticatedRepoRequest.provider:type_name -> dev_observer.api.types.repo.GitProvider
+	16, // 8: dev_observer.api.web.repositories.GetRepoTokenRequest.provider:type_name -> dev_observer.api.types.repo.GitProvider
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_dev_observer_api_web_repositories_proto_init() }
@@ -963,7 +1099,7 @@ func file_dev_observer_api_web_repositories_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dev_observer_api_web_repositories_proto_rawDesc), len(file_dev_observer_api_web_repositories_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

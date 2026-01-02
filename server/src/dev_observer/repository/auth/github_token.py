@@ -15,3 +15,8 @@ class GithubTokenAuthProvider(GithubAuthProvider):
 
     async def get_cli_token_prefix(self, repo: ObservedRepo) -> str:
         return self._token
+
+    async def get_token(self, repo: ObservedRepo) -> str:
+        return self._token
+
+

@@ -9,7 +9,8 @@ from dev_observer.api.types.repo_pb2 import GitRepository
 from dev_observer.api.web.repositories_pb2 import AddRepositoryRequest, AddRepositoryResponse, \
     ListRepositoriesResponse, RescanRepositoryResponse, GetRepositoryResponse, DeleteRepositoryResponse, \
     FilterRepositoriesRequest, FilterRepositoriesResponse, RescanRepositoryRequest, RescanAnalysisSummaryResponse, \
-    RescanAnalysisSummaryRequest, GetAuthenticatedRepoRequest, GetAuthenticatedRepoResponse
+    RescanAnalysisSummaryRequest, GetAuthenticatedRepoRequest, GetAuthenticatedRepoResponse, GetRepoTokenRequest, \
+    GetRepoTokenResponse
 from dev_observer.log import s_
 from dev_observer.observations.provider import ObservationsProvider
 from dev_observer.processors.code_research import mark_forced_research
@@ -60,6 +61,7 @@ class RepositoriesService:
         self.router.add_api_route("/repositories", self.list, methods=["GET"])
         self.router.add_api_route("/repositories/filter", self.filter, methods=["POST"])
         self.router.add_api_route("/repositories/fetch/authenticated", self.get_authenticated, methods=["POST"])
+        self.router.add_api_route("/repositories/fetch/token", self.get_token, methods=["POST"])
         self.router.add_api_route("/repositories/{repo_id}", self.get, methods=["GET"])
         self.router.add_api_route("/repositories/{repo_id}", self.delete, methods=["DELETE"])
         self.router.add_api_route("/repositories/{repo_id}/rescan", self.rescan, methods=["POST"])
@@ -92,6 +94,15 @@ class RepositoriesService:
         observed = ObservedRepo(url=repo.url, git_repo=repo)
         auth_url = await self._repository.get_authenticated_url(observed)
         return pb_to_dict(GetAuthenticatedRepoResponse(authenticated_url=auth_url))
+
+    async def get_token(self, req: Request):
+        request = parse_dict_pb(await req.json(), GetRepoTokenRequest())
+        repo = await self._store.find_git_repo(request.repo_full_name, request.provider)
+        if not repo:
+            raise HTTPException(status_code=404, detail="Repo not found")
+        observed = ObservedRepo(url=repo.url, git_repo=repo)
+        token = await self._repository.get_repo_token(observed)
+        return pb_to_dict(GetRepoTokenResponse(token=token))
 
     async def delete(self, repo_id: str):
         await self._store.delete_git_repo(repo_id)

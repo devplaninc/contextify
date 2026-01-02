@@ -31,12 +31,14 @@ class BitBucketTokenAuthProvider(BitBucketAuthProvider):
         }
 
     async def get_cli_token_prefix(self, repo: ObservedRepo) -> str:
-        """Get token prefix for git CLI operations."""
+        token = await self.get_token(repo)
+        return f"x-token-auth:{token}"
+
+    async def get_token(self, repo: ObservedRepo) -> str:
         token = await self._get_best_token(repo)
         if not token:
             raise ValueError(f"No valid token found for repository {repo.git_repo.full_name}")
-
-        return f"x-token-auth:{token}"
+        return token
 
     async def _get_best_token(self, repo: ObservedRepo) -> Optional[str]:
         full_name = repo.git_repo.full_name
@@ -65,7 +67,6 @@ class BitBucketTokenAuthProvider(BitBucketAuthProvider):
 
         return token.token
 
-
     def _get_valid_tokens(self, tokens: List[AuthToken]) -> List[AuthToken]:
         if not tokens:
             return []
@@ -78,9 +79,11 @@ class BitBucketTokenAuthProvider(BitBucketAuthProvider):
             result.append(token)
         return result
 
+
 def _best_token(tokens: List[AuthToken]) -> Optional[AuthToken]:
     if not tokens:
         return None
+
     def sort_key(token: AuthToken) -> int:
         if token.system:
             return 0
@@ -90,9 +93,6 @@ def _best_token(tokens: List[AuthToken]) -> Optional[AuthToken]:
             return 2
         else:
             return 3
+
     sorted_tokens = sorted(tokens, key=sort_key)
     return sorted_tokens[0]
-
-
-
-

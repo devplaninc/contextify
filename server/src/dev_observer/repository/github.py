@@ -25,6 +25,10 @@ class GithubAuthProvider(Protocol):
     async def get_cli_token_prefix(self, repo: ObservedRepo) -> str:
         ...
 
+    @abstractmethod
+    async def get_token(self, repo: ObservedRepo) -> str:
+        ...
+
 
 class GithubProvider(GitRepositoryProvider):
     _auth_provider: GithubAuthProvider
@@ -89,3 +93,6 @@ class GithubProvider(GitRepositoryProvider):
         info = await self.get_repo(repo)
         token = await self._auth_provider.get_cli_token_prefix(repo)
         return info.clone_url.replace("https://", f"https://{token}@")
+
+    async def get_repo_token(self, repo: ObservedRepo) -> str:
+        return await self._auth_provider.get_token(repo)

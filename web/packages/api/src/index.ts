@@ -82,6 +82,10 @@ export {
   FilterRepositoriesRequest,
   RescanAnalysisSummaryResponse,
   RescanAnalysisSummaryRequest,
+  GetRepoTokenResponse,
+  GetRepoTokenRequest,
+  GetAuthenticatedRepoRequest,
+  GetAuthenticatedRepoResponse,
 } from './pb/dev_observer/api/web/repositories';
 export {
   ListTokensRequest,

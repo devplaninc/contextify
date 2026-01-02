@@ -26,6 +26,10 @@ class BitBucketAuthProvider(Protocol):
         """Get token prefix for git CLI operations."""
         ...
 
+    @abstractmethod
+    async def get_token(self, repo: ObservedRepo) -> str:
+        ...
+
 
 class BitBucketProvider(GitRepositoryProvider):
     _auth_provider: BitBucketAuthProvider
@@ -107,3 +111,8 @@ class BitBucketProvider(GitRepositoryProvider):
         info = await self.get_repo(repo)
         token = await self._auth_provider.get_cli_token_prefix(repo)
         return info.clone_url.replace("https://", f"https://{token}@")
+
+    async def get_repo_token(self, repo: ObservedRepo) -> str:
+        pass
+
+

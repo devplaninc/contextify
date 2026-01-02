@@ -64,6 +64,15 @@ export interface GetAuthenticatedRepoResponse {
   authenticatedUrl: string;
 }
 
+export interface GetRepoTokenRequest {
+  repoFullName: string;
+  provider: GitProvider;
+}
+
+export interface GetRepoTokenResponse {
+  token: string;
+}
+
 function createBaseListRepositoriesResponse(): ListRepositoriesResponse {
   return { repos: [] };
 }
@@ -860,6 +869,140 @@ export const GetAuthenticatedRepoResponse: MessageFns<GetAuthenticatedRepoRespon
   fromPartial(object: DeepPartial<GetAuthenticatedRepoResponse>): GetAuthenticatedRepoResponse {
     const message = createBaseGetAuthenticatedRepoResponse();
     message.authenticatedUrl = object.authenticatedUrl ?? "";
+    return message;
+  },
+};
+
+function createBaseGetRepoTokenRequest(): GetRepoTokenRequest {
+  return { repoFullName: "", provider: 0 };
+}
+
+export const GetRepoTokenRequest: MessageFns<GetRepoTokenRequest> = {
+  encode(message: GetRepoTokenRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.repoFullName !== "") {
+      writer.uint32(10).string(message.repoFullName);
+    }
+    if (message.provider !== 0) {
+      writer.uint32(16).int32(message.provider);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetRepoTokenRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetRepoTokenRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.repoFullName = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.provider = reader.int32() as any;
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetRepoTokenRequest {
+    return {
+      repoFullName: isSet(object.repoFullName) ? gt.String(object.repoFullName) : "",
+      provider: isSet(object.provider) ? gitProviderFromJSON(object.provider) : 0,
+    };
+  },
+
+  toJSON(message: GetRepoTokenRequest): unknown {
+    const obj: any = {};
+    if (message.repoFullName !== "") {
+      obj.repoFullName = message.repoFullName;
+    }
+    if (message.provider !== 0) {
+      obj.provider = gitProviderToJSON(message.provider);
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetRepoTokenRequest>): GetRepoTokenRequest {
+    return GetRepoTokenRequest.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetRepoTokenRequest>): GetRepoTokenRequest {
+    const message = createBaseGetRepoTokenRequest();
+    message.repoFullName = object.repoFullName ?? "";
+    message.provider = object.provider ?? 0;
+    return message;
+  },
+};
+
+function createBaseGetRepoTokenResponse(): GetRepoTokenResponse {
+  return { token: "" };
+}
+
+export const GetRepoTokenResponse: MessageFns<GetRepoTokenResponse> = {
+  encode(message: GetRepoTokenResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.token !== "") {
+      writer.uint32(10).string(message.token);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): GetRepoTokenResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseGetRepoTokenResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.token = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): GetRepoTokenResponse {
+    return { token: isSet(object.token) ? gt.String(object.token) : "" };
+  },
+
+  toJSON(message: GetRepoTokenResponse): unknown {
+    const obj: any = {};
+    if (message.token !== "") {
+      obj.token = message.token;
+    }
+    return obj;
+  },
+
+  create(base?: DeepPartial<GetRepoTokenResponse>): GetRepoTokenResponse {
+    return GetRepoTokenResponse.fromPartial(base ?? {});
+  },
+  fromPartial(object: DeepPartial<GetRepoTokenResponse>): GetRepoTokenResponse {
+    const message = createBaseGetRepoTokenResponse();
+    message.token = object.token ?? "";
     return message;
   },
 };

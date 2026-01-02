@@ -32,6 +32,9 @@ class DelegatingGitRepositoryProvider(GitRepositoryProvider):
     async def get_authenticated_url(self, repo: ObservedRepo) -> str:
         return repo.url
 
+    async def get_repo_token(self, repo: ObservedRepo) -> str:
+        return ""
+
 
 def _get_git_root() -> str:
     result = subprocess.run(

@@ -32,11 +32,14 @@ class GithubAppAuthProvider(GithubAuthProvider):
         return auth.get_installation_auth(installation_id)
 
     async def get_cli_token_prefix(self, repo: ObservedRepo) -> str:
+        token = await self.get_token(repo)
+        return f"x-access-token:{token}"
+
+    async def get_token(self, repo: ObservedRepo) -> str:
         auth = Auth.AppAuth(self._app_id, self._private_key)
         installation_id = await self._get_installation_id(auth, repo)
         with GithubIntegration(auth=auth) as gh:
-            token = gh.get_access_token(installation_id).token
-            return f"x-access-token:{token}"
+            return gh.get_access_token(installation_id).token
 
     async def _get_installation_id(self, auth: Auth.AppAuth, repo: ObservedRepo) -> int:
         full_name = repo.git_repo.full_name

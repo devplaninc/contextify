@@ -25,3 +25,7 @@ class GitRepositoryProvider(Protocol):
     @abstractmethod
     async def get_authenticated_url(self, repo: ObservedRepo) -> str:
         ...
+
+    @abstractmethod
+    async def get_repo_token(self, repo: ObservedRepo) -> str:
+        ...

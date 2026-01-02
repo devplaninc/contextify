@@ -88,3 +88,17 @@ class GetAuthenticatedRepoResponse(_message.Message):
     AUTHENTICATED_URL_FIELD_NUMBER: _ClassVar[int]
     authenticated_url: str
     def __init__(self, authenticated_url: _Optional[str] = ...) -> None: ...
+
+class GetRepoTokenRequest(_message.Message):
+    __slots__ = ("repo_full_name", "provider")
+    REPO_FULL_NAME_FIELD_NUMBER: _ClassVar[int]
+    PROVIDER_FIELD_NUMBER: _ClassVar[int]
+    repo_full_name: str
+    provider: _repo_pb2.GitProvider
+    def __init__(self, repo_full_name: _Optional[str] = ..., provider: _Optional[_Union[_repo_pb2.GitProvider, str]] = ...) -> None: ...
+
+class GetRepoTokenResponse(_message.Message):
+    __slots__ = ("token",)
+    TOKEN_FIELD_NUMBER: _ClassVar[int]
+    token: str
+    def __init__(self, token: _Optional[str] = ...) -> None: ...

@@ -59,3 +59,12 @@ message GetAuthenticatedRepoResponse {
   string authenticated_url = 1;
 }
 
+message GetRepoTokenRequest {
+  string repo_full_name = 1;
+  api.types.repo.GitProvider provider = 2;
+}
+
+message GetRepoTokenResponse {
+  string token = 1;
+}
+
