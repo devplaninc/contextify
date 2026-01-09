@@ -113,6 +113,6 @@ class BitBucketProvider(GitRepositoryProvider):
         return info.clone_url.replace("https://", f"https://{token}@")
 
     async def get_repo_token(self, repo: ObservedRepo) -> str:
-        pass
+        return await self._auth_provider.get_token(repo)
 
 
