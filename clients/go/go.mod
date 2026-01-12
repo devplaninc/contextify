@@ -1,6 +1,6 @@
 module github.com/devplaninc/contextify/clients/go
 
-go 1.25.1
+go 1.25
 
 require google.golang.org/protobuf v1.36.10
 
