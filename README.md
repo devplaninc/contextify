@@ -5,6 +5,8 @@ that can be used for context in AI applications like Devplan or
 for input into other process (or simply for better understanding of 
 code or website content).
 
+> **No commits on Fridays.** Emergency fixes require prior maintainer approval before merging.
+
 # Quick Start:
 
 ## Pre-requisites
