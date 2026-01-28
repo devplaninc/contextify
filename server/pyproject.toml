@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.12,<4.0"
 dependencies = [
     "langgraph (>=0.5.0,<0.6.0)",
-    "langgraph-checkpoint-postgres (>=2.0.21,<3.0.0)",
+    "langgraph-checkpoint-postgres (>=3.0.3,<4.0.0)",
     "grpcio (>=1.71.0,<2.0.0)",
     "pydantic>=2.11.4,<3.0.0",
     "langchain-google-vertexai>=2.0.23,<3.0.0",
@@ -43,6 +43,7 @@ dependencies = [
     "aiobotocore>=2.23.2",
     "gcloud-aio-storage>=9.3.0",
     "cryptography>=44.0.3",
+    "python-multipart>=0.0.22",
 ]
 
 [build-system]
