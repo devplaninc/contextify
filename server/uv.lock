@@ -626,6 +626,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pygithub" },
     { name = "python-dotenv" },
+    { name = "python-multipart" },
     { name = "scrapy" },
     { name = "sqlalchemy" },
     { name = "tiktoken" },
@@ -663,7 +664,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = ">=0.3.16,<0.4.0" },
     { name = "langfuse", specifier = ">=3.0.2,<4.0.0" },
     { name = "langgraph", specifier = ">=0.5.0,<0.6.0" },
-    { name = "langgraph-checkpoint-postgres", specifier = ">=2.0.21,<3.0.0" },
+    { name = "langgraph-checkpoint-postgres", specifier = ">=3.0.3,<4.0.0" },
     { name = "load-dotenv", specifier = ">=0.1.0" },
     { name = "openai", specifier = ">=1.78.0,<2.0.0" },
     { name = "protobuf", specifier = ">=5.29.4" },
@@ -672,6 +673,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.9.1" },
     { name = "pygithub", specifier = ">=2.6.1" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "python-multipart", specifier = ">=0.0.22" },
     { name = "scrapy", specifier = ">=2.11.0" },
     { name = "sqlalchemy", specifier = ">=2.0.40" },
     { name = "tiktoken", specifier = ">=0.7.0" },
@@ -1861,7 +1863,7 @@ wheels = [
 
 [[package]]
 name = "langgraph-checkpoint-postgres"
-version = "2.0.25"
+version = "3.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langgraph-checkpoint" },
@@ -1869,9 +1871,9 @@ dependencies = [
     { name = "psycopg" },
     { name = "psycopg-pool" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bd/6a/e2c5163b274c80bf7afe48a766b788d922d5a0685b6a6cf65a4e1f0b6ba1/langgraph_checkpoint_postgres-2.0.25.tar.gz", hash = "sha256:916b80f73a641a589301f6c54414974768b6d646d82db7b301ff8d47105c3613", size = 118843, upload-time = "2025-10-07T18:44:55.116Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/86/5f3c01346be4b7f455aeeff915f78c878fe9eee5cc8b3782df0886b409bf/langgraph_checkpoint_postgres-3.0.3.tar.gz", hash = "sha256:f77852340198b9e71f2d52da5b591cfc55a4a2e537001868a83b9ab1865f9146", size = 127198, upload-time = "2026-01-12T20:36:40.205Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/43/f406097fe110f637282d583f2d1b490c107f6a4c661977bc59aed44f2baa/langgraph_checkpoint_postgres-2.0.25-py3-none-any.whl", hash = "sha256:cf1248a58fe828c9cfc36ee57ff118d7799ce214d4b35718e57ec98407130fb5", size = 40944, upload-time = "2025-10-07T18:44:54.25Z" },
+    { url = "https://files.pythonhosted.org/packages/84/f8/5a6f9dbc3a93e3b9a567ba0a8b6df5e89882be64dc1c6586a33ec15e93b8/langgraph_checkpoint_postgres-3.0.3-py3-none-any.whl", hash = "sha256:f603f4f81961e2740bd70679affeb540452d467990d4692132c07c20870bdbb1", size = 42715, upload-time = "2026-01-12T20:36:38.636Z" },
 ]
 
 [[package]]
@@ -3052,11 +3054,11 @@ wheels = [
 
 [[package]]
 name = "python-multipart"
-version = "0.0.21"
+version = "0.0.22"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/78/96/804520d0850c7db98e5ccb70282e29208723f0964e88ffd9d0da2f52ea09/python_multipart-0.0.21.tar.gz", hash = "sha256:7137ebd4d3bbf70ea1622998f902b97a29434a9e8dc40eb203bbcf7c2a2cba92", size = 37196, upload-time = "2025-12-17T09:24:22.446Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/01/979e98d542a70714b0cb2b6728ed0b7c46792b695e3eaec3e20711271ca3/python_multipart-0.0.22.tar.gz", hash = "sha256:7340bef99a7e0032613f56dc36027b959fd3b30a787ed62d310e951f7c3a3a58", size = 37612, upload-time = "2026-01-25T10:15:56.219Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/aa/76/03af049af4dcee5d27442f71b6924f01f3efb5d2bd34f23fcd563f2cc5f5/python_multipart-0.0.21-py3-none-any.whl", hash = "sha256:cf7a6713e01c87aa35387f4774e812c4361150938d20d232800f75ffcf266090", size = 24541, upload-time = "2025-12-17T09:24:21.153Z" },
+    { url = "https://files.pythonhosted.org/packages/1b/d0/397f9626e711ff749a95d96b7af99b9c566a9bb5129b8e4c10fc4d100304/python_multipart-0.0.22-py3-none-any.whl", hash = "sha256:2b2cd894c83d21bf49d702499531c7bafd057d730c201782048f7945d82de155", size = 24579, upload-time = "2026-01-25T10:15:54.811Z" },
 ]
 
 [[package]]
