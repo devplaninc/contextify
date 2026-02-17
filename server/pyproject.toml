@@ -43,7 +43,7 @@ dependencies = [
     "types-aiobotocore[essential]>=2.23.2",
     "aiobotocore>=2.23.2",
     "gcloud-aio-storage>=9.3.0",
-    "cryptography>=45.0.0,<46.0.0",
+    "cryptography>=46.0.5,<47.0.0",
     "python-multipart>=0.0.22",
 ]
 
