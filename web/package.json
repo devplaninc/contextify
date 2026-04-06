@@ -13,6 +13,7 @@
   "overrides": {
     "file-type": "21.3.3",
     "@tootallnate/once": "3.0.1",
-    "fast-xml-parser": "5.5.8"
+    "fast-xml-parser": "5.5.8",
+    "path-to-regexp": "^8.4.0"
   }
 }
