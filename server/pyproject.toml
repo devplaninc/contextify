@@ -19,7 +19,7 @@ dependencies = [
     "langchain>=1.2.10,<2.0.0",
     "langchain-community (>=0.4.1,<0.5.0)",
     "openai (>=2.20.0,<3.0.0)",
-    "langchain-core (>=1.2.11,<2.0.0)",
+    "langchain-core (>=1.2.22,<2.0.0)",
     "langchain-openai (>=1.1.9,<2.0.0)",
     "pygithub >=2.6.1",
     "tiktoken >=0.7.0",
@@ -43,7 +43,7 @@ dependencies = [
     "types-aiobotocore[essential]>=2.23.2",
     "aiobotocore>=2.23.2",
     "gcloud-aio-storage>=9.3.0",
-    "cryptography>=46.0.5,<47.0.0",
+    "cryptography>=46.0.6,<47.0.0",
     "python-multipart>=0.0.22",
 ]
 
