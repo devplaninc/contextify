@@ -8,12 +8,12 @@
   "dependencies": {
     "@types/uuid": "^10.0.0",
     "uuid": "^11.1.0",
-    "fast-xml-parser": "5.5.8"
+    "fast-xml-parser": "^5.7.0"
   },
   "overrides": {
     "file-type": "21.3.3",
     "@tootallnate/once": "3.0.1",
-    "fast-xml-parser": "5.5.8",
+    "fast-xml-parser": "^5.7.0",
     "path-to-regexp": "^8.4.0"
   }
 }
