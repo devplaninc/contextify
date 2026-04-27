@@ -19,8 +19,8 @@ dependencies = [
     "langchain>=1.2.10,<2.0.0",
     "langchain-community (>=0.4.1,<0.5.0)",
     "openai (>=2.20.0,<3.0.0)",
-    "langchain-core (>=1.2.22,<2.0.0)",
-    "langchain-openai (>=1.1.9,<2.0.0)",
+    "langchain-core (>=1.2.28,<2.0.0)",
+    "langchain-openai (>=1.1.14,<2.0.0)",
     "pygithub >=2.6.1",
     "tiktoken >=0.7.0",
     "dotenv>=0.9.9",
@@ -28,7 +28,7 @@ dependencies = [
     "pydantic-settings>=2.9.1",
     "langchain-groq>=1.1.2",
     "langchain-google-genai>=4.2.0",
-    "python-dotenv>=1.1.0",
+    "python-dotenv>=1.2.2",
     "grpcio-tools>=1.71.0",
     "uvicorn>=0.34.2",
     "protobuf>=5.29.4",
@@ -43,8 +43,8 @@ dependencies = [
     "types-aiobotocore[essential]>=2.23.2",
     "aiobotocore>=2.23.2",
     "gcloud-aio-storage>=9.3.0",
-    "cryptography>=46.0.6,<47.0.0",
-    "python-multipart>=0.0.22",
+    "cryptography>=46.0.7,<47.0.0",
+    "python-multipart>=0.0.26",
 ]
 
 [build-system]
@@ -54,6 +54,6 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "grpcio-tools>=1.71.0",
-    "pytest>=8.3.5",
+    "pytest>=9.0.3",
     "pytest-mock>=3.14.0",
 ]
