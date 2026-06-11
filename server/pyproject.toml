@@ -53,6 +53,7 @@ dependencies = [
     "langchain-classic>=1.0.7,<2.0.0",
     "ujson>=5.12.1,<6.0.0",
     "twisted>=26.4.0,<27.0.0",
+    "aiohttp>=3.14.0,<4.0.0",
 ]
 
 [build-system]
