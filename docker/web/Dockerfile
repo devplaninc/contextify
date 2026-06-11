@@ -2,7 +2,7 @@
 # Multi-stage build for minimal image size
 
 # Build stage
-FROM node:20-slim AS build
+FROM node:22-slim AS build
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ WORKDIR /app/apps/dev-observer
 RUN npm run build
 
 # Production stage
-FROM node:20-slim AS production
+FROM node:22-slim AS production
 
 WORKDIR /app
 
