@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import subprocess
 import threading
 from contextlib import asynccontextmanager
@@ -8,11 +9,11 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 import dev_observer
-from dev_observer.log import s_
+from dev_observer.log import PlainTextEncoder, configure_logging, s_
 from dev_observer.server.services.health import HealthService
 
-dev_observer.log.encoder = dev_observer.log.PlainTextEncoder()
-logging.basicConfig(level=logging.DEBUG)
+dev_observer.log.encoder = PlainTextEncoder(color=os.getenv("PYTHON_ENV") == "development")
+configure_logging()
 
 # Or suppress all AWS-related debug messages
 logging.getLogger('boto3').setLevel(logging.WARNING)
@@ -108,7 +109,13 @@ app.add_middleware(
 async def start_fastapi_server():
     import uvicorn
     port = 8090
-    uvicorn_config = uvicorn.Config("dev_observer.server.main:app", host="0.0.0.0", port=port, log_level="debug")
+    uvicorn_config = uvicorn.Config(
+        "dev_observer.server.main:app",
+        host="0.0.0.0",
+        port=port,
+        log_level=os.getenv("LOG_LEVEL", "info").lower(),
+        log_config=None,
+    )
     uvicorn_server = uvicorn.Server(uvicorn_config)
     _log.info(s_("Starting FastAPI server...", port=port))
     await uvicorn_server.serve()

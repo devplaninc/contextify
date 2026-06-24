@@ -72,8 +72,14 @@ class PeriodicProcessor:
                 config = await self._storage.get_global_config()
                 concurrency = config.periodic.concurrency
                 async with self._lock:
-                    _log.debug(s_("Checking periodic processing", running=self._running, concurrency=concurrency))
                     if self._running >= concurrency:
+                        _log.debug(
+                            s_(
+                                "Periodic processing at concurrency limit",
+                                running=self._running,
+                                concurrency=concurrency,
+                            )
+                        )
                         continue
                     asyncio.create_task(process_item())
                     self._running += 1
