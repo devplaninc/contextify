@@ -75,7 +75,7 @@ const TokenForm: React.FC<TokenFormProps> = ({onSuccess}) => {
                 <FormItem>
                   <FormLabel>Provider</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(parseInt(value) as AuthTokenProvider)}
+                    onValueChange={(value) => field.onChange(parseInt(value))}
                     value={field.value?.toString()}
                   >
                     <FormControl>
