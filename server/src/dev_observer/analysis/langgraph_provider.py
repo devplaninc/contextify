@@ -1,9 +1,11 @@
 import asyncio
 import dataclasses
 import logging
-from typing import Optional
+from contextlib import contextmanager
+from typing import Iterator, Optional
 
 from langchain_core.runnables import RunnableConfig
+from langfuse import propagate_attributes
 from langfuse.langchain import CallbackHandler
 from langgraph.constants import END
 from langgraph.graph.state import CompiledStateGraph, StateGraph
@@ -19,6 +21,13 @@ from dev_observer.prompts.provider import FormattedPrompt
 from dev_observer.storage.provider import StorageProvider
 
 _log = logging.getLogger(__name__)
+
+
+@contextmanager
+def _use_langfuse_session(session_id: Optional[str]) -> Iterator[None]:
+    """Propagate trace-level attributes before LangChain creates its root span."""
+    with propagate_attributes(session_id=session_id):
+        yield
 
 
 @dataclasses.dataclass
@@ -65,7 +74,10 @@ class LanggraphAnalysisProvider(AnalysisProvider):
                           ))
             callbacks = [CallbackHandler(public_key=self._lf_auth.public_key, )]
             config["callbacks"] = callbacks
-        result = await g.ainvoke({}, config, output_keys=["response"])
+        # Keep the metadata above for LangChain compatibility while using the
+        # v4 OpenTelemetry context for trace-level attributes.
+        with _use_langfuse_session(session_id):
+            result = await g.ainvoke({}, config, output_keys=["response"])
         analysis = result.get("response", "")
         _log.debug(s_("Content analyzed", anaysis_len=len(analysis)))
         return AnalysisResult(analysis=analysis)
