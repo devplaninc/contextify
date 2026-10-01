@@ -109,7 +109,7 @@ export class ObservationsFetcher {
         updatedAt: updatedDateStr ? new Date(updatedDateStr) : undefined,
       }
     } catch (error) {
-      if (isNamedError(error) && (error as any).code === 404) {
+      if (isNamedError(error) && 'code' in error && error.code === 404) {
         return undefined
       }
       throw new Error(`Failed to fetch GCS object ${key.key}: ${error}`)
