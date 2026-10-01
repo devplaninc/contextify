@@ -46,6 +46,7 @@ dependencies = [
     "cryptography>=50.0.0,<51.0.0",
     "python-multipart>=0.0.31",
     # Security floors for transitive deps
+    "pyjwt>=2.15.0,<3.0.0",
     "protego>=0.6.2,<0.7.0",
     "setuptools>=83.0.0",
     "pyasn1>=0.6.4,<1.0.0",
