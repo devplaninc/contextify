@@ -51,6 +51,13 @@
     "browserslist": "^4.28.7",
     "baseline-browser-mapping": "^2.11.0",
     "nanoid": "^3.3.18",
-    "ip-address": "^10.7.2"
+    "ip-address": "^10.7.2",
+    "source-map-js": "^1.2.2",
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "^7.1.6"
+    },
+    "micromark-extension-math": {
+      "katex": "^0.18.2"
+    }
   }
 }
