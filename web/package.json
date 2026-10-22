@@ -59,6 +59,7 @@
     },
     "micromark-extension-math": {
       "katex": "^0.18.2"
-    }
+    },
+    "follow-redirects": "^1.16.1"
   }
 }
