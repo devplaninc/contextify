@@ -17,8 +17,8 @@ import {toast} from "sonner";
 
 const formSchema = z.object({
   namespace: z.string().optional(),
-  from: z.date({required_error: "From date is required"}),
-  to: z.date({required_error: "To date is required"}),
+  from: z.date({error: issue => issue.input === undefined ? "From date is required" : undefined}),
+  to: z.date({error: issue => issue.input === undefined ? "To date is required" : undefined}),
 }).refine((data) => data.from <= data.to, {
   message: "From date must be before or equal to To date",
   path: ["to"],
