@@ -32,46 +32,46 @@ const repoAnalysisConfigFlattenSchema = z.object({
   compress: z.boolean(),
   removeEmptyLines: z.boolean(),
   outStyle: z.string(),
-  maxTokensPerChunk: z.coerce.number(),
-  maxRepoSizeMb: z.coerce.number(),
+  maxTokensPerChunk: z.coerce.number<string | number>(),
+  maxRepoSizeMb: z.coerce.number<string | number>(),
   ignorePattern: z.string(),
-  largeRepoThresholdMb: z.coerce.number(),
+  largeRepoThresholdMb: z.coerce.number<string | number>(),
   largeRepoIgnorePattern: z.string(),
   compressLarge: z.boolean(),
-  maxFileSizeBytes: z.coerce.number(),
+  maxFileSizeBytes: z.coerce.number<string | number>(),
 })
 
 const researchHistoryLimitsSchema = z.object({
-  plan: z.coerce.number(),
-  summarize: z.coerce.number(),
+  plan: z.coerce.number<string | number>(),
+  summarize: z.coerce.number<string | number>(),
 })
 
 const repoAnalysisConfigResearchSchema = z.object({
-  maxRepoSizeMb: z.coerce.number(),
-  maxIterations: z.coerce.number(),
+  maxRepoSizeMb: z.coerce.number<string | number>(),
+  maxIterations: z.coerce.number<string | number>(),
   generalPrefix: z.string().optional(),
   analyzers: z.array(analyzerSchema),
-  reportChunkSize: z.coerce.number(),
-  maxToolContentTokens: z.coerce.number(),
+  reportChunkSize: z.coerce.number<string | number>(),
+  maxToolContentTokens: z.coerce.number<string | number>(),
   historyLimits: researchHistoryLimitsSchema,
 })
 
 const repoAnalysisConfigSchema = z.object({
   flatten: repoAnalysisConfigFlattenSchema,
-  processingIntervalSec: z.coerce.number(),
+  processingIntervalSec: z.coerce.number<string | number>(),
   disabled: z.boolean(),
   research: repoAnalysisConfigResearchSchema,
 })
 
 const websiteCrawlingConfigSchema = z.object({
-  websiteScanTimeoutSeconds: z.coerce.number(),
-  scrapyResponseTimeoutSeconds: z.coerce.number(),
-  crawlDepth: z.coerce.number(),
-  timeoutWithoutDataSeconds: z.coerce.number(),
+  websiteScanTimeoutSeconds: z.coerce.number<string | number>(),
+  scrapyResponseTimeoutSeconds: z.coerce.number<string | number>(),
+  crawlDepth: z.coerce.number<string | number>(),
+  timeoutWithoutDataSeconds: z.coerce.number<string | number>(),
 })
 
 const periodicConfigSchema = z.object({
-  concurrency: z.coerce.number(),
+  concurrency: z.coerce.number<string | number>(),
 })
 
 const globalConfigSchema = z.object({
@@ -96,7 +96,7 @@ export function GlobalConfigEditor() {
 
 function GlobalConfigEditorForm({config}: { config: GlobalConfig }) {
   const {updateGlobalConfig} = useBoundStore()
-  const form = useForm<globalConfigType>({
+  const form = useForm<z.input<typeof globalConfigSchema>, unknown, globalConfigType>({
     resolver: zodResolver(globalConfigSchema),
     defaultValues: config,
   });

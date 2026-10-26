@@ -16,8 +16,8 @@ import {Loader} from "@/components/Loader.tsx";
 
 const tokenFormSchema = z.object({
   namespace: z.string().optional(),
-  provider: z.nativeEnum(AuthTokenProvider, {
-    errorMap: () => ({message: "Please select a valid provider"}),
+  provider: z.enum(AuthTokenProvider, {
+    error: "Please select a valid provider",
   }),
   workspace: z.string().optional(),
   repo: z.string().optional(),
