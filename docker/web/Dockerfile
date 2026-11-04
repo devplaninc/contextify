@@ -9,7 +9,8 @@ WORKDIR /app
 ENV VITE_KEEP_OWN_DOMAIN=true
 
 # Copy the workspace root package files
-COPY web/package.json web/package-lock.json ./
+COPY web/package.json web/package-lock.json web/.npmrc ./
+COPY web/vendor ./vendor
 
 # Copy all workspace packages
 COPY web/packages ./packages

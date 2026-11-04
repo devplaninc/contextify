@@ -51,6 +51,7 @@ local-compose:
 	@scripts/compose-up.sh
 
 test-ts-api: npm-install
+	@cd web && npm run test:dependency-security
 	@cd web/packages/api && npm run test
 
 test-ts: test-ts-api
