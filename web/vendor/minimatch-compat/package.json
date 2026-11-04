@@ -1,0 +1,12 @@
+{
+  "name": "@devplaninc/minimatch-compat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Callable and named exports of maintained minimatch",
+  "main": "index.cjs",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "minimatch-modern": "npm:minimatch@^11.0.1"
+  },
+  "types": "index.d.ts"
+}
