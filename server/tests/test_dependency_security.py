@@ -1,7 +1,23 @@
-"""Exercise the upstream Twisted IMAP fix while it is pinned to a release candidate."""
+"""Exercise upstream dependency security fixes with real parsers."""
 
+import dns.exception
+import dns.rdata
 import pytest
 from twisted.mail.imap4 import wildcardToRegexp
+
+
+@pytest.mark.parametrize("service", [-1, 65536])
+def test_wks_rejects_out_of_range_service_numbers(service):
+    # Use bounded inputs: a vulnerable parser accepts 65536 without a huge allocation.
+    with pytest.raises(dns.exception.SyntaxError):
+        dns.rdata.from_text("IN", "WKS", f"10.0.0.1 udp {service}")
+
+
+@pytest.mark.parametrize("service", [0, 53, 65535])
+def test_wks_preserves_valid_service_numbers(service):
+    record = dns.rdata.from_text("IN", "WKS", f"10.0.0.1 udp {service}")
+    assert record.bitmap[service // 8] & (0x80 >> (service % 8))
+    assert dns.rdata.from_wire("IN", "WKS", record.to_wire(), 0, len(record.to_wire())) == record
 
 
 @pytest.mark.parametrize("delimiter", [None, "/"])
