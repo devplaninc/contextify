@@ -14,6 +14,7 @@ from dev_observer.processors.code_research import CodeResearchProcessor
 from dev_observer.processors.flattening import ObservationRequest
 from dev_observer.processors.git.changes import GitChangesHandler, ProcessGitChangesParams
 from dev_observer.processors.observations import get_repo_key_pref
+from dev_observer.processors.token_retention import TokenRetentionMaintenance
 from dev_observer.processors.repos import ReposProcessor
 from dev_observer.processors.websites import WebsitesProcessor, ObservedWebsite
 from dev_observer.repository.types import ObservedRepo
@@ -52,6 +53,7 @@ class PeriodicProcessor:
         self._websites_processor = websites_processor
         self._research_processor = research_processor
         self._clock = clock
+        self._token_retention = TokenRetentionMaintenance(storage)
 
     async def run(self):
 
@@ -69,6 +71,7 @@ class PeriodicProcessor:
         while True:
             try:
                 await asyncio.sleep(2)
+                await self._token_retention.run_if_due()
                 config = await self._storage.get_global_config()
                 concurrency = config.periodic.concurrency
                 async with self._lock:
