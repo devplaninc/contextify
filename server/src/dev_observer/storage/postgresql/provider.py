@@ -1,11 +1,13 @@
 import asyncio
 import datetime
+import hashlib
+import json
 import logging
 import uuid
 from typing import Optional, MutableSequence, List, Sequence, Callable, cast
 
 from google.protobuf import json_format
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, func, or_, text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSession
 
 from dev_observer.api.types.config_pb2 import GlobalConfig
@@ -352,6 +354,8 @@ class PostgresqlStorageProvider(StorageProvider):
 
     # Token CRUD operations
     async def add_token(self, token: AuthToken, old_token_id: Optional[str] = None) -> AuthToken:
+        if _is_managed_forge_token(token):
+            return await self._add_forge_token(token)
         token_id = token.id
         if not token_id or len(token_id) == 0:
             token_id = f"{uuid.uuid4()}"
@@ -373,6 +377,100 @@ class PostgresqlStorageProvider(StorageProvider):
                         delete(AuthTokenEntity).where(AuthTokenEntity.id == old_token_id)
                     )
                 return self._to_token(await session.get(AuthTokenEntity, token_id))
+
+    async def _add_forge_token(self, token: AuthToken) -> AuthToken:
+        # instead_of_id is a stale client-side hint. Managed groups use their
+        # own retention policy instead of deleting one caller-selected row.
+        expires_at = token.expires_at.ToDatetime(datetime.timezone.utc) if token.HasField("expires_at") else None
+        async with AsyncSession(self._engine, expire_on_commit=False) as session:
+            async with session.begin():
+                await session.execute(text("SET LOCAL lock_timeout = '3s'"))
+                await session.execute(select(func.pg_advisory_xact_lock(_forge_lock_key(token.workspace))))
+                # Exact expiry narrows replay detection without decrypting the
+                # entire historical backlog. Ciphertext uses a per-record salt.
+                matches = list((await session.scalars(select(AuthTokenEntity).where(
+                    *_forge_scope(token.workspace),
+                    AuthTokenEntity.expires_at.is_not_distinct_from(expires_at),
+                ))).all())
+                existing = await asyncio.to_thread(self._matching_token, matches, token.token)
+                if existing is None:
+                    token_id = token.id or str(uuid.uuid4())
+                    encrypted = await asyncio.to_thread(self._encryptor.encrypt, token.token, token_id)
+                    existing = AuthTokenEntity(
+                        id=token_id, namespace="", provider=AuthTokenProvider.JIRA,
+                        workspace=token.workspace, repo="", system=True,
+                        token=encrypted, expires_at=expires_at,
+                    )
+                    session.add(existing)
+                    await session.flush()
+                await self._prune_forge_tokens(session, token.workspace, preserve_id=existing.id)
+            result = await asyncio.to_thread(self._to_token, existing)
+        return result
+
+    def _matching_token(self, entities: Sequence[AuthTokenEntity], plaintext: str) -> Optional[AuthTokenEntity]:
+        for ent in entities:
+            if self._encryptor.decrypt(ent.token, ent.id) == plaintext:
+                return ent
+        return None
+
+    async def _prune_forge_tokens(
+            self, session: AsyncSession, workspace: str, preserve_id: Optional[str] = None,
+    ) -> int:
+        # Caller holds the group advisory lock. Lock a valid replacement too so
+        # an explicit token delete cannot remove it before this transaction ends.
+        valid = await session.scalar(select(AuthTokenEntity.id).where(
+            *_forge_scope(workspace), AuthTokenEntity.expires_at > func.clock_timestamp(),
+        ).order_by(AuthTokenEntity.id).limit(1).with_for_update())
+        if valid is None:
+            return 0
+        newest = select(AuthTokenEntity.id).where(
+            *_forge_scope(workspace), AuthTokenEntity.expires_at <= func.clock_timestamp(),
+        ).order_by(
+            AuthTokenEntity.created_at.desc(), AuthTokenEntity.id.desc(),
+        ).limit(3)
+        candidates = select(AuthTokenEntity.id).where(
+            *_forge_scope(workspace),
+            AuthTokenEntity.expires_at <= func.clock_timestamp(),
+            AuthTokenEntity.id.not_in(newest),
+        ).order_by(AuthTokenEntity.created_at, AuthTokenEntity.id).limit(500)
+        if preserve_id is not None:
+            candidates = candidates.where(AuthTokenEntity.id != preserve_id)
+        deleted = await session.execute(delete(AuthTokenEntity).where(
+            AuthTokenEntity.id.in_(candidates),
+        ).returning(AuthTokenEntity.id))
+        return len(deleted.all())
+
+    async def cleanup_expired_forge_tokens(self) -> int:
+        # Select only groups with actual eligible history, so small/protected
+        # groups cannot starve later groups when the sweep reaches its limit.
+        ranked = select(
+            AuthTokenEntity.workspace, AuthTokenEntity.expires_at,
+            func.row_number().over(
+                partition_by=AuthTokenEntity.workspace,
+                order_by=(AuthTokenEntity.created_at.desc(), AuthTokenEntity.id.desc()),
+            ).label("recency"),
+        ).where(
+            *_forge_scope(), AuthTokenEntity.expires_at <= func.clock_timestamp(),
+        ).subquery()
+        valid_groups = select(AuthTokenEntity.workspace).where(
+            *_forge_scope(), AuthTokenEntity.expires_at > func.clock_timestamp(),
+        )
+        async with AsyncSession(self._engine) as session:
+            await session.execute(text("SET LOCAL statement_timeout = '10s'"))
+            groups = list((await session.scalars(select(ranked.c.workspace).where(
+                ranked.c.recency > 3,
+                ranked.c.workspace.in_(valid_groups),
+            ).distinct().order_by(ranked.c.workspace).limit(100))).all())
+        total = 0
+        for workspace in groups:
+            async with AsyncSession(self._engine) as session:
+                async with session.begin():
+                    await session.execute(text("SET LOCAL lock_timeout = '3s'"))
+                    await session.execute(text("SET LOCAL statement_timeout = '10s'"))
+                    acquired = await session.scalar(select(func.pg_try_advisory_xact_lock(_forge_lock_key(workspace))))
+                    if acquired:
+                        total += await self._prune_forge_tokens(session, workspace)
+        return total
 
     async def get_token(self, token_id: str) -> Optional[AuthToken]:
         async with AsyncSession(self._engine) as session:
@@ -462,6 +560,29 @@ class PostgresqlStorageProvider(StorageProvider):
         token.updated_at.FromDatetime(ent.updated_at)
 
         return token
+
+
+def _is_managed_forge_token(token: AuthToken) -> bool:
+    return (token.provider == AuthTokenProvider.JIRA and token.system and
+            token.namespace == "" and bool(token.workspace) and not token.repo)
+
+
+def _forge_scope(workspace: Optional[str] = None):
+    conditions = [
+        AuthTokenEntity.provider == AuthTokenProvider.JIRA,
+        AuthTokenEntity.system.is_(True), AuthTokenEntity.namespace == "",
+        AuthTokenEntity.workspace.is_not(None), AuthTokenEntity.workspace != "",
+        or_(AuthTokenEntity.repo.is_(None), AuthTokenEntity.repo == ""),
+    ]
+    if workspace is not None:
+        conditions.append(AuthTokenEntity.workspace == workspace)
+    return conditions
+
+
+def _forge_lock_key(workspace: str) -> int:
+    # Stable across processes; null/empty unscoped repo values share one lock.
+    scope = json.dumps(["forge-token-retention", AuthTokenProvider.JIRA, "", workspace, "", True])
+    return int.from_bytes(hashlib.sha256(scope.encode()).digest()[:8], "big", signed=True)
 
 
 def _to_optional_repo(ent: Optional[GitRepoEntity]) -> Optional[GitRepository]:

@@ -126,3 +126,7 @@ class StorageProvider(Protocol):
 
     async def add_token(self, token: AuthToken, old_token_id: Optional[str] = None) -> AuthToken:
         ...
+
+    async def cleanup_expired_forge_tokens(self) -> int:
+        """Optional maintenance for persistent Forge token stores."""
+        return 0
