@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import uuid
@@ -405,8 +406,10 @@ class PostgresqlStorageProvider(StorageProvider):
                     query = query.where(AuthTokenEntity.workspace == filter.workspace)
                 if filter.HasField("provider") and filter.provider != AuthTokenProvider.UNKNOWN:
                     query = query.where(AuthTokenEntity.provider == filter.provider)
-            entities = await session.scalars(query)
-            return [self._to_token(ent) for ent in entities.all()]
+            entities = list((await session.scalars(query)).all())
+        # Release the DB connection before CPU-heavy decryption. Keep the web
+        # event loop available for health checks while converting the batch.
+        return await asyncio.to_thread(lambda: [self._to_token(ent) for ent in entities])
 
     async def find_tokens(
             self, provider: AuthTokenProvider, workspace: Optional[str] = None, repo: Optional[str] = None,
@@ -431,8 +434,8 @@ class PostgresqlStorageProvider(StorageProvider):
             else:
                 return []
 
-            entities = await session.scalars(query)
-            return [self._to_token(ent) for ent in entities.all()]
+            entities = list((await session.scalars(query)).all())
+        return await asyncio.to_thread(lambda: [self._to_token(ent) for ent in entities])
 
     def _to_optional_token(self, ent: Optional[AuthTokenEntity]) -> Optional[AuthToken]:
         return None if ent is None else self._to_token(ent)
